@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "meta": {
+    "lastScanned": "2026-11-06T14:40:26.688Z",
+    "fileCount": 1,
+    "hits": 0,
+    "misses": 0,
+    "renderedHash": "750a3ea53546958c38226cfa1c922612d53acdc20513f5f663122ab4c8f67260",
+    "storeUpdatedAt": "2026-11-06T14:40:26.688Z",
+    "rootHash": "61a6df7b2297aebf"
+  },
+  "files": {
+    "CLAUDE.md": {
+      "description": "OpenWolf",
+      "tokens": 99,
+      "hash": "074d6b42b583729a",
+      "size": 395,
+      "mtimeMs": 1793976026663.6865,
+      "updatedAt": "2026-11-06T14:40:26.684Z",
+      "source": "scan"
+    }
+  },
+  "preamble": [
+    "> Project structure index. Auto-maintained by OpenWolf hooks and daemon.",
+    "> Run `openwolf scan` to generate, or wait for the first Claude Code session.",
+    "> Status: Pending initial scan"
+  ]
+}

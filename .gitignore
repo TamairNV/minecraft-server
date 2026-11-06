@@ -1,0 +1,6 @@
+.env
+crafty/
+__pycache__/
+web-data/
+.backups/
+.staging/

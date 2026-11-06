@@ -1,0 +1,88 @@
+name: minecraft
+
+services:
+  crafty:
+    image: arcadiatechnology/crafty-4:4.11.0
+    container_name: minecraft-crafty
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      # 8443 (NPM) and 8100 (event-gallery) are taken on this host, so the
+      # Crafty dashboard and BlueMap get different host ports.
+      - "8444:8443"
+      - "25565:25565/tcp"
+      - "24454:24454/udp"
+      # Localhost only: the map is behind the site's login at /map/.
+      - "127.0.0.1:8105:8100/tcp"
+    volumes:
+      - ./crafty/config:/crafty/app/config
+      - ./crafty/logs:/crafty/logs
+      - ./crafty/servers:/crafty/servers
+      - ./crafty/import:/crafty/import
+      # Backups go on the 2TB drive, the world stays on the NVMe.
+      - /mnt/fpv2tb/minecraft-backups:/crafty/backups
+    # 10G heap + ZGC/metaspace/native + Crafty itself. Leaves 2 threads for the other sites.
+    mem_limit: 14g
+    cpus: 14
+
+  web:
+    build:
+      context: ./web
+      target: prod
+    container_name: minecraft-web
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+      - MC_HOST=crafty
+      - MC_BORDER=10000
+      - MC_PUBLIC_ADDRESS=${MC_PUBLIC_ADDRESS:-}
+      - CRAFTY_SERVER_ID=${CRAFTY_SERVER_ID}
+      - CRAFTY_BACKUP_ID=${CRAFTY_BACKUP_ID}
+      - CRAFTY_WEB_USER=${CRAFTY_WEB_USER}
+      - CRAFTY_WEB_PASSWORD=${CRAFTY_WEB_PASSWORD}
+      - ACCESS_SITE=${ACCESS_SITE}
+      - CF_TEAM_DOMAIN=${CF_TEAM_DOMAIN}
+      - CF_AUD=${CF_AUD}
+      - ACCESS_LOWEST_ROLE=${ACCESS_LOWEST_ROLE}
+    volumes:
+      # Writable for world swaps, which only rename paths listed in app/worlds.py.
+      - ./crafty/servers/bbcec7f2-5e56-4d6c-95f6-64f4635787f2:/server
+      - /mnt/fpv2tb/minecraft-backups/bbcec7f2-5e56-4d6c-95f6-64f4635787f2/${CRAFTY_BACKUP_ID}:/backups:ro
+      - ./web-data:/data
+    networks: [default, access-net]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+
+  proxy:
+    image: nginxinc/nginx-unprivileged:1.29-alpine
+    container_name: minecraft-proxy
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/London
+    ports:
+      # mc.tamairnv.co.uk reaches this through the "house" tunnel.
+      - "127.0.0.1:8106:8080"
+    volumes:
+      - ./web/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [web, crafty]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+
+networks:
+  access-net:
+    external: true

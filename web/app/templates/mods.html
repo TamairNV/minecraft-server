@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Mods · TNV SMP{% endblock %}
+{% block body %}
+<main class="under page">
+  <div class="page-head">
+    <h1>Mods</h1>
+    <p class="muted">One download sets up everything: voice chat, far-away terrain and a faster game.</p>
+  </div>
+  {% if pack %}
+  <section class="join card">
+    <div class="pack-id">
+      <img src="/static/brand/logo-128.png?v={{ v }}" alt="" width="96" height="96">
+      <div>
+        <h2>{{ pack.name }}</h2>
+        <p>Minecraft {{ pack.minecraft }} · Fabric {{ pack.fabric_loader }} · {{ pack.mods|length }} mods</p>
+      </div>
+    </div>
+    <div class="pack-actions">
+      <a class="btn primary" href="/mods/download" download>Download the pack</a>
+      <a class="btn" href="/static/brand/logo-512.png?v={{ v }}" download="TNV-SMP-icon.png">Download the icon</a>
+    </div>
+  </section>
+
+  <section aria-labelledby="install-h">
+    <h2 id="install-h">Install it</h2>
+    <ol class="steps">
+      <li><b>Get a launcher.</b> Install the <a href="https://modrinth.com/app" target="_blank" rel="noopener">Modrinth App</a> or <a href="https://prismlauncher.org/" target="_blank" rel="noopener">Prism Launcher</a>.</li>
+      <li><b>Add the pack.</b> Open the downloaded <span class="mono">.mrpack</span> in the launcher. Modrinth App: create an instance and choose From File. Prism: Add Instance, then Import. If your launcher doesn't pick up the pack's icon, download it above and set it in the instance's settings.</li>
+      <li><b>Launch and join.</b> {% if address %}Add the server <span class="mono">{{ address }}</span> in Multiplayer.{% else %}Ask an admin for the server address, then add it in Multiplayer.{% endif %} You need to be on the whitelist.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="why-h">
+    <h2 id="why-h">The two that matter</h2>
+    <div class="explain">
+      <div class="fact"><h3>Simple Voice Chat</h3><p class="muted">Talk to people near you in game, and hear them fade with distance. It walks you through picking a microphone the first time. Press V for its settings.</p></div>
+      <div class="fact"><h3>Distant Horizons</h3><p class="muted">Draws terrain far past your normal view distance using simplified chunks, so mountains don't pop in. The server sends it what you haven't explored.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="list-h">
+    <h2 id="list-h">What's in the pack</h2>
+    <table class="modlist">
+      <thead><tr><th>Mod</th><th>Version</th><th></th></tr></thead>
+      <tbody>
+        {% for m in pack.mods %}
+        <tr><td><a href="https://modrinth.com/mod/{{ m.slug|urlencode }}" target="_blank" rel="noopener">{{ m.name }}</a></td><td class="mono">{{ m.version }}</td><td>{% if m.client == 'optional' %}<span class="pill">Optional</span>{% elif m.dependency_of %}<span class="muted">Needed by {{ m.dependency_of }}</span>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted note">Iris adds shader support and is optional. Your launcher may ask whether you want it, or you can turn it off in the instance's mod list. It does nothing until you add a shader pack of your own.</p>
+    {% if pack.skipped %}<p class="muted note">Not in this build, because they have no version for {{ pack.minecraft }} yet: {{ pack.skipped|map(attribute='slug')|join(', ') }}.</p>{% endif %}
+  </section>
+  {% else %}
+  <p class="empty">The pack hasn't been built yet. Ask an admin to build it.</p>
+  {% endif %}
+</main>
+{% endblock %}

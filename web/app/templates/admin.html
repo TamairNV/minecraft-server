@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Admin · TNV SMP{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/admin.css?v={{ v }}">{% endblock %}
+{% block body %}
+<div id="job" class="job" role="status" hidden></div>
+
+<div class="adminbar">
+<div class="tabs" role="tablist">
+  <button role="tab" data-tab="console" aria-selected="true" type="button">Console</button>
+  <button role="tab" data-tab="whitelist" aria-selected="false" type="button">Whitelist</button>
+  <button role="tab" data-tab="backups" aria-selected="false" type="button">Backups</button>
+  <button role="tab" data-tab="worlds" aria-selected="false" type="button">Worlds</button>
+  <button role="tab" data-tab="modpack" aria-selected="false" type="button">Modpack</button>
+  <button role="tab" data-tab="system" aria-selected="false" type="button">System</button>
+</div>
+
+  <div class="power">
+    <button class="btn" id="srv-start" data-action="start" type="button">Start</button>
+    <button class="btn" id="srv-restart" data-action="restart" type="button">Restart</button>
+    <button class="btn danger" id="srv-stop" data-action="stop" type="button">Stop</button>
+  </div>
+</div>
+<main>
+  <section id="tab-console" class="tab console">
+    <pre id="log" tabindex="0" aria-label="Server log" aria-live="off"></pre>
+    <form id="command-form" class="row">
+      <label for="command" class="prompt">&gt;</label>
+      <input id="command" autocomplete="off" spellcheck="false" maxlength="500" placeholder="Type a console command, e.g. list">
+      <button class="btn primary" type="submit">Send</button>
+    </form>
+  </section>
+
+  <section id="tab-whitelist" class="tab" hidden>
+    <form id="whitelist-form" class="row narrow">
+      <label for="player" class="sr">Player name</label>
+      <input id="player" autocomplete="off" spellcheck="false" maxlength="16" placeholder="Minecraft name" required>
+      <button class="btn primary" type="submit">Add to whitelist</button>
+    </form>
+    <table class="list"><thead><tr><th>Player</th><th>Role</th><th></th></tr></thead><tbody id="whitelist-rows"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
+    <p id="whitelist-empty" class="empty" hidden>Nobody's on the whitelist.</p>
+  </section>
+
+  <section id="tab-backups" class="tab" hidden>
+    <div class="row narrow">
+      <button class="btn primary" id="backup-now" type="button">Back up now</button>
+      <span class="hint">Runs in the background. Automatic backups run every 6 hours and the newest 28 are kept.</span>
+    </div>
+    <table class="list"><thead><tr><th>When</th><th>World</th><th class="n">Size</th><th></th></tr></thead><tbody id="backup-rows"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
+    <p id="backup-empty" class="empty" hidden>No backups yet.</p>
+  </section>
+
+  <section id="tab-worlds" class="tab" hidden>
+    <table class="list"><thead><tr><th>World</th><th>Version</th><th>Seed</th><th class="n">Size</th><th></th></tr></thead><tbody id="world-rows"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
+    <div class="forms">
+      <form id="new-world-form" class="stack">
+        <h2>New world</h2>
+        <label>Name <input id="new-name" maxlength="40" required></label>
+        <label>Seed <input id="new-seed" maxlength="64" placeholder="Blank for random"></label>
+        <button class="btn primary" type="submit">Create</button>
+        <p class="hint">It's generated when you first swap to it, with the 10,000-block border and one-player sleep already set.</p>
+      </form>
+      <form id="restore-form" class="stack">
+        <h2>New world from a backup</h2>
+        <label>Name <input id="restore-name" maxlength="40" required></label>
+        <label>Backup <select id="restore-backup" required></select></label>
+        <button class="btn primary" type="submit">Create from backup</button>
+        <p class="hint">Makes a separate copy, so nothing's overwritten. The map redraws after you swap to it.</p>
+      </form>
+    </div>
+    <div class="row narrow pregen">
+      <button class="btn" id="pregen" type="button">Pre-generate the live world</button>
+      <span class="hint">Fills the whole border in all three dimensions. About an hour of high CPU, with progress in the console.</span>
+    </div>
+  </section>
+
+  <section id="tab-modpack" class="tab" hidden>
+    <div class="row narrow">
+      <button class="btn primary" id="pack-build" type="button">Rebuild &amp; distribute pack</button>
+      <span class="hint">Takes the newest builds from Modrinth for the server's version. On success it replaces the download on <a href="/mods">the Mods page</a>. A failed build leaves the old pack in place.</span>
+    </div>
+    <p id="pack-status" role="status" aria-live="polite" class="packline"></p>
+    <ul id="pack-skipped" class="packnotes" hidden></ul>
+    <table class="list"><thead><tr><th>Mod</th><th>Version</th><th>Channel</th><th>Client</th><th>Needed by</th></tr></thead><tbody id="pack-rows"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
+    <h2 class="gap">Kept builds</h2>
+    <table class="list"><thead><tr><th>Built</th><th>By</th><th>Minecraft</th><th class="n">Mods</th><th>File</th></tr></thead><tbody id="pack-builds"></tbody></table>
+    <p id="pack-empty" class="empty" hidden>No builds yet.</p>
+  </section>
+
+  <section id="tab-system" class="tab" hidden>
+    <div class="facts" id="system-cards"></div>
+    <h2 class="gap">Recent admin actions</h2>
+    <table class="list"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody id="audit-rows"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
+    <p id="audit-empty" class="empty" hidden>Nothing yet.</p>
+  </section>
+</main>
+
+<dialog id="swap-dialog">
+  <form id="swap-form" method="dialog" class="stack">
+    <h2>Swap to <span id="swap-name"></span>?</h2>
+    <p id="swap-text"></p>
+    <label>Type the world's name to confirm <input id="swap-confirm" autocomplete="off" required></label>
+    <div class="row end">
+      <button class="btn" type="button" id="swap-cancel">Cancel</button>
+      <button type="submit" class="btn danger">Swap worlds</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="ask-dialog">
+  <form id="ask-form" method="dialog" class="stack">
+    <h2 id="ask-title"></h2>
+    <p id="ask-text"></p>
+    <div class="row end">
+      <button class="btn" type="button" id="ask-no">Cancel</button>
+      <button class="btn danger" type="submit" id="ask-yes"></button>
+    </div>
+  </form>
+</dialog>
+<p class="adminlinks"><a href="https://admin.tamairnv.co.uk/" target="_blank" rel="noopener">Manage logins ↗</a> <a href="{{ crafty_url }}" target="_blank" rel="noopener">Crafty, LAN only ↗</a></p>
+{% endblock %}
+{% block script %}<script src="/static/admin.js?v={{ v }}"></script>{% endblock %}

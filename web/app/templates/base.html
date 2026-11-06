@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}TNV SMP{% endblock %}</title>
+<link rel="icon" href="/static/brand/favicon.ico?v={{ v }}" sizes="any">
+<link rel="icon" href="/static/brand/logo.svg?v={{ v }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/brand/logo-256.png?v={{ v }}">
+<link rel="preload" href="/static/fonts/pixelify-sans-600.woff2?v={{ v }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/site.css?v={{ v }}">
+{% block head %}{% endblock %}
+</head>
+<body data-page="{{ active }}">
+<header class="top">
+  <a class="brand" href="/"><img src="/static/brand/logo-64.png?v={{ v }}" alt="" width="36" height="36">TNV SMP</a>
+  <nav class="nav" aria-label="Main">
+    <a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>Home</a>
+    <a href="/players" {% if active == 'players' %}aria-current="page"{% endif %}>Players</a>
+    <a href="/world" {% if active == 'world' %}aria-current="page"{% endif %}>Map</a>
+    <a href="/mods" {% if active == 'mods' %}aria-current="page"{% endif %}>Mods</a>
+    {% if is_admin %}<a href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>Admin</a>{% endif %}
+  </nav>
+  <p class="chip" id="chip" role="status"><span class="dot"></span><span id="chip-text">Checking…</span></p>
+</header>
+{% block body %}{% endblock %}
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="/static/common.js?v={{ v }}"></script>
+<script src="/static/figure.js?v={{ v }}"></script>
+{% block script %}{% endblock %}
+</body>
+</html>

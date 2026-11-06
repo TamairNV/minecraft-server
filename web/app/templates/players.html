@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Players · TNV SMP{% endblock %}
+{% block body %}
+<main class="under page">
+  <div class="page-head">
+    <h1>The crew</h1>
+    <p id="crew-count" class="muted" aria-live="polite">Rounding everyone up…</p>
+  </div>
+  <div class="roster" id="roster"></div>
+  <p class="empty" id="roster-empty" hidden>Nobody's on the whitelist yet.</p>
+</main>
+<dialog id="player-dialog" class="player-dialog" aria-labelledby="pd-name">
+  <button class="btn close" id="pd-close" type="button" aria-label="Close">✕</button>
+  <div class="pd-stage" id="pd-stage" title="Drag to spin"></div>
+  <div class="pd-info">
+    <h2 id="pd-name"></h2>
+    <p id="pd-status" class="muted"></p>
+    <dl class="pd-stats" id="pd-stats"></dl>
+  </div>
+</dialog>
+{% endblock %}
+{% block script %}<script src="/static/site.js?v={{ v }}"></script>{% endblock %}

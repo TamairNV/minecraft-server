@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""TNV SMP helper.
+  mc logs                     follow the live console log
+  mc whitelist add <player>   any other arguments are sent as a console command
+  mc start | stop | restart   control the server through Crafty
+  mc backup                   start a backup
+"""
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import crafty
+args = sys.argv[1:]
+if not args or args[0] in ("-h", "--help"):
+    sys.exit(__doc__)
+sid = crafty.env()["CRAFTY_SERVER_ID"]
+if args == ["logs"]:
+    os.execvp("tail", ["tail", "-n", "50", "-F", f"{crafty.HERE}/crafty/servers/{sid}/logs/latest.log"])
+if len(args) == 1 and args[0] in ("start", "stop", "restart"):
+    r = crafty.call("POST", f"/servers/{sid}/action/{args[0]}_server")
+elif args == ["backup"]:
+    r = crafty.call("POST", f"/servers/{sid}/action/backup_server/{crafty.env()['CRAFTY_BACKUP_ID']}")
+else:
+    r = crafty.call("POST", f"/servers/{sid}/stdin", " ".join(args).encode())
+print(r.get("status"), r.get("error") or "")

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="scene" id="scene" aria-label="Who's online">
+  <div class="sky" aria-hidden="true">
+    <span class="orb"></span>
+    <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
+  </div>
+  <div class="scene-title">
+    <h1 id="scene-title">Checking who's about…</h1>
+    <p class="splash" id="splash" aria-hidden="true"></p>
+  </div>
+  <div class="crowd" id="crowd"></div>
+  <div class="sign" id="sign" hidden><span id="sign-text"></span></div>
+  <div class="ground" aria-hidden="true"></div>
+</section>
+
+<main class="under">
+  <section class="join card">
+    <div>
+      <h2>Come and play</h2>
+      <p>Java Edition, any vanilla client. You need to be on the whitelist.</p>
+    </div>
+    {% if address %}
+    <button class="btn primary copy" id="copy" data-address="{{ address }}" type="button"><span class="mono">{{ address }}</span><small id="copy-hint">Click to copy</small></button>
+    {% else %}
+    <p class="askme">Ask an admin for the server address.</p>
+    {% endif %}
+  </section>
+
+  <section aria-labelledby="totals-h">
+    <h2 id="totals-h" class="sr">The server so far</h2>
+    <div class="facts">
+      <div class="fact"><b id="t-whitelisted">–</b><span>on the whitelist</span></div>
+      <div class="fact"><b id="t-hours">–</b><span>hours played</span></div>
+      <div class="fact"><b id="t-mined">–</b><span>blocks mined</span></div>
+      <div class="fact"><b id="t-km">–</b><span>km travelled</span></div>
+      <div class="fact"><b id="t-deaths">–</b><span>deaths</span></div>
+      <div class="fact"><b id="t-world">–</b><span>world on disk</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="awards-h">
+    <h2 id="awards-h">Hall of fame</h2>
+    <div class="awards" id="awards"></div>
+    <p class="empty" id="awards-empty" hidden>No legends yet. The first person to play takes every award.</p>
+  </section>
+
+  <p class="more"><a class="btn" href="/players">Meet everyone</a> <a class="btn" href="/world">Explore the map</a></p>
+</main>
+{% endblock %}
+{% block script %}<script src="/static/site.js?v={{ v }}"></script>{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Map · TNV SMP{% endblock %}
+{% block body %}
+<main class="mapview">
+  <iframe src="/map/" title="Live 3D map of the world" allow="fullscreen"></iframe>
+</main>
+<a class="btn map-full" href="/map/" target="_blank" rel="noopener">Full screen ↗</a>
+{% endblock %}
