@@ -1,18 +1,66 @@
-# TNV SMP
+# Friends SMP
 
-Paper Minecraft server run by Crafty Controller, plus a login-only site at https://mc.tamairnv.co.uk. Add people on admin.tamairnv.co.uk, card "Friends SMP": `user` sees status, map and stats, `admin` also gets `/admin`.
+A Paper Minecraft server run by Crafty Controller, plus a login-only website with the live map, player stats, a client modpack and world swapping. The site is at https://mc.tamairnv.co.uk.
+
+## Features
+
+- **Website:** server status, a whitelist page with 3D player skins, and the BlueMap world map.
+- **Admin area:** swap worlds, rebuild the modpack and see an audit log.
+- **Client modpack:** a one-click `.mrpack` download, built from Modrinth.
+- **Voice chat:** Simple Voice Chat, on its own UDP port.
+- **Backups:** every 6 hours, keeping 28, on a separate drive.
+
+## How it works
+
+| Container | Job |
+|---|---|
+| `minecraft-crafty` | Crafty Controller 4.11, running the Paper server and BlueMap |
+| `minecraft-web` | FastAPI site (`web/`), with player stats, world swaps and the modpack builder |
+| `minecraft-proxy` | nginx in front of the site. It asks the app (`/authz`) before serving the map, because BlueMap has no login of its own |
+
+The site sits behind Cloudflare Access, and the app checks the login token and the person's role itself. `user` sees status, map and stats, and `admin` also gets `/admin`.
 
 | What | Where |
 |---|---|
 | Game | `25565/tcp`, whitelist on |
 | Voice | `24454/udp` |
 | Map (BlueMap) | `/map/` on the site, behind login. Host `127.0.0.1:8105` for local use only |
-| Crafty dashboard | `https://<server>:8444` (8443 is NPM's). Login in `.env` |
-| Site | `127.0.0.1:8106` -> nginx (`minecraft-proxy`) -> `minecraft-web`, through the `house` tunnel |
-| World | `crafty/servers/<id>/world` on the NVMe |
+| Crafty dashboard | `https://<server>:8444` |
+| Site | `127.0.0.1:8106` -> `minecraft-proxy` -> `minecraft-web` |
+| World | `crafty/servers/<id>/world` |
 | Other worlds | `crafty/servers/<id>/worlds/slots/<slug>`, left out of scheduled backups |
-| Backups | `/mnt/fpv2tb/minecraft-backups`: every 6 hours, keeps 28 |
+| Backups | `/mnt/fpv2tb/minecraft-backups` |
 | Admin audit log | `web-data/audit.jsonl` |
+
+## Run it
+
+Needs Docker with Compose, and the `access-net` Docker network. `crafty/`, `web-data/` and `.env` aren't in this repo, so a new machine starts with no world.
+
+```sh
+cp .env.example .env
+docker network create access-net
+docker compose up -d --build
+```
+
+| Setting in `.env` | What it's for |
+|---|---|
+| `CRAFTY_ADMIN_USER`, `CRAFTY_ADMIN_PASSWORD` | Crafty admin login |
+| `CRAFTY_WEB_USER`, `CRAFTY_WEB_PASSWORD` | The site's restricted Crafty account |
+| `CRAFTY_SERVER_ID`, `CRAFTY_BACKUP_ID` | Which Crafty server and backup config to use |
+| `MC_PUBLIC_ADDRESS` | Address shown on the site |
+| `ACCESS_SITE`, `CF_TEAM_DOMAIN`, `CF_AUD`, `ACCESS_LOWEST_ROLE` | Login checks |
+
+The server ID is also written into the volume paths in `docker-compose.yml`, so change those for a new Crafty server.
+
+## Deployment
+
+| | |
+|---|---|
+| Folder | `~/minecraft` |
+| Port | `127.0.0.1:8106` (site), plus the game, voice and Crafty ports above |
+| Address | https://mc.tamairnv.co.uk |
+
+To update the site, run `docker compose up -d --build web`.
 
 ## Commands
 
@@ -50,11 +98,22 @@ Paper Minecraft server run by Crafty Controller, plus a login-only site at https
 - Each dimension has its own world border.
 - Chunky names worlds `minecraft:overworld`, `minecraft:the_nether`, `minecraft:the_end`.
 - A Crafty schedule needs `command: backup_server` set. Without it the schedule saves fine and never backs up.
+- Crafty 4.11.0 can kill its scheduler at startup with "database is locked" if two or more non-system users have an email set, and backups then silently stop. Blank those emails, including the `default@example.com` new users get. After any Crafty start, check that `schedule.log` shows `Loaded schedules`.
 
-## When the friend's public proxy is ready
+## Running behind a public proxy
 
-It forwards `25565/tcp` and `24454/udp` to this machine over Tailscale.
+The proxy forwards `25565/tcp` and `24454/udp` to this machine.
 
 1. Set `voice_host=<public host>:24454` in `plugins/voicechat/voicechat-server.properties`, then restart.
 2. Set `MC_PUBLIC_ADDRESS` in `.env`, then `docker compose up -d web` to show it on the site.
-3. Paper will see every player as the proxy's IP. To get real IPs the proxy must send PROXY protocol and `proxies.proxy-protocol` must be on in `config/paper-global.yml`. Direct LAN and Tailscale joins then stop working, so choose one.
+3. Paper will see every player as the proxy's IP. To get real IPs the proxy must send PROXY protocol and `proxies.proxy-protocol` must be on in `config/paper-global.yml`. Direct joins that skip the proxy then stop working, so choose one.
+
+## Project layout
+
+```
+docker-compose.yml  Crafty, the site and nginx
+scripts/            Console, updates, pre-generation and backups
+web/app/            FastAPI site, world swaps and modpack builder
+web/nginx/          Proxy config, with the map's login check
+web/tests/          Test suite
+```
