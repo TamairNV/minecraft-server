@@ -185,3 +185,42 @@ def test_pregen_start_and_control(tmp_path):
             p.start(*bad, "x")
     with pytest.raises(st.SettingsError):
         p.control("overworld", "trim")
+
+
+def bluemap(tmp_path):
+    maps = tmp_path / "plugins" / "BlueMap" / "maps"
+    maps.mkdir(parents=True)
+    for name, dim in (("world", "overworld"), ("world_the_nether", "the_nether"), ("world_the_end", "the_end")):
+        (maps / f"{name}.conf").write_text(f'world: "world"\ndimension: "minecraft:{dim}"\nname: "{name}"\n')
+
+
+def test_map_render_uses_bluemap_map_ids(tmp_path):
+    bluemap(tmp_path)
+    c = Crafty()
+    p = Pregen(tmp_path, tmp_path, c, sleep=lambda s: None)
+    assert p.map_ids() == {"overworld": "world", "the_nether": "world_the_nether", "the_end": "world_the_end"}
+    p.render("the_nether")
+    assert c.sent == ["bluemap update world_the_nether"]
+    with pytest.raises(st.SettingsError):
+        p.render("mars")
+
+
+def test_map_status_reads_the_multi_line_answer(tmp_path):
+    (tmp_path / "logs").mkdir()
+    log = tmp_path / "logs" / "latest.log"
+    log.write_text("")
+
+    class Talks(Crafty):
+        def command(self, text):
+            self.sent.append(text)
+            with open(log, "a") as f:
+                f.write(self.answer)
+
+    s = st.ServerSettings(tmp_path, tmp_path / "data", None, sleep=lambda s: None)
+    idle = "[19:33:45] [BlueMap-FJP-0/INFO]: BlueMap Status >\n ✔ 2 render-threads are idle\n └ last active 5 minutes ago\n ✔ 3 maps are updated\n[19:33:46] [Server thread/INFO]: next\n"
+    s.crafty = Talks(answer=idle)
+    r = Pregen(tmp_path, tmp_path, s.crafty, sleep=lambda s: None, query=s.query).map_status()
+    assert r["busy"] is False and r["lines"][0] == " ✔ 2 render-threads are idle" and len(r["lines"]) == 3
+    s.crafty = Talks(answer="[19:40:00] [BlueMap-FJP-0/INFO]: BlueMap Status >\n ⌛ 2 render-threads are working\n └ Update map 'world' (12.5%)\n")
+    r = Pregen(tmp_path, tmp_path, s.crafty, sleep=lambda s: None, query=s.query).map_status()
+    assert r["busy"] is True and "12.5%" in r["lines"][1]

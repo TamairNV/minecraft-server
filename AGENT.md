@@ -16,7 +16,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 | Login | Cloudflare Access on the whole site, panel card `mc` (roles user, admin); /admin needs admin |
 | Folder | `~/minecraft` |
 | Repo | TamairNV/minecraft-server (public: scan before pushing) |
-| Branch state | `main`, 1 uncommitted file on 2026-11-08 |
+| Branch state | `main`, in sync with GitHub at ebf705b (2026-11-08). The server has no push credentials: push from the Mac by fetching over ssh |
 
 ## Run, deploy, roll back
 
@@ -68,3 +68,4 @@ Agents: add a dated line here at the end of every session, newest last, and trim
 
 - 2026-11-08: AGENT.md created from the code, compose files and infra notes (server map work).
 - 2026-11-08: added Admin tabs Server settings (server.properties form, live/restart tags, per-dimension world borders) and Pre-generate (Chunky per dimension with progress). Code in web/app/settings.py and pregen.py, tests in web/tests/test_settings.py. Web image before this tagged minecraft-web:rollback-20261108. Not committed to git yet.
+- 2026-11-08: map cache fix in web/nginx/default.conf (BlueMap's day-long cache on empty 204 tiles hid newly rendered areas) and BlueMap status + Render map button on the Pre-generate tab. Rollback image minecraft-web:rollback-20261108b.

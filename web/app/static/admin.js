@@ -81,7 +81,7 @@ function fill(id, items, key, make) {
 }
 
 // ---- tabs
-const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: loadPregen, modpack: loadModpack, system: loadSystem };
+const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, system: loadSystem };
 let currentTab = 'console';
 function openTab(name) {
   currentTab = name;
@@ -556,8 +556,11 @@ async function loadPregen() {
       const pause = control('pause', 'Paused. Progress is saved.');
       const cont = control('continue', 'Carrying on.');
       const cancel = control('cancel', 'Task cancelled.');
-      a.append(start, rerun, pause, cont, cancel);
-      pregenRows[w.dim] = { status, start, rerun, pause, cont, cancel, last: w.last };
+      const render = button('Render map', async () => {
+        if (await act('map/render', { dim: w.dim }, `Map render queued for the ${w.name}.`)) setTimeout(loadMapStatus, 2000);
+      });
+      a.append(start, rerun, pause, cont, cancel, render);
+      pregenRows[w.dim] = { status, start, rerun, pause, cont, cancel, render, last: w.last };
       const cells = [radius, x, z, shape].map((i) => { const td = cell(''); td.append(i); return td; });
       tr.append(cell(w.name), status, ...cells, a);
       return tr;
@@ -581,8 +584,22 @@ async function loadPregen() {
     r.pause.disabled = !d.running || !active;
     r.cont.disabled = !d.running || !w.can_continue;
     r.cancel.disabled = !d.running || !(active || w.can_continue);
+    r.render.disabled = !d.running;
   }
 }
+
+// Asking BlueMap means a console command, so it's only polled while a render is running.
+let mapBusy = false;
+async function loadMapStatus() {
+  const d = await act('map');
+  if (!d) return;
+  mapBusy = !!d.busy;
+  let text = d.lines.join('\n');
+  if (!d.running) text = 'The server is stopped.';
+  else if (!d.lines.length) text = "BlueMap didn't answer. Try again in a moment.";
+  setText($('map-status'), text);
+}
+$('map-check').addEventListener('click', () => busyWhile($('map-check'), loadMapStatus));
 
 // ---- modpack
 let packRunning = false;
@@ -668,3 +685,4 @@ setInterval(refreshStatus, 10000);
 setInterval(refreshJob, 3000);
 setInterval(() => { if (currentTab === 'modpack' && packRunning) loadModpack(); }, 2000);
 setInterval(() => { if (currentTab === 'pregen') loadPregen(); }, 5000);
+setInterval(() => { if (currentTab === 'pregen' && mapBusy) loadMapStatus(); }, 15000);

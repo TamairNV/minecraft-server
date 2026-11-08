@@ -83,7 +83,7 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
     audit_file = data / "audit.jsonl"
     audit_lock = threading.Lock()
     settings = ServerSettings(server, data, crafty)
-    chunks = Pregen(server, data, crafty)
+    chunks = Pregen(server, data, crafty, query=settings.query)
 
     def audit(user: AccessUser, action: str, detail: str = "") -> None:
         line = json.dumps({"time": int(time.time()), "who": user.email, "action": action, "detail": detail})
@@ -270,6 +270,19 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
         need_running()
         commands = settings_do(chunks.start, body.dim, body.radius, body.center_x, body.center_z, body.shape, user.email)
         audit(user, "pregen start", "; ".join(commands))
+        return {"ok": True}
+
+    @router.get("/map")
+    def map_status():
+        if not is_running():
+            return {"lines": [], "busy": None, "running": False}
+        return {**settings_do(chunks.map_status), "running": True}
+
+    @router.post("/map/render", dependencies=[Depends(same_origin)])
+    def map_render(body: dict, user: AccessUser = Depends(admin_user)):
+        need_running()
+        commands = settings_do(chunks.render, str(body.get("dim", "")))
+        audit(user, "map render", "; ".join(commands))
         return {"ok": True}
 
     @router.post("/pregen/{action}", dependencies=[Depends(same_origin)])

@@ -76,3 +76,6 @@ dialog .row{justify-self:stretch}
 .pregen-act{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:flex-end}
 @media (max-width:760px){#tab-settings .list,#tab-pregen .list{display:block;overflow-x:auto}}
 #tab-pregen td:first-child,#tab-settings td:first-child{white-space:nowrap;font-weight:600}
+.mapstatus{margin:0 0 1.5rem;padding:.75rem 1rem;border:1px solid var(--line)}
+.mapstatus .row.narrow{margin-bottom:.5rem}
+#map-status{margin:0 0 .5rem;padding:.5rem .75rem;background:#0d0a08;border:1px solid var(--line);font:.82rem/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}

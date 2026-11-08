@@ -97,6 +97,14 @@
 
   <section id="tab-pregen" class="tab" hidden>
     <p class="hint">Generates chunks ahead of time with Chunky, so exploring doesn't lag the server. It's heavy on CPU, so it's best run while nobody's on. Chunky only generates chunks that don't exist yet, so running it again after a Minecraft update won't regenerate old chunks with new terrain.</p>
+    <div class="mapstatus">
+      <div class="row narrow">
+        <b>Website map (BlueMap)</b>
+        <button class="btn" id="map-check" type="button">Check render status</button>
+      </div>
+      <pre id="map-status" aria-live="polite">Not checked yet.</pre>
+      <p class="hint">New chunks show on the map once BlueMap has rendered them. It spots changed areas by itself within about 5 minutes and then renders them in the background, which takes a while for a big area (around 40 minutes for a 5,000-block square). "Render map" just queues that straight away.</p>
+    </div>
     <table class="list"><thead><tr><th>Dimension</th><th>Status</th><th>Radius</th><th>Centre X</th><th>Centre Z</th><th>Shape</th><th></th></tr></thead><tbody id="pregen-rows"><tr><td class="muted" colspan="7">Loading…</td></tr></tbody></table>
   </section>
 

@@ -1,7 +1,10 @@
-"""Chunk pre-generation with the Chunky plugin, one task per dimension.
+"""Chunk pre-generation with the Chunky plugin, one task per dimension, and the
+BlueMap render that turns those chunks into the website map.
 
 Progress comes from Chunky's own lines in the console log, so watching it never
 sends anything to the server. Chunky only generates chunks that are missing.
+BlueMap notices changed region files by itself within a few minutes; the map
+render here only queues that sooner.
 """
 import re
 import threading
@@ -24,6 +27,9 @@ EVENTS = (
     ("cancelled", re.compile(rf"\[Chunky\] Task cancelled for {WORLD}\.")),
 )
 TIME_RE = re.compile(r"^\[(\d\d:\d\d:\d\d)\]")
+# The answer to `bluemap` is one multi-line log entry: the header, then lines without a timestamp.
+MAP_STATUS_RE = re.compile(r"BlueMap Status >[^\n]*\n((?:(?!\[\d\d:\d\d:\d\d\]).*(?:\n|$))*)")
+MAP_DIM_RE = re.compile(r'^dimension:\s*"minecraft:(\w+)"', re.M)
 
 
 def number(text: str) -> float:
@@ -31,8 +37,9 @@ def number(text: str) -> float:
 
 
 class Pregen:
-    def __init__(self, server: Path, data: Path, crafty, sleep=time.sleep):
-        self.server, self.crafty, self.sleep = Path(server), crafty, sleep
+    def __init__(self, server: Path, data: Path, crafty, sleep=time.sleep, query=None):
+        self.server, self.crafty, self.sleep, self.query = Path(server), crafty, sleep, query
+        self.bluemap_maps = self.server / "plugins" / "BlueMap" / "maps"
         self.log_file = self.server / "logs" / "latest.log"
         self.tasks = self.server / "plugins" / "Chunky" / "tasks" / "minecraft"
         self.last_file = Path(data) / "pregen.json"
@@ -132,3 +139,33 @@ class Pregen:
                 self.crafty.command(command)
                 self.sleep(0.3)
         return commands
+
+    # ---- BlueMap
+    def map_ids(self) -> dict:
+        """Dimension -> BlueMap map id, from BlueMap's map configs."""
+        out = {}
+        for conf in sorted(self.bluemap_maps.glob("*.conf")):
+            try:
+                m = MAP_DIM_RE.search(conf.read_text())
+            except OSError:
+                continue
+            if m:
+                out.setdefault(m.group(1), conf.stem)
+        return out
+
+    def render(self, dim: str) -> list:
+        map_id = self.map_ids().get(dim)
+        if dim not in dict(DIMENSIONS) or not map_id:
+            raise SettingsError("That dimension has no map.")
+        commands = [f"bluemap update {map_id}"]
+        self.crafty.command(commands[0])
+        return commands
+
+    def map_status(self) -> dict:
+        """BlueMap's own status report, e.g. idle threads or a queued render with its progress."""
+        m = self.query("bluemap", MAP_STATUS_RE) if self.query else None
+        if not m:
+            return {"lines": [], "busy": None}
+        lines = [line.rstrip() for line in m.group(1).splitlines() if line.strip()]
+        text = " ".join(lines).lower()
+        return {"lines": lines, "busy": "idle" not in text}
