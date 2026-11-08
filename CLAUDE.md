@@ -1,3 +1,5 @@
+@AGENT.md
+
 # OpenWolf
 
 This project uses OpenWolf for context management. The always-on rules live in `.claude/rules/openwolf.md`; the hooks handle bookkeeping (anatomy index, memory log, read tracking) automatically.
