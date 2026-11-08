@@ -13,6 +13,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from .crafty import CraftyError
+from .pregen import Pregen
+from .settings import ServerSettings, SettingsError
 from .tnv_access import AccessUser, require_role
 from .worlds import WorldError, read_json
 
@@ -56,11 +58,32 @@ class Swap(BaseModel):
     confirm: str
 
 
+class Settings(BaseModel):
+    values: dict[str, str | bool | int]
+
+
+class Border(BaseModel):
+    dim: str
+    size: float
+    center_x: float = 0
+    center_z: float = 0
+
+
+class PregenStart(BaseModel):
+    dim: str
+    radius: float
+    center_x: float = 0
+    center_z: float = 0
+    shape: str = "square"
+
+
 def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
     audit_lock = threading.Lock()
+    settings = ServerSettings(server, data, crafty)
+    chunks = Pregen(server, data, crafty)
 
     def audit(user: AccessUser, action: str, detail: str = "") -> None:
         line = json.dumps({"time": int(time.time()), "who": user.email, "action": action, "detail": detail})
@@ -187,15 +210,73 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
         audit(user, "world swap", body.slug)
         return {"ok": True}
 
-    @router.post("/pregen", dependencies=[Depends(same_origin)])
-    def pregen(user: AccessUser = Depends(admin_user)):
+    def is_running() -> bool:
+        try:
+            return crafty.running()
+        except CraftyError:
+            return False
+
+    def settings_do(fn, *args):
+        try:
+            return fn(*args)
+        except SettingsError as e:
+            raise HTTPException(400, str(e)) from None
+        except CraftyError as e:
+            raise HTTPException(502, str(e)) from None
+
+    @router.get("/settings")
+    def settings_view():
+        started, online = None, None
+        try:
+            s = crafty.stats()
+            running, started = bool(s.get("running")), s.get("started")
+        except CraftyError:
+            running = False
+        if running:
+            try:
+                online = ping().get("players", {}).get("online", 0)
+            except Exception:  # still starting or shutting down
+                pass
+        return {**settings_do(settings.view, running, started), "online": online}
+
+    @router.post("/settings", dependencies=[Depends(same_origin)])
+    def settings_save(body: Settings, user: AccessUser = Depends(admin_user)):
+        idle()
+        result = settings_do(settings.save, body.values, is_running(), user.email)
+        if result["changed"]:
+            detail = ", ".join(f"{k}={body.values[k]}" for k in result["changed"])
+            audit(user, "settings", detail + (f" (live: {', '.join(result['live'])})" if result["live"] else ""))
+        return result
+
+    @router.get("/borders")
+    def borders():
+        running = is_running()
+        return {"borders": settings.borders(running), "running": running}
+
+    @router.post("/borders", dependencies=[Depends(same_origin)])
+    def border_set(body: Border, user: AccessUser = Depends(admin_user)):
         need_running()
-        audit(user, "pregen")
-        for dim in ("overworld", "the_nether", "the_end"):
-            for text in (f"chunky world minecraft:{dim}", "chunky shape square", "chunky center 0 0",
-                         "chunky radius 5000", "chunky start", "chunky confirm"):
-                crafty_do(crafty.command, text)
-                time.sleep(0.5)
+        commands = settings_do(settings.set_border, body.dim, body.size, body.center_x, body.center_z)
+        audit(user, "border", "; ".join(commands))
+        return {"ok": True}
+
+    @router.get("/pregen")
+    def pregen_state():
+        running = is_running()
+        return {"worlds": chunks.state(running), "running": running}
+
+    @router.post("/pregen/start", dependencies=[Depends(same_origin)])
+    def pregen_start(body: PregenStart, user: AccessUser = Depends(admin_user)):
+        need_running()
+        commands = settings_do(chunks.start, body.dim, body.radius, body.center_x, body.center_z, body.shape, user.email)
+        audit(user, "pregen start", "; ".join(commands))
+        return {"ok": True}
+
+    @router.post("/pregen/{action}", dependencies=[Depends(same_origin)])
+    def pregen_control(action: str, body: dict, user: AccessUser = Depends(admin_user)):
+        need_running()
+        commands = settings_do(chunks.control, str(body.get("dim", "")), action)
+        audit(user, f"pregen {action}", "; ".join(commands))
         return {"ok": True}
 
     @router.get("/modpack")

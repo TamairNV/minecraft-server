@@ -91,3 +91,18 @@ def test_modpack_failure_is_reported_and_audited(tmp_path):
             break
         time.sleep(0.02)
     assert actions == ["modpack build", "modpack failed"]
+
+
+def test_settings_save_needs_admin_same_origin_and_is_audited(tmp_path):
+    (tmp_path / "server.properties").write_text("view-distance=14\n")
+    c, sent = client(tmp_path, "user")
+    assert c.post("/admin/api/settings", json={"values": {"view-distance": 12}}, headers=HEAD).status_code == 403
+    c, sent = client(tmp_path, "admin")
+    bad = {**HEAD, "Origin": "https://evil.example"}
+    assert c.post("/admin/api/settings", json={"values": {"view-distance": 12}}, headers=bad).status_code == 403
+    assert c.post("/admin/api/settings", json={"values": {"view-distance": 99}}, headers=HEAD).status_code == 400
+    r = c.post("/admin/api/settings", json={"values": {"view-distance": 12}}, headers=HEAD)
+    assert r.status_code == 200 and r.json()["restart"] == ["view-distance"]
+    assert (tmp_path / "server.properties").read_text() == "view-distance=12\n"
+    assert json.loads((tmp_path / "audit.jsonl").read_text())["action"] == "settings"
+    assert sent == []

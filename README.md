@@ -5,7 +5,7 @@ A Paper Minecraft server run by Crafty Controller, plus a login-only website wit
 ## Features
 
 - **Website:** server status, a whitelist page with 3D player skins, and the BlueMap world map.
-- **Admin area:** swap worlds, rebuild the modpack and see an audit log.
+- **Admin area:** swap worlds, edit server settings and world borders, pre-generate chunks, rebuild the modpack and see an audit log.
 - **Client modpack:** a one-click `.mrpack` download, built from Modrinth.
 - **Voice chat:** Simple Voice Chat, on its own UDP port.
 - **Backups:** every 6 hours, keeping 28, on a separate drive.
@@ -31,6 +31,7 @@ The site sits behind Cloudflare Access, and the app checks the login token and t
 | Other worlds | `crafty/servers/<id>/worlds/slots/<slug>`, left out of scheduled backups |
 | Backups | `/mnt/fpv2tb/minecraft-backups` |
 | Admin audit log | `web-data/audit.jsonl` |
+| server.properties backups (site saves) | `web-data/settings-backups/`, newest 50 |
 
 ## Run it
 
@@ -80,6 +81,13 @@ To update the site, run `docker compose up -d --build web`.
 - After editing `web/nginx/default.conf`, run `docker compose up -d --force-recreate proxy`. A rebuild alone leaves the old config running.
 - World swaps are in `web/app/worlds.py`. A swap writes `worlds/swap-journal.json` first, and if the site restarts part way through it restores the previous world on startup.
 - Tests: `docker build --target test web`.
+
+## Server settings and pre-generation (2026-11-08)
+
+- Admin, **Server settings** tab (`web/app/settings.py`): server.properties as a grouped form (Gameplay, Performance, Access, Display) plus an Advanced list of every other key. Saving rewrites only changed lines, atomically, after copying the old file to `web-data/settings-backups/`, and logs to `audit.jsonl`. Keys with password/secret/token in the name are never shown; ports, level-name, level-seed, RCON, management-server and online-mode are read only.
+- Live while running: difficulty (`difficulty`), default game mode (`defaultgamemode`), whitelist on/off (`whitelist on|off`) and pvp, which is the `pvp` game rule in 26.x, not a property. Everything else needs a restart; the tab shows a banner with a Restart button until Crafty reports a start after the save (`web-data/settings-pending.json`). The game rewrites server.properties on start, which drops comments.
+- **World borders** on the same tab: each dimension has its own border in 26.x (`world/dimensions/minecraft/<dim>/data/minecraft/world_border.dat`). Size is read live with `execute in minecraft:<dim> run worldborder get`; the centre comes from that file, which is only written on a world save, so values set from the site are kept in `web-data/borders.json` until then. Set with `worldborder center` and `worldborder set`, no restart.
+- Admin, **Pre-generate** tab (`web/app/pregen.py`): Chunky per dimension with radius (defaults to half the border), centre, shape, and Start, Pause, Continue, Cancel, Re-run last (last settings in `web-data/pregen.json`). Progress is parsed from Chunky's lines in `logs/latest.log` every 5 s, so watching sends nothing to the server. Chunky only generates missing chunks. It replaced the old one-button "pre-generate the live world".
 
 ## Client modpack
 

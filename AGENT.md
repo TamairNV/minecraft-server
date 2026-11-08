@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.tamairnv.co.uk) with status, whitelist with 3D skins, BlueMap world map, client modpack and an admin area (console, backups, whitelist, world swap). Currently a TEST WORLD on Paper 26.3 until 26.4 ships. Full details in README.md.
+Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.tamairnv.co.uk) with status, whitelist with 3D skins, BlueMap world map, client modpack and an admin area (console, backups, whitelist, world swap, server settings and borders, Chunky pre-generation). Currently a TEST WORLD on Paper 26.3 until 26.4 ships. Full details in README.md.
 
 ## Where it lives
 
@@ -67,3 +67,4 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 Agents: add a dated line here at the end of every session, newest last, and trim old lines once they stop mattering.
 
 - 2026-11-08: AGENT.md created from the code, compose files and infra notes (server map work).
+- 2026-11-08: added Admin tabs Server settings (server.properties form, live/restart tags, per-dimension world borders) and Pre-generate (Chunky per dimension with progress). Code in web/app/settings.py and pregen.py, tests in web/tests/test_settings.py. Web image before this tagged minecraft-web:rollback-20261108. Not committed to git yet.

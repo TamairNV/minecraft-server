@@ -10,6 +10,8 @@
   <button role="tab" data-tab="whitelist" aria-selected="false" type="button">Whitelist</button>
   <button role="tab" data-tab="backups" aria-selected="false" type="button">Backups</button>
   <button role="tab" data-tab="worlds" aria-selected="false" type="button">Worlds</button>
+  <button role="tab" data-tab="settings" aria-selected="false" type="button">Server settings</button>
+  <button role="tab" data-tab="pregen" aria-selected="false" type="button">Pre-generate</button>
   <button role="tab" data-tab="modpack" aria-selected="false" type="button">Modpack</button>
   <button role="tab" data-tab="system" aria-selected="false" type="button">System</button>
 </div>
@@ -67,10 +69,35 @@
         <p class="hint">Makes a separate copy, so nothing's overwritten. The map redraws after you swap to it.</p>
       </form>
     </div>
-    <div class="row narrow pregen">
-      <button class="btn" id="pregen" type="button">Pre-generate the live world</button>
-      <span class="hint">Fills the whole border in all three dimensions. About an hour of high CPU, with progress in the console.</span>
+    <p class="hint gap">To fill a world's border with generated chunks, use <a href="#pregen" data-open="pregen">Pre-generate</a>.</p>
+  </section>
+
+  <section id="tab-settings" class="tab" hidden>
+    <div id="restart-banner" class="banner" role="status" hidden>
+      <span id="restart-text"></span>
+      <button class="btn primary" id="restart-now" type="button">Restart server</button>
     </div>
+    <form id="settings-form" class="settings" novalidate>
+      <div id="settings-groups"><p class="muted">Loading…</p></div>
+      <details class="advanced">
+        <summary>Advanced: every other setting in server.properties</summary>
+        <p class="hint">Raw values, all need a restart. Greyed-out ones are managed elsewhere (ports, world seed and name, RCON) and passwords are never shown.</p>
+        <div id="settings-advanced" class="adv-grid"></div>
+      </details>
+      <div class="row narrow gap">
+        <button class="btn primary" type="submit">Save settings</button>
+        <span class="hint">Settings tagged <span class="tag">Live</span> change straight away while the server is running. The rest need a restart. The previous file is backed up first.</span>
+      </div>
+    </form>
+
+    <h2 class="gap">World borders</h2>
+    <p class="hint">The size is the full width in blocks. Borders change live, no restart needed. Players outside a smaller border take damage until they walk back in.</p>
+    <table class="list"><thead><tr><th>Dimension</th><th class="n">Size now</th><th>Centre</th><th>New size</th><th>Centre X</th><th>Centre Z</th><th></th></tr></thead><tbody id="border-rows"><tr><td class="muted" colspan="7">Loading…</td></tr></tbody></table>
+  </section>
+
+  <section id="tab-pregen" class="tab" hidden>
+    <p class="hint">Generates chunks ahead of time with Chunky, so exploring doesn't lag the server. It's heavy on CPU, so it's best run while nobody's on. Chunky only generates chunks that don't exist yet, so running it again after a Minecraft update won't regenerate old chunks with new terrain.</p>
+    <table class="list"><thead><tr><th>Dimension</th><th>Status</th><th>Radius</th><th>Centre X</th><th>Centre Z</th><th>Shape</th><th></th></tr></thead><tbody id="pregen-rows"><tr><td class="muted" colspan="7">Loading…</td></tr></tbody></table>
   </section>
 
   <section id="tab-modpack" class="tab" hidden>

@@ -81,7 +81,7 @@ function fill(id, items, key, make) {
 }
 
 // ---- tabs
-const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, modpack: loadModpack, system: loadSystem };
+const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: loadPregen, modpack: loadModpack, system: loadSystem };
 let currentTab = 'console';
 function openTab(name) {
   currentTab = name;
@@ -367,10 +367,222 @@ submitBusy($('restore-form'), async () => {
     await refreshJob();
   }
 });
-$('pregen').addEventListener('click', async () => {
-  if (!await ask('Pre-generate the live world?', 'The server stays up, but the CPU runs high for about an hour.', 'Start')) return;
-  await busyWhile($('pregen'), () => act('pregen', {}, 'Pre-generation started. Progress shows in the console.'));
+document.querySelectorAll('[data-open]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); openTab(a.dataset.open); }));
+
+// ---- server settings
+let settingsOriginal = {};
+let settingsLabels = {};
+const n = (v) => (v === null || v === undefined ? '–' : fmt(v));
+
+function settingControl(f) {
+  const id = `set-${f.key}`;
+  let input;
+  if (f.kind === 'bool' || f.kind === 'rule') {
+    input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = f.value === 'true';
+    input.disabled = f.value === null;
+  } else if (f.kind === 'enum') {
+    input = document.createElement('select');
+    for (const c of f.choices) {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c[0].toUpperCase() + c.slice(1);
+      input.append(o);
+    }
+    input.value = f.value;
+  } else {
+    input = document.createElement('input');
+    if (f.kind === 'int') { input.type = 'number'; input.min = f.min; input.max = f.max; input.step = 1; input.inputMode = 'numeric'; }
+    if (f.kind === 'text') input.maxLength = f.max;
+    input.value = f.value ?? '';
+  }
+  input.id = id;
+  input.dataset.key = f.key;
+  if (f.locked) input.disabled = true;
+  else if (f.value !== null) settingsOriginal[f.key] = f.value;
+  settingsLabels[f.key] = f.label;
+  const wrap = document.createElement('div');
+  wrap.className = `field ${input.type === 'checkbox' ? 'check' : ''}`;
+  const label = document.createElement('label');
+  label.htmlFor = id;
+  label.textContent = f.label;
+  const tag = document.createElement('span');
+  tag.className = f.locked ? 'tag warn' : f.live ? 'tag' : 'tag dim';
+  tag.textContent = f.locked ? 'Read only' : f.live ? 'Live' : 'Restart';
+  label.append(tag);
+  const help = document.createElement('small');
+  help.textContent = f.kind === 'rule' && f.value === null ? 'Start the server to change this.' : f.help;
+  if (input.type === 'checkbox') wrap.append(input, label, help);
+  else wrap.append(label, input, help);
+  return wrap;
+}
+
+function settingValue(input) {
+  return input.type === 'checkbox' ? String(input.checked) : input.value;
+}
+
+function showRestart(keys) {
+  $('restart-banner').hidden = !keys.length;
+  setText($('restart-text'), `Saved, but these take effect after a restart: ${keys.map((k) => settingsLabels[k] || k).join(', ')}.`);
+}
+
+async function loadSettings() {
+  const d = await act('settings');
+  if (!d) return;
+  settingsOriginal = {};
+  const groups = d.groups.map((g) => {
+    const fs = document.createElement('fieldset');
+    const lg = document.createElement('legend');
+    lg.textContent = g.name;
+    fs.append(lg, ...g.fields.map(settingControl));
+    return fs;
+  });
+  $('settings-groups').replaceChildren(...groups);
+  $('settings-advanced').replaceChildren(...d.advanced.map((a) => settingControl({ ...a, label: a.key, kind: 'raw', help: '' })));
+  showRestart(d.pending);
+  loadBorders();
+}
+
+submitBusy($('settings-form'), async () => {
+  const values = {};
+  for (const input of $('settings-form').querySelectorAll('[data-key]')) {
+    const key = input.dataset.key;
+    if (input.disabled || !(key in settingsOriginal)) continue;
+    const v = settingValue(input);
+    if (v === settingsOriginal[key]) continue;
+    if (input.type === 'number' && !input.checkValidity()) {
+      toast(`${settingsLabels[key]} must be between ${input.min} and ${input.max}.`);
+      input.focus();
+      return;
+    }
+    values[key] = v;
+  }
+  if (!Object.keys(values).length) { toast('Nothing changed.', true); return; }
+  const r = await act('settings', { values });
+  if (!r) return;
+  const parts = [`Saved ${r.changed.length} setting${r.changed.length === 1 ? '' : 's'}.`];
+  if (r.live.length) parts.push(`Applied now: ${r.live.map((k) => settingsLabels[k] || k).join(', ')}.`);
+  toast(parts.join(' '), true);
+  await loadSettings();
 });
+
+$('restart-now').addEventListener('click', () => busyWhile($('restart-now'), async () => {
+  let online = 0;
+  try { const s = await api('system'); online = s.crafty && s.joinable ? s.crafty.online : 0; } catch { /* asked anyway */ }
+  const who = online ? `${online} player${online === 1 ? ' is' : 's are'} online and will be disconnected.` : 'Nobody is online right now.';
+  if (!await ask('Restart the server?', `${who} It takes about a minute to come back.`, 'Restart')) return;
+  await changeServer('restart');
+  await loadSettings();
+}));
+
+function numberInput(value, label, min) {
+  const i = document.createElement('input');
+  i.type = 'number';
+  i.step = 'any';
+  if (min !== undefined) i.min = min;
+  i.value = value ?? '';
+  i.setAttribute('aria-label', label);
+  i.className = 'num';
+  return i;
+}
+
+let bordersCache = [];
+async function loadBorders() {
+  const d = await act('borders');
+  if (!d) return [];
+  bordersCache = d.borders;
+  fill('border-rows', d.borders, [d.borders, d.running], (b) => {
+    const tr = document.createElement('tr');
+    const size = numberInput(b.live ?? b.size, `${b.name} border size`, 1);
+    const x = numberInput(b.center_x, `${b.name} centre X`);
+    const z = numberInput(b.center_z, `${b.name} centre Z`);
+    const cells = [size, x, z].map((i) => { const td = cell(''); td.append(i); return td; });
+    const a = cell('', 'act');
+    const apply = button('Set border', async () => {
+      const body = { dim: b.dim, size: Number(size.value), center_x: Number(x.value), center_z: Number(z.value) };
+      if (!(body.size >= 1)) { toast('Enter a border size.'); return; }
+      if (!await ask(`Set the ${b.name} border?`, `${fmt(body.size)} blocks wide, centred on ${fmt(body.center_x)}, ${fmt(body.center_z)}. It changes straight away.`, 'Set border')) return;
+      if (await act('borders', body, `${b.name} border set.`)) setTimeout(loadBorders, 800);
+    });
+    apply.disabled = !d.running;
+    a.append(apply);
+    const now = b.live !== null ? fmt(b.live) : b.size !== null ? `${fmt(b.size)} (last save)` : '–';
+    tr.append(cell(b.name), cell(now, 'n'), cell(b.center_x === null ? '–' : `${n(b.center_x)}, ${n(b.center_z)}`), ...cells, a);
+    return tr;
+  });
+  return d.borders;
+}
+
+// ---- pre-generate
+const pregenRows = {};
+async function loadPregen() {
+  if (!bordersCache.length) await loadBorders();
+  const d = await act('pregen');
+  if (!d) return;
+  const tbody = $('pregen-rows');
+  if (!tbody.dataset.sig) {
+    tbody.dataset.sig = 'built';
+    tbody.replaceChildren(...d.worlds.map((w) => {
+      const border = bordersCache.find((b) => b.dim === w.dim) || {};
+      const width = border.live ?? border.size;
+      const tr = document.createElement('tr');
+      const status = cell('');
+      const radius = numberInput(width ? Math.round(width / 2) : 1000, `${w.name} radius`, 16);
+      const x = numberInput(border.center_x ?? 0, `${w.name} centre X`);
+      const z = numberInput(border.center_z ?? 0, `${w.name} centre Z`);
+      const shape = document.createElement('select');
+      shape.setAttribute('aria-label', `${w.name} shape`);
+      for (const s of ['square', 'circle']) { const o = document.createElement('option'); o.value = s; o.textContent = s[0].toUpperCase() + s.slice(1); shape.append(o); }
+      const a = cell('', 'act pregen-act');
+      const run = async (settings) => {
+        const body = { dim: w.dim, ...settings };
+        if (!(body.radius >= 16)) { toast('The radius must be at least 16 blocks.'); return; }
+        const online = await api('system').then((s) => (s.joinable ? s.crafty.online : 0)).catch(() => 0);
+        const busyNote = online ? ` ${online} player${online === 1 ? ' is' : 's are'} online and may notice lag.` : '';
+        const text = `A ${body.shape} of radius ${fmt(body.radius)} around ${fmt(body.center_x)}, ${fmt(body.center_z)}. The CPU runs high until it finishes.${busyNote} This replaces any paused task for this dimension.`;
+        if (!await ask(`Pre-generate the ${w.name}?`, text, 'Start')) return;
+        if (await act('pregen/start', body, `Pre-generation started in the ${w.name}.`)) setTimeout(loadPregen, 1500);
+      };
+      const start = button('Start', () => run({ radius: Number(radius.value), center_x: Number(x.value), center_z: Number(z.value), shape: shape.value }), 'primary');
+      const rerun = button('Re-run last', () => {
+        const last = pregenRows[w.dim].last;
+        radius.value = last.radius; x.value = last.center_x; z.value = last.center_z; shape.value = last.shape;
+        return run({ radius: last.radius, center_x: last.center_x, center_z: last.center_z, shape: last.shape });
+      });
+      const control = (action, okText) => button(action[0].toUpperCase() + action.slice(1), async () => {
+        if (action === 'cancel' && !await ask(`Cancel the ${w.name} task?`, 'A cancelled task can\'t be continued. Chunks already generated are kept.', 'Cancel task')) return;
+        if (await act(`pregen/${action}`, { dim: w.dim }, okText)) setTimeout(loadPregen, 1000);
+      }, action === 'cancel' ? 'danger' : '');
+      const pause = control('pause', 'Paused. Progress is saved.');
+      const cont = control('continue', 'Carrying on.');
+      const cancel = control('cancel', 'Task cancelled.');
+      a.append(start, rerun, pause, cont, cancel);
+      pregenRows[w.dim] = { status, start, rerun, pause, cont, cancel, last: w.last };
+      const cells = [radius, x, z, shape].map((i) => { const td = cell(''); td.append(i); return td; });
+      tr.append(cell(w.name), status, ...cells, a);
+      return tr;
+    }));
+  }
+  for (const w of d.worlds) {
+    const r = pregenRows[w.dim];
+    if (!r) continue;
+    r.last = w.last;
+    let text = 'Idle';
+    if (w.status === 'running') text = w.eta ? `Running: ${w.percent}% · ${fmt(w.chunks)} chunks · ${w.eta} left · ${Math.round(w.rate)}/s` : 'Running…';
+    else if (w.status === 'paused') text = `Paused${w.percent ? ` at ${w.percent}%` : ''}${w.chunks ? ` · ${fmt(w.chunks)} chunks done` : ''}`;
+    else if (w.status === 'finished') text = `Finished${w.took ? ` in ${w.took}` : ''} · ${fmt(w.chunks)} chunks`;
+    else if (w.status === 'cancelled') text = 'Cancelled';
+    else if (w.status === 'started') text = 'Starting…';
+    if (w.last) text += ` · last run radius ${fmt(w.last.radius)} on ${when(w.last.time)}`;
+    setText(r.status, text);
+    const active = w.status === 'running' || w.status === 'started';
+    r.start.disabled = !d.running || active;
+    r.rerun.disabled = !d.running || active || !w.last;
+    r.pause.disabled = !d.running || !active;
+    r.cont.disabled = !d.running || !w.can_continue;
+    r.cancel.disabled = !d.running || !(active || w.can_continue);
+  }
+}
 
 // ---- modpack
 let packRunning = false;
@@ -455,3 +667,4 @@ setInterval(() => { if (currentTab === 'console') pollLog(); }, 2000);
 setInterval(refreshStatus, 10000);
 setInterval(refreshJob, 3000);
 setInterval(() => { if (currentTab === 'modpack' && packRunning) loadModpack(); }, 2000);
+setInterval(() => { if (currentTab === 'pregen') loadPregen(); }, 5000);
