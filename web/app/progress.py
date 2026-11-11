@@ -99,6 +99,10 @@ def week_name(t: float) -> str:
     return _local(week_start(t)).date().isoformat()
 
 
+def _instance(row) -> dict:
+    return {**json.loads(row["data"]), "iid": row["id"], "kind": row["kind"], "period": row["period"]}
+
+
 class Store:
     def __init__(self, path: Path):
         self.path = path
@@ -141,6 +145,65 @@ class Store:
             c.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?,?)", (key, json.dumps(value)))
 
 
+    # ---- challenge instances (frozen copies of pool entries for one day or week)
+    def add_instance(self, kind: str, period: str, entry: dict) -> int:
+        with self.conn() as c:
+            return c.execute("INSERT INTO instances (kind, period, data) VALUES (?,?,?)",
+                             (kind, period, json.dumps(entry))).lastrowid
+
+    def current(self, kind: str, period: str) -> list:
+        with self.conn() as c:
+            rows = c.execute("SELECT * FROM instances WHERE kind=? AND period=? AND active=1 ORDER BY id",
+                             (kind, period)).fetchall()
+        return [_instance(r) for r in rows]
+
+    def instance(self, iid: int) -> dict | None:
+        with self.conn() as c:
+            r = c.execute("SELECT * FROM instances WHERE id=?", (iid,)).fetchone()
+        return _instance(r) if r else None
+
+    def replace_instance(self, iid: int, entry: dict) -> None:
+        with self.conn() as c:
+            c.execute("UPDATE instances SET data=? WHERE id=?", (json.dumps(entry), iid))
+
+
 def progress(totals: dict, store: Store, mark_name: str, metric: dict) -> dict:
     mark = store.mark(mark_name) or {}
     return {u: metric_value(delta(flat, mark.get(u)), metric) for u, flat in totals.items()}
+
+
+# ---- challenge instances and completions
+def pick(pool: list, count: int, avoid: set, rng) -> list:
+    """`count` enabled entries, preferring ones not in `avoid` (the previous period's picks)."""
+    enabled = [e for e in pool if e.get("enabled", True)]
+    fresh = [e for e in enabled if e["id"] not in avoid]
+    rng.shuffle(fresh)
+    chosen = fresh[:count]
+    if len(chosen) < count:
+        rest = [e for e in enabled if e["id"] in avoid]
+        rng.shuffle(rest)
+        chosen += rest[:count - len(chosen)]
+    return [json.loads(json.dumps(e)) for e in chosen]
+
+
+def record_completions(store: Store, iid: int, prog: dict, target: int, now: float, names: dict) -> list:
+    """Records players who reached the target. Returns the new ones, most progress first, then by name."""
+    with store.conn() as c:
+        done = {r["uuid"] for r in c.execute("SELECT uuid FROM completions WHERE iid=?", (iid,))}
+        new = [u for u, v in prog.items() if v >= target and u not in done]
+        new.sort(key=lambda u: (-prog[u], names.get(u, u).lower()))
+        seq = c.execute("SELECT COALESCE(MAX(seq), 0) FROM completions").fetchone()[0]
+        for i, u in enumerate(new, 1):
+            c.execute("INSERT INTO completions (iid, uuid, at, seq) VALUES (?,?,?,?)", (iid, u, now, seq + i))
+    return new
+
+
+def first_finisher(store: Store, iid: int) -> str | None:
+    with store.conn() as c:
+        r = c.execute("SELECT uuid FROM completions WHERE iid=? ORDER BY at, seq LIMIT 1", (iid,)).fetchone()
+    return r["uuid"] if r else None
+
+
+def completed(store: Store, iid: int) -> set:
+    with store.conn() as c:
+        return {r["uuid"] for r in c.execute("SELECT uuid FROM completions WHERE iid=?", (iid,))}
