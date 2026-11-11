@@ -1,4 +1,4 @@
-# Friends SMP / TNV SMP (Minecraft): AGENT.md
+# TNV SMP (Minecraft): AGENT.md
 
 > Read this first. It's the human-curated fact sheet for this project on TNV-server. Keep it true: fix any fact you find wrong.
 > Learned memory lives in OpenWolf's `.wolf/` (`.wolf/cerebrum.md` = decisions and preferences, `.wolf/STATUS.md` = session handoff, `.wolf/buglog.json` = bugs; AGENT.md holds the facts, .wolf holds what agents learned). Server-wide: `~/AGENT.md` (index of every project), `~/.claude/CLAUDE.md`, and infra notes (`read_note("apps/minecraft")` with the tnv-server MCP tools, or `~/infra/notes/apps/minecraft.md`).
@@ -16,7 +16,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 | Login | Cloudflare Access on the whole site, panel card `mc` (roles user, admin); /admin needs admin |
 | Folder | `~/minecraft` |
 | Repo | TamairNV/minecraft-server (public: scan before pushing) |
-| Branch state | `main`, local is ahead of GitHub (2026-11-11: dimension lock commit not pushed yet). The server has no push credentials: push from the Mac by fetching over ssh |
+| Branch state | Work on branch `stats-challenges` (2026-11-11), deployed; `main` is ahead of GitHub (not pushed). The server has no push credentials: push from the Mac by fetching over ssh |
 
 ## Run, deploy, roll back
 
@@ -32,7 +32,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 
 ## Containers and processes
 
-- `minecraft-crafty` (Crafty 4.11 + Paper + BlueMap, mem 14g, cpus 14), `minecraft-web` (FastAPI site, on access-net), `minecraft-proxy` (nginx, asks the app /authz before serving the map).
+- `minecraft-crafty` (Crafty 4.11 + Paper + BlueMap, mem 14g, cpus 14, cgroup slice minecraft.slice), `minecraft-web` (FastAPI site, on access-net), `minecraft-proxy` (nginx, asks the app /authz before serving the map).
 
 ## Data
 
@@ -71,3 +71,6 @@ Agents: add a dated line here at the end of every session, newest last, and trim
 - 2026-11-08: map cache fix in web/nginx/default.conf (BlueMap's day-long cache on empty 204 tiles hid newly rendered areas) and BlueMap status + Render map button on the Pre-generate tab. Rollback image minecraft-web:rollback-20261108b.
 - 2026-11-10: blanked the Crafty system user email (DB backup ~/backups/crafty.sqlite.20261110-190346). Added scripts/backup-drive-guard.sh (Tamair runs with sudo) so a missing 2TB drive makes backups fail instead of filling the main disk.
 - 2026-11-11: Nether/End lock: own Paper plugin DimLock (plugins-src/dimlock, jar in server plugins/) plus a Dimensions card on Admin > Server settings (web/app/dimensions.py, tests web/tests/test_dimensions.py). Both dimensions locked now; Tamair unlocks from the site. Rollback image minecraft-web:rollback-20261111, backup ~/backups/minecraft_20261111-131251.tgz. Committed on local main; push from the Mac.
+- 2026-11-11: Admin > System: htop-style per-thread CPU meters and a real Minecraft CPU card (100% = one thread), every 1.5 s (web/app/cpu.py, tests web/tests/test_cpu.py). crafty now runs with cgroup_parent minecraft.slice and web mounts /sys/fs/cgroup read-only; Crafty's CPU stat was the 0% bug (it samples badly). Rollback images minecraft-web:rollback-20261111b, compose backup ~/backups/minecraft-compose.yml_20261111-*. Uncommitted: this and the TNV SMP rename.
+- 2026-11-11: Challenges, claimable rewards, weekly boards, hall of fame, community goals, season awards and an admin Challenges tab (branch stats-challenges; spec/plan in docs/superpowers). web mounts ~/mc-onboard/data read-only (ONBOARD_DB). Reviewed by a fresh reviewer; fixes in 001b832. Rollback: minecraft-web:rollback-20261111c, ~/backups/minecraft-web-data_20261111-142943.tgz. Next: Tamair links his own email on the Challenges tab and tries Test reward in game; deferred minors are in the session summary.
+

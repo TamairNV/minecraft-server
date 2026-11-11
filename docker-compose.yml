@@ -25,6 +25,8 @@ services:
     # 10G heap + ZGC/metaspace/native + Crafty itself. Leaves 2 threads for the other sites.
     mem_limit: 14g
     cpus: 14
+    # Own cgroup slice so the site can read its exact CPU use (web/app/cpu.py), like htop.
+    cgroup_parent: minecraft.slice
 
   web:
     build:
@@ -45,11 +47,16 @@ services:
       - CF_TEAM_DOMAIN=${CF_TEAM_DOMAIN}
       - CF_AUD=${CF_AUD}
       - ACCESS_LOWEST_ROLE=${ACCESS_LOWEST_ROLE}
+      - ONBOARD_DB=/onboard/onboard.db
     volumes:
       # Writable for world swaps, which only rename paths listed in app/worlds.py.
       - ./crafty/servers/bbcec7f2-5e56-4d6c-95f6-64f4635787f2:/server
       - /mnt/fpv2tb/minecraft-backups/bbcec7f2-5e56-4d6c-95f6-64f4635787f2/${CRAFTY_BACKUP_ID}:/backups:ro
       - ./web-data:/data
+      # Read-only CPU counters for the System tab (minecraft.slice/cpu.stat).
+      - /sys/fs/cgroup:/host/cgroup:ro
+      # Discord sign-up bot's db (email -> whitelist name) for claiming challenge rewards. Read-only.
+      - /home/tnv/mc-onboard/data:/onboard:ro
     networks: [default, access-net]
     read_only: true
     tmpfs: [/tmp]

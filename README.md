@@ -1,4 +1,4 @@
-# Friends SMP
+# TNV SMP
 
 A Paper Minecraft server run by Crafty Controller, plus a login-only website with the live map, player stats, a client modpack and world swapping. The site is at https://mc.tamairnv.co.uk.
 
@@ -84,6 +84,7 @@ To update the site, run `docker compose up -d --build web`.
 
 ## Server settings and pre-generation (2026-11-08)
 
+- Admin, **System** tab: htop-style meters per CPU thread (whole machine, green programs / red kernel, from /proc/stat) and a Minecraft CPU card (100% = one thread, so it goes past 100%), polled every 1.5 s from `/admin/api/cpu` (`web/app/cpu.py`). The Minecraft figure is the crafty container's cgroup: compose puts it in `cgroup_parent: minecraft.slice` and mounts `/sys/fs/cgroup` read-only into web at `/host/cgroup`. Crafty's own CPU stat is unreliable (often 0) and isn't used.
 - Admin, **Server settings** tab (`web/app/settings.py`): server.properties as a grouped form (Gameplay, Performance, Access, Display) plus an Advanced list of every other key. Saving rewrites only changed lines, atomically, after copying the old file to `web-data/settings-backups/`, and logs to `audit.jsonl`. Keys with password/secret/token in the name are never shown; ports, level-name, level-seed, RCON, management-server and online-mode are read only.
 - Live while running: difficulty (`difficulty`), default game mode (`defaultgamemode`), whitelist on/off (`whitelist on|off`) and pvp, which is the `pvp` game rule in 26.x, not a property. Everything else needs a restart; the tab shows a banner with a Restart button until Crafty reports a start after the save (`web-data/settings-pending.json`). The game rewrites server.properties on start, which drops comments.
 - **World borders** on the same tab: each dimension has its own border in 26.x (`world/dimensions/minecraft/<dim>/data/minecraft/world_border.dat`). Size is read live with `execute in minecraft:<dim> run worldborder get`; the centre comes from that file, which is only written on a world save, so values set from the site are kept in `web-data/borders.json` until then. Set with `worldborder center` and `worldborder set`, no restart.
@@ -134,4 +135,13 @@ web/tests/          Test suite
 - Enforced by our own plugin **DimLock** (source `plugins-src/dimlock`, build with `plugins-src/dimlock/build.sh`, which runs Maven in Docker, then copy `target/DimLock-*.jar` into the server's `plugins/`). It cancels portal travel (players and entities) into a locked dimension. Players already inside can stay and leave. Commands like `/tp` still work, so ops can go in.
 - State: `plugins/DimLock/config.yml` (`locked.nether`, `locked.end`). Console: `scripts/mc dimlock <nether|end> <lock|unlock|status>`. The site (`web/app/dimensions.py`) sends that command while running and edits the file while stopped.
 - After a Paper update, rebuild DimLock against the new paper-api version in `pom.xml` if it fails to load.
+
+## Challenges, rewards and weekly stats (2026-11-11)
+
+- Players: **/challenges** has 2 daily challenges (reset 00:00 UK) and 3 weekly ones (reset Monday 00:00), each with item rewards. Weekly ones also give a bonus to the first finisher. Players press **Claim** on the site while they're in the game; the site runs `give` and only counts it once the game logs `System chat: Gave ...`. Also on the page: the community goal, this week's leaders and the hall of fame. Home shows this week's top 3 and the goal; player cards show fun facts; about 25 season awards.
+- How progress works: at the season start (Reset), every day start and every week start the site saves a copy of everyone's stats (`save-all` first) into `web-data/progress.db`; progress = the stats files now minus that copy. The game writes stats on autosave (~5 min) and logout, so progress lags up to ~5 minutes. Code: `web/app/progress.py`, `engine.py` (60 s background tick), `rewards.py`, `links.py`, `play.py`; defaults in `challenges_default.py`.
+- Who's who: website login email -> Minecraft name from the Discord sign-up bot (`~/mc-onboard/data` mounted read-only at `/onboard`, approved rows only), then manual links on the admin page (`web-data/links.json`, wins). Names are resolved to the whitelist's exact name.
+- Admin > **Challenges** tab: current picks (swap, re-roll), reward log (Give again), Test reward (to your own linked player), links, challenge pools and community goals (editable), **Reset stats** (type `reset`; backs up to `web-data/progress-backups/`). Pools: `web-data/challenges.json`; goals: `web-data/goals.json`.
+- Claim states in `claims`: `done`, `partial` (some items refused; use Give again for the rest), `unconfirmed` (give sent but the game didn't confirm in 3 s; check with the player, then Give again if needed). Claims and admin actions go to `web-data/audit.jsonl`.
+- Nether/End challenges aren't in the default pools while those dimensions are locked; add them in the pools once unlocked.
 
