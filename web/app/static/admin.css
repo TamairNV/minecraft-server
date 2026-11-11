@@ -79,3 +79,17 @@ dialog .row{justify-self:stretch}
 .mapstatus{margin:0 0 1.5rem;padding:.75rem 1rem;border:1px solid var(--line)}
 .mapstatus .row.narrow{margin-bottom:.5rem}
 #map-status{margin:0 0 .5rem;padding:.5rem .75rem;background:#0d0a08;border:1px solid var(--line);font:.82rem/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+.cpubars{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.25rem 1.5rem;max-width:48rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem}
+.meter{display:flex;align-items:center;gap:.4rem}
+.meter .mi{width:1.4rem;text-align:right;color:var(--dim)}
+.meter .mt{position:relative;flex:1;display:flex;height:1.05rem;background:var(--earth2);border:1px solid var(--line);overflow:hidden}
+.meter .mu{background:var(--grass2);transition:width .3s linear}
+.meter .ms{background:#e0604a;transition:width .3s linear}
+.meter .mv{position:absolute;right:.3rem;top:0;bottom:0;display:flex;align-items:center;color:var(--ink);text-shadow:0 0 3px #000}
+.cpu-avg{font-family:inherit;font-size:.9rem;font-weight:400}
+.list.pool input,#ch-goals input{width:100%;min-width:4rem;font-size:.85rem}
+.list.pool input.num,#ch-goals input.num{max-width:6rem}
+.list.pool td,#ch-goals td{padding:.3rem .3rem}
+#tab-challenges h3.gap{margin-top:1rem;font-size:1.05rem}
+#ch-current select{max-width:16rem}
+

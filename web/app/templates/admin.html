@@ -12,6 +12,7 @@
   <button role="tab" data-tab="worlds" aria-selected="false" type="button">Worlds</button>
   <button role="tab" data-tab="settings" aria-selected="false" type="button">Server settings</button>
   <button role="tab" data-tab="pregen" aria-selected="false" type="button">Pre-generate</button>
+  <button role="tab" data-tab="challenges" aria-selected="false" type="button">Challenges</button>
   <button role="tab" data-tab="modpack" aria-selected="false" type="button">Modpack</button>
   <button role="tab" data-tab="system" aria-selected="false" type="button">System</button>
 </div>
@@ -112,6 +113,38 @@
     <table class="list"><thead><tr><th>Dimension</th><th>Status</th><th>Radius</th><th>Centre X</th><th>Centre Z</th><th>Shape</th><th></th></tr></thead><tbody id="pregen-rows"><tr><td class="muted" colspan="7">Loading…</td></tr></tbody></table>
   </section>
 
+  <section id="tab-challenges" class="tab" hidden>
+    <p class="hint">Players see these at <a href="/challenges">/challenges</a>. New dailies are picked at midnight and weeklies on Monday at midnight (UK time), at random from the pools below. Progress comes from the game's stats files, which save every ~5 minutes.</p>
+    <h2 class="gap">Today and this week</h2>
+    <table class="list"><thead><tr><th>Kind</th><th>Challenge</th><th>Rewards</th><th>Swap for</th><th></th></tr></thead><tbody id="ch-current"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
+    <div class="row narrow"><button class="btn" type="button" id="ch-reroll-daily">Re-roll today</button><button class="btn" type="button" id="ch-reroll-weekly">Re-roll this week</button><span class="hint">Re-rolling drops unclaimed rewards of the old picks. Swap keeps them.</span></div>
+
+    <h2 class="gap">Rewards waiting or given</h2>
+    <table class="list"><thead><tr><th>When</th><th>Player</th><th>Reward</th><th>State</th><th></th></tr></thead><tbody id="ch-log"></tbody></table>
+    <p class="empty" id="ch-log-empty" hidden>Nobody has claimed anything yet.</p>
+    <div class="row narrow"><input id="ch-test-items" placeholder="3 diamond, 1 enchanted_book[...]" aria-label="Test reward items"><button class="btn" type="button" id="ch-test">Give me a test reward</button></div>
+    <p class="hint">Gives the items to your own linked player (you must be online). Handy for checking a reward before adding it.</p>
+
+    <h2 class="gap">Who's who</h2>
+    <p class="hint">Website logins are matched to Minecraft names from the Discord sign-up bot. Add a link here for anyone who didn't sign up through it (a link here wins).</p>
+    <table class="list"><thead><tr><th>Email</th><th>Minecraft name</th><th>From</th><th></th></tr></thead><tbody id="ch-links"></tbody></table>
+    <form class="row narrow" id="ch-link-form"><input id="ch-link-email" type="email" placeholder="email" required aria-label="Email"><input id="ch-link-name" placeholder="Minecraft name" required aria-label="Minecraft name"><button class="btn" type="submit">Link</button></form>
+
+    <h2 class="gap">Challenge pools</h2>
+    <p class="hint">Rewards are written like <span class="mono">32 oak_log, 10 iron_ingot</span>. Targets use blocks for distances and hours for play time. Stats are a type and names, e.g. <span class="mono">mined: minecraft:*_log</span> or <span class="mono">custom: minecraft:fish_caught</span>.</p>
+    <div id="ch-pools"></div>
+    <div class="row narrow"><button class="btn primary" type="button" id="ch-pools-save">Save pools</button></div>
+
+    <h2 class="gap">Community goals</h2>
+    <p class="hint">Counted from everyone's stats since the season started. The first unfinished one is shown; the next starts when it's reached.</p>
+    <table class="list"><thead><tr><th>Id</th><th>Text ({n} = target)</th><th>Stats</th><th>Target</th><th></th></tr></thead><tbody id="ch-goals"></tbody></table>
+    <div class="row narrow"><button class="btn" type="button" id="ch-goal-add">Add goal</button><button class="btn primary" type="button" id="ch-goals-save">Save goals</button></div>
+
+    <h2 class="gap">Fresh start</h2>
+    <p class="hint">Starts a new season: every leaderboard, award, goal and challenge counts from zero from now on, new challenges are picked, and the hall of fame and claims are cleared. The game's own stats aren't touched, and the old data is backed up first.</p>
+    <div class="row narrow"><button class="btn danger" type="button" id="ch-reset">Reset stats…</button></div>
+  </section>
+
   <section id="tab-modpack" class="tab" hidden>
     <div class="row narrow">
       <button class="btn primary" id="pack-build" type="button">Rebuild &amp; distribute pack</button>
@@ -127,6 +160,9 @@
 
   <section id="tab-system" class="tab" hidden>
     <div class="facts" id="system-cards"></div>
+    <h2 class="gap">CPU threads <span class="muted cpu-avg" id="cpu-avg"></span></h2>
+    <p class="hint">Like htop: each thread of the machine, refreshed every 1.5 seconds. <span style="color:var(--grass)">Green</span> is programs, <span style="color:#e0604a">red</span> is the kernel. It's the whole machine, so the other sites count too. The Minecraft CPU card counts 100% per busy thread, so it goes past 100% when the server uses several.</p>
+    <div class="cpubars" id="cpu-bars" role="img" aria-label="CPU use per thread"></div>
     <h2 class="gap">Recent admin actions</h2>
     <table class="list"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody id="audit-rows"><tr><td class="muted" colspan="5">Loading…</td></tr></tbody></table>
     <p id="audit-empty" class="empty" hidden>Nothing yet.</p>

@@ -70,7 +70,7 @@ def validate_reward(items, known: set | None) -> list:
 
 def use_registry(server: Path) -> None:
     """Make challenge pool saves check reward items against the game's item list."""
-    challenges_default.reward_check = lambda items: validate_reward(items, item_ids(server))
+    challenges_default.known_items = lambda: item_ids(server)
 
 
 def _period_start(period: str) -> float:

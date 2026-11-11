@@ -81,7 +81,7 @@ function fill(id, items, key, make) {
 }
 
 // ---- tabs
-const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, system: loadSystem };
+const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, system: loadSystem, challenges: loadChallenges };
 let currentTab = 'console';
 function openTab(name) {
   currentTab = name;
@@ -679,22 +679,62 @@ $('pack-build').addEventListener('click', async () => {
 });
 
 // ---- system
+// htop-style meters: green = programs, red = kernel.
+function renderThreads(threads) {
+  const box = $('cpu-bars');
+  if (!threads || !threads.length) { box.textContent = 'Not available.'; $('cpu-avg').textContent = ''; return; }
+  if (box.children.length !== threads.length || !box.firstElementChild.classList.contains('meter')) {
+    box.replaceChildren(...threads.map((_, i) => {
+      const row = document.createElement('div');
+      row.className = 'meter';
+      row.innerHTML = '<span class="mi"></span><span class="mt"><span class="mu"></span><span class="ms"></span><span class="mv"></span></span>';
+      row.querySelector('.mi').textContent = i;
+      return row;
+    }));
+  }
+  let sum = 0;
+  threads.forEach((t, i) => {
+    const row = box.children[i];
+    const total = t.user + t.system;
+    sum += total;
+    row.querySelector('.mu').style.width = `${t.user}%`;
+    row.querySelector('.ms').style.width = `${t.system}%`;
+    row.querySelector('.mv').textContent = `${total.toFixed(1)}%`;
+    row.title = `Thread ${i}: ${t.user.toFixed(1)}% programs, ${t.system.toFixed(1)}% kernel`;
+  });
+  const avg = sum / threads.length;
+  $('cpu-avg').textContent = `· ${avg.toFixed(1)}% of the whole machine`;
+  box.setAttribute('aria-label', `CPU use per thread, ${avg.toFixed(0)}% average`);
+}
+
+// 100% = one thread busy, so it goes past 100% when Minecraft uses several (like htop).
+let lastServerCpu = '–';
+async function pollCpu() {
+  let d = null;
+  try { d = await api('cpu'); } catch { return; }
+  renderThreads(d.threads);
+  lastServerCpu = d.server === null ? '–' : `${d.server < 10 ? d.server.toFixed(1) : Math.round(d.server)}%`;
+  const card = $('cpu-card');
+  if (card) card.textContent = lastServerCpu;
+}
+
 function renderSystem(s) {
   const c = s.crafty || {};
   const cards = [
     [c.running ? 'Online' : 'Offline', c.started && c.running ? `since ${c.started}` : 'server'],
-    [c.running ? `${Math.round(c.cpu)}%` : '–', 'server CPU'],
+    [c.running ? lastServerCpu : '–', 'Minecraft CPU (100% = one thread)', 'cpu-card'],
     [c.running ? size(c.mem) : '–', 'server memory'],
   ];
   if (s.memory) cards.push([size(s.memory.total - s.memory.available), `of ${size(s.memory.total)} machine memory`]);
   for (const d of s.disks) cards.push([size(d.used), `of ${size(d.total)} · ${d.label}`]);
   cards.push([s.last_backup ? when(s.last_backup) : 'None', 'last backup']);
-  fill('system-cards', cards, cards, ([big, small]) => {
+  fill('system-cards', cards, cards, ([big, small, id]) => {
     const div = document.createElement('div');
     div.className = 'fact';
     const b = document.createElement('b');
     const sp = document.createElement('span');
     b.textContent = big; sp.textContent = small;
+    if (id) b.id = id;
     div.append(b, sp);
     return div;
   });
@@ -709,13 +749,169 @@ async function loadSystem() {
     return tr;
   });
   refreshStatus();
+  pollCpu();
 }
+
+// ---- challenges
+let ch = null;
+const chScale = (m) => {
+  const keys = (m && m.keys) || [];
+  if (m && m.cat === 'custom' && keys.length && keys.every((k) => k.endsWith('_one_cm'))) return 100;
+  if (m && m.cat === 'custom' && keys.length && keys.every((k) => k.endsWith('play_time') || k.endsWith('sneak_time'))) return 72000;
+  return 1;
+};
+const itemsToText = (items) => (items || []).map((i) => `${i.count} ${i.item.replace(/^minecraft:/, '')}`).join(', ');
+function textToItems(text) {
+  return text.split(/,(?![^\[]*\])/).map((p) => p.trim()).filter(Boolean).map((p) => {
+    const m = p.match(/^(\d+)\s+(.+)$/);
+    const item = (m ? m[2] : p).trim();
+    return { item: item.split('[')[0].includes(':') ? item : `minecraft:${item}`, count: m ? Number(m[1]) : 1 };
+  });
+}
+const metricToText = (m) => `${m.cat}: ${m.keys.join(', ')}`;
+function textToMetric(t) {
+  const [cat, rest] = t.split(':', 2).length > 1 ? [t.slice(0, t.indexOf(':')), t.slice(t.indexOf(':') + 1)] : [t, ''];
+  return { cat: cat.trim(), keys: rest.split(',').map((k) => k.trim()).filter(Boolean) };
+}
+function input(value, label, cls) {
+  const i = document.createElement('input');
+  i.value = value ?? '';
+  i.setAttribute('aria-label', label);
+  if (cls) i.className = cls;
+  return i;
+}
+
+async function loadChallenges() {
+  const d = await act('progress');
+  if (!d) return;
+  ch = d;
+  const cur = [...d.daily.map((x) => ['Today', 'daily', x]), ...d.weekly.map((x) => ['This week', 'weekly', x])];
+  $('ch-current').replaceChildren(...cur.map(([label, kind, x]) => {
+    const tr = document.createElement('tr');
+    const sel = document.createElement('select');
+    sel.setAttribute('aria-label', `Swap ${x.text}`);
+    d.pools[kind].filter((e) => e.enabled !== false && e.id !== x.id).forEach((e) => sel.append(new Option(e.text.replace('{n}', Math.round((e.target / chScale(e.metric)) * 10) / 10), e.id)));
+    const swapTd = cell(''); swapTd.append(sel);
+    const a = cell('', 'act');
+    a.append(button('Swap', async () => {
+      if (await act('progress/swap', { iid: x.iid, pool_id: sel.value }, 'Swapped.')) loadChallenges();
+    }));
+    tr.append(cell(label), cell(x.text), cell(itemsToText(x.reward) + (x.bonus ? ` · first: ${itemsToText(x.bonus)}` : '')), swapTd, a);
+    return tr;
+  }));
+  $('ch-log-empty').hidden = d.log.length > 0;
+  $('ch-log').replaceChildren(...d.log.map((r) => {
+    const tr = document.createElement('tr');
+    const a = cell('', 'act');
+    a.append(button('Give again', async () => {
+      if (!await ask(`Give this reward to ${r.name} again?`, 'They must be online. This gives the items a second time.', 'Give again')) return;
+      if (await act('progress/give-again', { key: r.key, name: r.name }, `Given to ${r.name}.`)) loadChallenges();
+    }));
+    tr.append(cell(when(r.at)), cell(r.name), cell(r.key), cell(r.state === 'done' ? 'Given' : r.state), a);
+    return tr;
+  }));
+  const links = [...d.links.manual.map((l) => ({ ...l, from: 'Here' })), ...d.links.onboard.map((l) => ({ ...l, from: 'Discord sign-up' }))];
+  $('ch-links').replaceChildren(...links.map((l) => {
+    const tr = document.createElement('tr');
+    const a = cell('', 'act');
+    if (l.from === 'Here') a.append(button('Remove', async () => { if (await act('progress/links/remove', { email: l.email }, 'Link removed.')) loadChallenges(); }));
+    tr.append(cell(l.email), cell(l.name), cell(l.from), a);
+    return tr;
+  }));
+  renderPools(d.pools);
+  renderGoals(d.goals);
+}
+
+function poolRow(kind, e) {
+  const tr = document.createElement('tr');
+  const s = chScale(e.metric);
+  const f = {
+    id: input(e.id, 'Id', 'mono'), text: input(e.text, 'Text'), metric: input(metricToText(e.metric), 'Stats', 'mono'),
+    target: input(Math.round((e.target / s) * 10) / 10, 'Target', 'num'), reward: input(itemsToText(e.reward), 'Reward'),
+  };
+  if (kind === 'weekly') f.bonus = input(itemsToText(e.bonus), 'First-to-finish bonus');
+  const on = document.createElement('input');
+  on.type = 'checkbox'; on.checked = e.enabled !== false; on.setAttribute('aria-label', 'Enabled');
+  tr.read = () => {
+    const metric = textToMetric(f.metric.value);
+    const out = { id: f.id.value.trim(), text: f.text.value, metric, target: Math.round(Number(f.target.value) * chScale(metric)), reward: textToItems(f.reward.value), enabled: on.checked };
+    if (f.bonus) out.bonus = textToItems(f.bonus.value);
+    return out;
+  };
+  const cells = Object.values(f).map((i) => { const td = cell(''); td.append(i); return td; });
+  const onTd = cell(''); onTd.append(on);
+  const a = cell('', 'act');
+  a.append(button('✕', () => tr.remove()));
+  tr.append(...cells, onTd, a);
+  return tr;
+}
+
+function renderPools(pools) {
+  $('ch-pools').replaceChildren(...['daily', 'weekly'].map((kind) => {
+    const box = document.createElement('div');
+    const h = document.createElement('h3');
+    h.textContent = kind === 'daily' ? 'Daily pool' : 'Weekly pool';
+    h.className = 'gap';
+    const t = document.createElement('table');
+    t.className = 'list pool';
+    t.innerHTML = `<thead><tr><th>Id</th><th>Text ({n} = target)</th><th>Stats</th><th>Target</th><th>Reward</th>${kind === 'weekly' ? '<th>First-to-finish bonus</th>' : ''}<th>On</th><th></th></tr></thead>`;
+    const body = document.createElement('tbody');
+    body.id = `ch-pool-${kind}`;
+    body.append(...pools[kind].map((e) => poolRow(kind, e)));
+    t.append(body);
+    const add = button('Add challenge', () => body.append(poolRow(kind, { id: `${kind[0]}-new-${body.children.length + 1}`, text: 'Do a thing {n} times', metric: { cat: 'custom', keys: ['minecraft:jump'] }, target: 10, reward: [{ item: 'minecraft:dirt', count: 1 }], bonus: kind === 'weekly' ? [{ item: 'minecraft:diamond', count: 1 }] : undefined, enabled: true })));
+    box.append(h, t, add);
+    return box;
+  }));
+}
+
+function goalRow(g) {
+  const tr = document.createElement('tr');
+  const s = chScale(g.metric);
+  const f = { id: input(g.id, 'Id', 'mono'), text: input(g.text, 'Text'), metric: input(metricToText(g.metric), 'Stats', 'mono'), target: input(Math.round((g.target / s) * 10) / 10, 'Target', 'num') };
+  tr.read = () => { const metric = textToMetric(f.metric.value); return { id: f.id.value.trim(), text: f.text.value, metric, target: Math.round(Number(f.target.value) * chScale(metric)) }; };
+  const a = cell('', 'act');
+  a.append(button('✕', () => tr.remove()));
+  tr.append(...Object.values(f).map((i) => { const td = cell(''); td.append(i); return td; }), a);
+  return tr;
+}
+function renderGoals(goals) { $('ch-goals').replaceChildren(...goals.map(goalRow)); }
+
+$('ch-goal-add').addEventListener('click', () => $('ch-goals').append(goalRow({ id: `g-new-${$('ch-goals').children.length + 1}`, text: 'Mine {n} blocks together', metric: { cat: 'mined', keys: ['*'] }, target: 100000 })));
+$('ch-pools-save').addEventListener('click', (e) => busyWhile(e.currentTarget, async () => {
+  const pools = { daily: [...$('ch-pool-daily').children].map((r) => r.read()), weekly: [...$('ch-pool-weekly').children].map((r) => r.read()) };
+  if (await act('progress/pools', { pools }, 'Pools saved. New picks use them from the next day or week.')) loadChallenges();
+}));
+$('ch-goals-save').addEventListener('click', (e) => busyWhile(e.currentTarget, async () => {
+  if (await act('progress/goals', { goals: [...$('ch-goals').children].map((r) => r.read()) }, 'Goals saved.')) loadChallenges();
+}));
+['daily', 'weekly'].forEach((kind) => $(`ch-reroll-${kind}`).addEventListener('click', (e) => busyWhile(e.currentTarget, async () => {
+  if (!await ask(`Re-roll ${kind === 'daily' ? "today's" : "this week's"} challenges?`, 'New ones are picked at random. Rewards not yet claimed for the old ones are dropped.', 'Re-roll')) return;
+  if (await act('progress/reroll', { kind }, 'New challenges picked.')) loadChallenges();
+})));
+$('ch-link-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  busyWhile(e.submitter, async () => {
+    if (await act('progress/links', { email: $('ch-link-email').value, name: $('ch-link-name').value.trim() }, 'Linked.')) { $('ch-link-form').reset(); loadChallenges(); }
+  });
+});
+$('ch-test').addEventListener('click', (e) => busyWhile(e.currentTarget, async () => {
+  const items = textToItems($('ch-test-items').value);
+  if (!items.length) { toast('Type the items first, like 3 diamond.'); return; }
+  await act('progress/test-reward', { items }, 'Given. Check your inventory.');
+}));
+$('ch-reset').addEventListener('click', (e) => busyWhile(e.currentTarget, async () => {
+  const typed = prompt('This starts a new season and clears every leaderboard, award, goal, hall of fame and claim (backed up first). Type reset to confirm.');
+  if (typed === null) return;
+  if (await act('progress/reset', { confirm: typed }, 'Fresh start. Everything counts from now.')) loadChallenges();
+}));
 
 const start = location.hash.slice(1);
 openTab(document.querySelector(`.tabs button[data-tab="${start}"]`) ? start : 'console');
 refreshStatus(); refreshJob(); pollLog();
 setInterval(() => { if (currentTab === 'console') pollLog(); }, 2000);
 setInterval(refreshStatus, 10000);
+setInterval(() => { if (currentTab === 'system' && !document.hidden) pollCpu(); }, 1500);
 setInterval(refreshJob, 3000);
 setInterval(() => { if (currentTab === 'modpack' && packRunning) loadModpack(); }, 2000);
 setInterval(() => { if (currentTab === 'pregen') loadPregen(); }, 5000);

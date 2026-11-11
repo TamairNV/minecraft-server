@@ -111,8 +111,8 @@ DEFAULT_GOALS = [
     {"id": "g-mine-1m", "text": "Mine {n} blocks together", "metric": c("mined", "*"), "target": 1_000_000},
 ]
 
-# Rewards are checked by rewards.validate_reward (wired in by rewards.py at import time).
-reward_check = None
+# Reward items are always checked by rewards.validate_reward; rewards.use_registry() adds the game's item list.
+known_items = None
 
 
 def _check_metric(m) -> None:
@@ -126,12 +126,11 @@ def _check_metric(m) -> None:
 def _check_reward(items, label) -> list:
     if not isinstance(items, list) or not items:
         raise PoolError(f"Every challenge needs a {label}.")
-    if reward_check:
-        try:
-            return reward_check(items)
-        except Exception as e:  # RewardError: keep its message
-            raise PoolError(str(e)) from None
-    return items
+    from .rewards import RewardError, validate_reward  # late: rewards imports this module
+    try:
+        return validate_reward(items, known_items() if callable(known_items) else None)
+    except RewardError as e:
+        raise PoolError(str(e)) from None
 
 
 def check_entry(e: dict, weekly: bool) -> dict:
