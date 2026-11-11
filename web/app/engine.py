@@ -68,7 +68,7 @@ class Engine:
 
     @staticmethod
     def _text(inst: dict) -> str:
-        return inst["text"].replace("{n}", f"{inst['target']:,}")
+        return pg.describe(inst)
 
     # ---- the loop
     def tick(self) -> None:
@@ -169,14 +169,15 @@ class Engine:
             if g["id"] in done:
                 continue
             value = sum(pg.metric_value(pg.delta(flat, season.get(u)), g["metric"]) for u, flat in totals.items())
-            current = {"id": g["id"], "text": g["text"].replace("{n}", f"{g['target']:,}"), "value": value, "target": g["target"]}
+            current = {"id": g["id"], "text": pg.describe(g), "value": pg.shown(g["metric"], value),
+                       "target": pg.shown(g["metric"], g["target"]), "raw": value, "raw_target": g["target"]}
             break
         return {"current": current, "done": done}
 
     def check_goals(self) -> None:
         for _ in range(20):
             cur = self.goals_state()["current"]
-            if not cur or cur["value"] < cur["target"]:
+            if not cur or cur["raw"] < cur["raw_target"]:
                 return
             self.store.put("goals_done", self.store.get("goals_done", []) + [cur["id"]])
             self.announce(f"Community goal reached: {cur['text']}! Thanks everyone.")

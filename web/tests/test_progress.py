@@ -71,3 +71,13 @@ def test_progress_against_mark(tmp_path):
     totals = {"u1": {"custom:minecraft:jump": 15}, "u2": {"custom:minecraft:jump": 3}}
     metric = {"cat": "custom", "keys": ["minecraft:jump"]}
     assert pg.progress(totals, s, "week:2026-11-09", metric) == {"u1": 5, "u2": 3}
+
+
+def test_scale_and_describe_use_game_units():
+    walk = {"cat": "custom", "keys": ["minecraft:walk_one_cm", "minecraft:sprint_one_cm"]}
+    play = {"cat": "custom", "keys": ["minecraft:play_time"]}
+    assert pg.scale(walk) == 100 and pg.scale(play) == 72000
+    assert pg.scale({"cat": "mined", "keys": ["*"]}) == 1
+    assert pg.describe({"text": "Walk {n} blocks", "metric": walk, "target": 300000}) == "Walk 3,000 blocks"
+    assert pg.describe({"text": "Play for {n} hours", "metric": play, "target": 720000}) == "Play for 10 hours"
+    assert pg.shown(walk, 12345) == 123 and pg.shown(play, 108000) == 1.5

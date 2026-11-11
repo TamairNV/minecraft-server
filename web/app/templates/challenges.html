@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Challenges · TNV SMP{% endblock %}
+{% block body %}
+<main class="under page">
+  <div class="page-head">
+    <h1>Challenges</h1>
+    <p id="me-line" class="muted" aria-live="polite">Loading…</p>
+  </div>
+
+  <section class="claimbox card" id="claimbox" hidden aria-labelledby="claim-h">
+    <h2 id="claim-h">Rewards waiting for you</h2>
+    <p class="muted">Join the server, then press Claim. The items go straight into your inventory (or at your feet if it's full).</p>
+    <ul class="claims" id="claims"></ul>
+  </section>
+
+  <section aria-labelledby="daily-h">
+    <div class="sec-head"><h2 id="daily-h">Today</h2><span class="muted countdown" id="day-ends"></span></div>
+    <div class="ch-grid" id="daily"></div>
+  </section>
+
+  <section aria-labelledby="weekly-h">
+    <div class="sec-head"><h2 id="weekly-h">This week</h2><span class="muted countdown" id="week-ends"></span></div>
+    <p class="muted">Everyone who finishes gets the reward. The first to finish also gets the bonus.</p>
+    <div class="ch-grid" id="weekly"></div>
+  </section>
+
+  <section aria-labelledby="goal-h">
+    <h2 id="goal-h">Community goal</h2>
+    <div class="goal card" id="goal"><p class="muted">Loading…</p></div>
+  </section>
+
+  <section aria-labelledby="boards-h">
+    <h2 id="boards-h">This week's leaders</h2>
+    <div class="boards" id="boards"></div>
+  </section>
+
+  <section aria-labelledby="hall-h">
+    <h2 id="hall-h">Hall of fame</h2>
+    <div class="hall" id="hall"></div>
+    <p class="empty" id="hall-empty" hidden>No finished weeks yet. Last week's winners show up here every Monday.</p>
+  </section>
+</main>
+{% endblock %}
+{% block script %}<script src="/static/challenges.js?v={{ v }}"></script>{% endblock %}

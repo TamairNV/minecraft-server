@@ -13,7 +13,7 @@ from pathlib import Path
 
 from . import challenges_default
 from .links import NAME_RE, LinkError
-from .progress import LONDON, Store, completed, first_finisher
+from .progress import LONDON, Store, completed, describe, first_finisher
 
 ITEM_RE = re.compile(r"^minecraft:[a-z0-9_]+(\[[A-Za-z0-9_:{}\[\]=\",. '-]{1,200}\])?$")
 MAX_ITEMS = 5
@@ -114,7 +114,7 @@ class Claims:
             for tier, items in self._rewards_for(inst, uuid):
                 key = f"{inst['iid']}:{tier}"
                 if key not in claimed:
-                    title = inst["text"].replace("{n}", f"{inst['target']:,}")
+                    title = describe(inst)
                     out.append({"key": key, "kind": inst["kind"], "tier": tier, "title": title, "items": items, "expires": until})
         return out
 

@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from .cpu import CpuMeter
 from .crafty import CraftyError
 from .dimensions import DimensionError, Dimensions
 from .pregen import Pregen
@@ -83,7 +84,7 @@ class PregenStart(BaseModel):
     shape: str = "square"
 
 
-def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
+def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
@@ -91,6 +92,7 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
     settings = ServerSettings(server, data, crafty)
     chunks = Pregen(server, data, crafty, query=settings.query)
     dimensions = Dimensions(server, crafty, query=settings.query)
+    cpu_meter = CpuMeter()
 
     def audit(user: AccessUser, action: str, detail: str = "") -> None:
         line = json.dumps({"time": int(time.time()), "who": user.email, "action": action, "detail": detail})
@@ -370,6 +372,11 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
         if files:
             out["last_backup"] = files[0]["time"]
         return out
+
+    @router.get("/cpu")
+    def cpu_now():
+        """Polled every 1.5 s while the System tab is open: two small file reads, nothing sent to the server."""
+        return cpu_meter.sample()
 
     @router.get("/audit")
     def audit_log():

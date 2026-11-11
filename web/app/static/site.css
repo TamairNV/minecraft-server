@@ -180,3 +180,32 @@ a{color:var(--grass)}
 .modlist .mono{font-size:.85rem}
 .pill{padding:0 .4rem;font-size:.75rem;font-weight:600;background:var(--gold);color:#2b1c07;white-space:nowrap}
 .note{margin-top:.75rem}
+/* ---- challenges */
+.sec-head{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.countdown{font-size:.95rem}
+.ch-grid{margin-top:.75rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:.75rem}
+.ch{padding:1rem;display:grid;gap:.55rem;align-content:start}
+.ch h3{font-size:1.15rem}
+.ch-reward{font-size:.92rem}
+.ch-reward b{color:var(--grass)}
+.ch-reward.bonus b{color:var(--gold)}
+.ch-reward .tag{margin-left:.4rem;padding:0 .4rem;font-size:.75rem;font-weight:600;background:var(--gold);color:#1d1606}
+.ch-mine{display:grid;gap:.3rem}
+.ch .btn{justify-self:start}
+.pbar{height:.7rem;background:var(--earth);border:1px solid var(--line);overflow:hidden}
+.pbar span{display:block;height:100%;background:var(--grass2);transition:width .4s ease}
+.ch-people{list-style:none;margin:0;padding:0;display:grid;gap:.3rem;font-size:.88rem}
+.ch-people li{display:grid;grid-template-columns:6.5rem 1fr 3.5rem;align-items:center;gap:.5rem}
+.ch-people .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-people .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--dim)}
+.claimbox{padding:1rem 1.1rem;display:grid;gap:.6rem;border-left:4px solid var(--gold)}
+.claims{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.claims li{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.goal{padding:1rem 1.1rem;display:grid;gap:.5rem}
+.goal .pbar{height:1.1rem}
+.boards,.hall{margin-top:.75rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:.75rem}
+.board{padding:.9rem 1rem;display:grid;gap:.4rem;align-content:start}
+.board h3{font-size:1.05rem;color:var(--gold)}
+.board ol,.board ul{margin:0;padding-left:1.2rem;display:grid;gap:.15rem}
+.home-week{display:grid;gap:.75rem}
+.pd-facts{margin:.6rem 0 0;padding-left:1.1rem;display:grid;gap:.2rem;color:var(--dim);font-size:.92rem}

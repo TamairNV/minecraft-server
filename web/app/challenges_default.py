@@ -104,7 +104,7 @@ DEFAULT_POOLS = {"daily": DAILY, "weekly": WEEKLY}
 
 DEFAULT_GOALS = [
     {"id": "g-mine-100k", "text": "Mine {n} blocks together", "metric": c("mined", "*"), "target": 100_000},
-    {"id": "g-walk-1000k", "text": "Walk {n} km together", "metric": c("custom", "minecraft:walk_one_cm", "minecraft:sprint_one_cm"), "target": 1000 * 1000 * CM},
+    {"id": "g-walk-1m", "text": "Walk {n} blocks together", "metric": c("custom", "minecraft:walk_one_cm", "minecraft:sprint_one_cm"), "target": 1_000_000 * CM},
     {"id": "g-mobs-5k", "text": "Defeat {n} hostile mobs together", "metric": c("custom", "minecraft:mob_kills"), "target": 5_000},
     {"id": "g-fish-1k", "text": "Catch {n} fish together", "metric": c("custom", "minecraft:fish_caught"), "target": 1_000},
     {"id": "g-diamonds-500", "text": "Mine {n} diamond ore together", "metric": c("mined", "minecraft:diamond_ore", "minecraft:deepslate_diamond_ore"), "target": 500},

@@ -59,6 +59,31 @@ def metric_value(flat: dict, metric: dict) -> int:
                if k.startswith(prefix) and any(fnmatchcase(k[len(prefix):], p) for p in patterns))
 
 
+def scale(metric: dict) -> int:
+    """Raw stat units per shown unit: distance is stored in cm (shown in blocks), play time in ticks (hours)."""
+    keys = metric.get("keys", [])
+    if metric.get("cat") == "custom" and keys and all(k.endswith("_one_cm") for k in keys):
+        return 100
+    if metric.get("cat") == "custom" and keys and all(k.endswith(("play_time", "sneak_time")) for k in keys):
+        return 72000
+    return 1
+
+
+def shown(metric: dict, value: int):
+    """A raw stat value in the unit people read: whole blocks, hours to 0.1, else as is."""
+    div = scale(metric)
+    if div == 100:
+        return value // 100
+    if div > 1:
+        return round(value / div, 1)
+    return value
+
+
+def describe(entry: dict) -> str:
+    n = shown(entry["metric"], entry["target"])
+    return entry["text"].replace("{n}", f"{n:,}" if isinstance(n, int) else f"{n:,.1f}".rstrip("0").rstrip("."))
+
+
 def delta(now: dict, mark: dict | None) -> dict:
     mark = mark or {}
     return {k: max(0, n - mark.get(k, 0)) for k, n in now.items()}
