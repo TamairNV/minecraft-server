@@ -1,4 +1,4 @@
-@font-face{font-family:"Pixelify Sans";src:url("/static/fonts/pixelify-sans-600.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Pixelify Sans";src:url("/static/fonts/pixelify-sans-var.woff2") format("woff2");font-weight:400 700;font-display:swap}
 :root{--earth:#211a15;--earth2:#2d241d;--card:#382c23;--line:#55453a;--ink:#f7f1e3;--dim:#c9bda9;--grass:#8fd460;--grass2:#5fa83a;--gold:#ffd84a;--red:#ff9b88;--head:"Pixelify Sans",ui-monospace,Menlo,Consolas,monospace;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
 html{scrollbar-color:var(--line) var(--earth)}
@@ -185,7 +185,7 @@ a{color:var(--grass)}
 .countdown{font-size:.95rem}
 .ch-grid{margin-top:.75rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:.75rem}
 .ch{padding:1rem;display:grid;gap:.55rem;align-content:start}
-.ch h3{font-size:1.15rem}
+.ch h3{font-size:1.25rem;font-weight:500;letter-spacing:.02em;line-height:1.3}
 .ch-reward{font-size:.92rem}
 .ch-reward b{color:var(--grass)}
 .ch-reward.bonus b{color:var(--gold)}
@@ -203,9 +203,10 @@ a{color:var(--grass)}
 .claims li{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .goal{padding:1rem 1.1rem;display:grid;gap:.5rem}
 .goal .pbar{height:1.1rem}
+.goal h3{font-size:1.25rem;font-weight:500;letter-spacing:.02em;line-height:1.3}
 .boards,.hall{margin-top:.75rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:.75rem}
 .board{padding:.9rem 1rem;display:grid;gap:.4rem;align-content:start}
-.board h3{font-size:1.05rem;color:var(--gold)}
+.board h3{font-size:1.1rem;font-weight:500;letter-spacing:.02em;color:var(--gold)}
 .board ol,.board ul{margin:0;padding-left:1.2rem;display:grid;gap:.15rem}
 .home-week{display:grid;gap:.75rem}
 .pd-facts{margin:.6rem 0 0;padding-left:1.1rem;display:grid;gap:.2rem;color:var(--dim);font-size:.92rem}
