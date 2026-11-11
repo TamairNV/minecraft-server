@@ -2,7 +2,7 @@
 import threading
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 from . import progress as pg
@@ -15,7 +15,8 @@ class Claim(BaseModel):
     key: str
 
 
-def build(engine, claims, clock=time.time) -> APIRouter:
+def build(engine, claims, clock=time.time, online=lambda: None, icons=None) -> APIRouter:
+    """online() -> set of lower-case names in game, or None when it can't tell (the button then stays enabled)."""
     router = APIRouter(prefix="/api", dependencies=[Depends(current_user)])
     cache = {"at": 0.0, "value": None}
     cache_lock = threading.Lock()
@@ -61,9 +62,11 @@ def build(engine, claims, clock=time.time) -> APIRouter:
     def challenges(user: AccessUser = Depends(current_user)):
         base = shared()
         player = claims.links.player_for(user.email)
-        me = {"linked": bool(player), "name": player["name"] if player else None, "claimable": []}
+        me = {"linked": bool(player), "name": player["name"] if player else None, "claimable": [], "online": None}
         if player:
             me["claimable"] = claims.claimable(player["uuid"], clock())
+            names = online()
+            me["online"] = None if names is None else player["name"].lower() in names
         mine = {c["key"] for c in me["claimable"]}
 
         def strip(card: dict) -> dict:
@@ -85,6 +88,13 @@ def build(engine, claims, clock=time.time) -> APIRouter:
         except ClaimError as e:
             raise HTTPException(400, str(e)) from None
         return {"ok": True, **result}
+
+    @router.get("/icon/{item}.png")
+    def icon(item: str):
+        png = icons.get(item) if icons else None
+        if png is None:
+            raise HTTPException(404, "No picture for that item.")
+        return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=86400"})
 
     def invalidate():
         with cache_lock:

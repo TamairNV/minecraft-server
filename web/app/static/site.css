@@ -210,3 +210,7 @@ a{color:var(--grass)}
 .board ol,.board ul{margin:0;padding-left:1.2rem;display:grid;gap:.15rem}
 .home-week{display:grid;gap:.75rem}
 .pd-facts{margin:.6rem 0 0;padding-left:1.1rem;display:grid;gap:.2rem;color:var(--dim);font-size:.92rem}
+.item{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.item-icon{width:1.5rem;height:1.5rem;object-fit:cover;object-position:top;image-rendering:pixelated;flex:none}
+.claim-hint{margin:.4rem 0;padding:.45rem .7rem;background:rgba(0,0,0,.25);border-left:4px solid #c9a227}
+.btn.primary:disabled{background:#4a4f45;color:#b7bdb0;filter:grayscale(1)}

@@ -18,6 +18,7 @@ from . import admin, modpack, play, slp, stats
 from . import progress as pg
 from . import rewards
 from .engine import Engine
+from .icons import Icons
 from .links import Links
 from .settings import ServerSettings
 from .crafty import Crafty
@@ -165,7 +166,26 @@ async def errors(request: Request, exc: StarletteHTTPException):
 
 
 app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs, engine=engine, claims=claims, console=console))
-app.include_router(play.build(engine, claims))
+_online = {"at": -1e9, "value": None}
+
+
+def online_names():
+    """Who's in game, from the same ping as the home page (cached 10 s). None if the ping can't say for sure."""
+    if time.monotonic() - _online["at"] < 10:
+        return _online["value"]
+    try:
+        raw = blocking_ping()
+    except (OSError, ValueError, asyncio.TimeoutError, asyncio.IncompleteReadError):
+        value = set()  # server down: nobody can claim
+    else:
+        p = raw.get("players", {})
+        named = [s["name"] for s in p.get("sample", []) if s.get("name") and s.get("id") != "00000000-0000-0000-0000-000000000000"]
+        value = {n.lower() for n in named} if len(named) >= p.get("online", 0) else None
+    _online.update(at=time.monotonic(), value=value)
+    return value
+
+
+app.include_router(play.build(engine, claims, online=online_names, icons=Icons(SERVER)))
 
 
 @app.get("/healthz")

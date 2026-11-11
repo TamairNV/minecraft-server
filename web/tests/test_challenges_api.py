@@ -93,6 +93,7 @@ def client(tmp_path, email="alex@example.com"):
     app = FastAPI()
     clock = [NOW]
     app.include_router(play.build(engine, claims, clock=lambda: clock[0]))
+    app.state.claims = claims
     client.clock = clock
     return TestClient(app), engine, server, sent
 
@@ -136,4 +137,55 @@ def test_claim_flow_over_http(tmp_path):
 def test_unlinked_user_sees_not_linked(tmp_path):
     c, *_ = client(tmp_path, email="stranger@example.com")
     d = c.get("/api/challenges", headers=HEAD).json()
-    assert d["me"] == {"linked": False, "name": None, "claimable": []}
+    assert d["me"] == {"linked": False, "name": None, "claimable": [], "online": None}
+
+
+def test_me_online_flag(tmp_path):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app import play
+    c, engine, server, sent = client(tmp_path)
+    claims = c.app.state.claims
+    for online, want in ((lambda: {"alex"}, True), (lambda: set(), False), (lambda: None, None)):
+        app = FastAPI()
+        app.include_router(play.build(engine, claims, clock=lambda: NOW, online=online))
+        assert TestClient(app).get("/api/challenges", headers=HEAD).json()["me"]["online"] is want
+
+
+def make_jar(path, names):
+    import zipfile
+    with zipfile.ZipFile(path, "w") as z:
+        for n in names:
+            z.writestr(f"assets/minecraft/textures/{n}.png", n.encode())
+
+
+def test_icons_from_client_jar(tmp_path):
+    from app.icons import Icons
+    (tmp_path / "bluemap").mkdir()
+    make_jar(tmp_path / "bluemap" / "minecraft-client-26.3.jar", ["item/diamond", "block/oak_log", "block/crafting_table_front"])
+    icons = Icons(tmp_path)
+    assert icons.get("diamond") == b"item/diamond"
+    assert icons.get("oak_log") == b"block/oak_log"
+    assert icons.get("crafting_table") == b"block/crafting_table_front"
+    assert icons.get("nope") is None
+    assert icons.get("../../etc/passwd") is None
+    assert Icons(tmp_path / "missing").get("diamond") is None
+
+
+def test_icon_route(tmp_path):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app import play
+    from app.icons import Icons
+    c, engine, server, sent = client(tmp_path)
+    (server / "bluemap").mkdir()
+    make_jar(server / "bluemap" / "minecraft-client-26.3.jar", ["item/diamond"])
+    app = FastAPI()
+    app.include_router(play.build(engine, c.app.state.claims, clock=lambda: NOW, icons=Icons(server)))
+    t = TestClient(app)
+    r = t.get("/api/icon/diamond.png", headers=HEAD)
+    assert r.status_code == 200 and r.headers["content-type"] == "image/png" and "max-age" in r.headers["cache-control"]
+    assert t.get("/api/icon/stone.png", headers=HEAD).status_code == 404
+    assert t.get("/api/icon/diamond.png").status_code == 401

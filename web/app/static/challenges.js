@@ -10,6 +10,23 @@ function itemName(id) {
 }
 const itemsText = (items) => (items || []).map((i) => `${i.count} × ${itemName(i.item)}`).join(', ');
 
+// Rewards with their in-game pictures (from the Minecraft client jar on the server).
+function itemsNodes(items) {
+  const frag = document.createDocumentFragment();
+  (items || []).forEach((i, n) => {
+    if (n) frag.append(document.createTextNode(', '));
+    const span = el('span', 'item');
+    const img = el('img', 'item-icon');
+    img.src = `/api/icon/${i.item.split('[')[0].replace('minecraft:', '')}.png`;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.addEventListener('error', () => img.remove());
+    span.append(img, document.createTextNode(`${i.count} × ${itemName(i.item)}`));
+    frag.append(span);
+  });
+  return frag;
+}
+
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -47,7 +64,7 @@ async function claim(key, btn) {
   } catch (e) {
     toast(e.message);
   } finally {
-    btn.disabled = false;
+    btn.disabled = data && data.me.online === false;
     btn.classList.remove('is-busy');
   }
 }
@@ -55,6 +72,10 @@ async function claim(key, btn) {
 function claimButton(key, label) {
   const b = el('button', 'btn primary', label || 'Claim');
   b.type = 'button';
+  if (data && data.me.online === false) {
+    b.disabled = true;
+    b.title = `Join the server as ${data.me.name} to claim`;
+  }
   b.addEventListener('click', () => claim(key, b));
   return b;
 }
@@ -63,11 +84,11 @@ function card(c, weekly) {
   const art = el('article', 'ch card');
   art.append(el('h3', '', c.text));
   const rw = el('p', 'ch-reward');
-  rw.append(el('b', '', 'Reward: '), document.createTextNode(itemsText(c.reward)));
+  rw.append(el('b', '', 'Reward: '), itemsNodes(c.reward));
   art.append(rw);
   if (weekly) {
     const bonus = el('p', 'ch-reward bonus');
-    bonus.append(el('b', '', 'First to finish: '), document.createTextNode(itemsText(c.bonus)));
+    bonus.append(el('b', '', 'First to finish: '), itemsNodes(c.bonus));
     if (c.bonus_winner) bonus.append(el('span', 'tag', `won by ${c.bonus_winner}`));
     art.append(bonus);
   }
@@ -94,10 +115,17 @@ function card(c, weekly) {
 
 function renderClaims(me) {
   $('claimbox').hidden = !me.claimable.length;
+  const hint = $('claim-hint');
+  if (hint) {
+    hint.hidden = me.online !== false;
+    hint.textContent = `You're not in the game right now. Join the server as ${me.name} to claim.`;
+  }
   $('claims').replaceChildren(...me.claimable.map((c) => {
     const li = el('li');
     const txt = el('div');
-    txt.append(el('b', '', `${c.tier === 'bonus' ? 'Bonus: ' : ''}${itemsText(c.items)}`), el('span', 'muted', ` for "${c.title}" · ${left(c.expires).replace('left', 'to claim')}`));
+    const what = el('b', '', c.tier === 'bonus' ? 'Bonus: ' : '');
+    what.append(itemsNodes(c.items));
+    txt.append(what, el('span', 'muted', ` for "${c.title}" · ${left(c.expires).replace('left', 'to claim')}`));
     li.append(txt, claimButton(c.key));
     return li;
   }));
