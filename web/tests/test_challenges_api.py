@@ -153,24 +153,77 @@ def test_me_online_flag(tmp_path):
         assert TestClient(app).get("/api/challenges", headers=HEAD).json()["me"]["online"] is want
 
 
-def make_jar(path, names):
+def png(color, size=16):
+    import io
+    from PIL import Image
+    b = io.BytesIO()
+    Image.new("RGBA", (size, size), color).save(b, "PNG")
+    return b.getvalue()
+
+
+def make_jar(path, names=(), models=None):
+    """names: flat textures; models: {item: (item json, {model path: json})}."""
     import zipfile
     with zipfile.ZipFile(path, "w") as z:
         for n in names:
-            z.writestr(f"assets/minecraft/textures/{n}.png", n.encode())
+            z.writestr(f"assets/minecraft/textures/{n}.png", png((200, 100, 50, 255)))
+        for item, (item_json, files) in (models or {}).items():
+            z.writestr(f"assets/minecraft/items/{item}.json", json.dumps(item_json))
+            for mp, mj in files.items():
+                z.writestr(f"assets/minecraft/models/{mp}.json", json.dumps(mj))
+
+
+def cube_jar(path):
+    import zipfile
+    make_jar(path, models={
+        "test_block": ({"model": {"type": "minecraft:model", "model": "minecraft:block/test_block"}},
+                       {"block/test_block": {"parent": "minecraft:block/cube_column", "textures": {"end": "minecraft:block/t_top", "side": "minecraft:block/t_side"}},
+                        "block/cube_column": {"parent": "block/cube", "textures": {"up": "#end", "north": "#side", "east": "#side"}},
+                        "block/cube": {"parent": "block/block"}}),
+        "table": ({"model": {"type": "minecraft:model", "model": "minecraft:block/table"}},
+                  {"block/table": {"parent": "block/block", "textures": {"top": "block/r", "front": "block/b", "side": "block/g"}}}),
+        "stick": ({"model": {"type": "minecraft:model", "model": "minecraft:item/stick"}},
+                  {"item/stick": {"parent": "minecraft:item/generated", "textures": {"layer0": "minecraft:item/stick"}}}),
+    })
+    with zipfile.ZipFile(path, "a") as z:
+        for name, color in {"t_top": (255, 0, 0, 255), "t_side": (0, 0, 255, 255), "r": (255, 0, 0, 255),
+                            "b": (0, 0, 255, 255), "g": (0, 255, 0, 255)}.items():
+            z.writestr(f"assets/minecraft/textures/block/{name}.png", png(color))
+        z.writestr("assets/minecraft/textures/item/stick.png", png((10, 20, 30, 255), size=16))
+
+
+def load(data):
+    import io
+    from PIL import Image
+    return Image.open(io.BytesIO(data)).convert("RGBA")
 
 
 def test_icons_from_client_jar(tmp_path):
-    from app.icons import Icons
+    from app.icons import SIZE, Icons
     (tmp_path / "bluemap").mkdir()
     make_jar(tmp_path / "bluemap" / "minecraft-client-26.3.jar", ["item/diamond", "block/oak_log", "block/crafting_table_front"])
     icons = Icons(tmp_path)
-    assert icons.get("diamond") == b"item/diamond"
-    assert icons.get("oak_log") == b"block/oak_log"
-    assert icons.get("crafting_table") == b"block/crafting_table_front"
+    assert load(icons.get("diamond")).size == (SIZE, SIZE)
+    assert icons.get("oak_log") and icons.get("crafting_table")  # no model files: flat fallback
     assert icons.get("nope") is None
     assert icons.get("../../etc/passwd") is None
     assert Icons(tmp_path / "missing").get("diamond") is None
+
+
+def test_block_icons_are_shaded_cubes(tmp_path):
+    from app.icons import SIZE, Icons
+    (tmp_path / "bluemap").mkdir()
+    cube_jar(tmp_path / "bluemap" / "minecraft-client-26.3.jar")
+    icons = Icons(tmp_path)
+    for item, left, right in (("table", (0, 0, 204), (0, 153, 0)), ("test_block", (0, 0, 204), (0, 0, 153))):
+        im = load(icons.get(item))
+        assert im.size == (SIZE, SIZE)
+        assert im.getpixel((0, 0))[3] == 0 and im.getpixel((SIZE - 1, 0))[3] == 0  # corners are see-through
+        assert im.getpixel((SIZE // 2, SIZE // 4))[:3] == (255, 0, 0)  # top
+        assert im.getpixel((SIZE // 4, SIZE * 5 // 8))[:3] == left  # front face, a bit darker
+        assert im.getpixel((SIZE * 3 // 4, SIZE * 5 // 8))[:3] == right  # side face, darker still
+    flat = load(icons.get("stick"))
+    assert flat.getpixel((SIZE // 2, SIZE // 2))[:3] == (10, 20, 30)
 
 
 def test_icon_route(tmp_path):

@@ -10,21 +10,49 @@ function itemName(id) {
 }
 const itemsText = (items) => (items || []).map((i) => `${i.count} × ${itemName(i.item)}`).join(', ');
 
-// Rewards with their in-game pictures (from the Minecraft client jar on the server).
-function itemsNodes(items) {
-  const frag = document.createDocumentFragment();
-  (items || []).forEach((i, n) => {
-    if (n) frag.append(document.createTextNode(', '));
-    const span = el('span', 'item');
-    const img = el('img', 'item-icon');
+// Rewards drawn like inventory slots: picture, stack count in the corner, game-style tooltip on hover or tap.
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+const ONE_LEVEL = new Set(['mending', 'silk_touch', 'infinity', 'flame', 'channeling', 'multishot', 'aqua_affinity', 'binding_curse', 'vanishing_curse']);
+const title = (s) => s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+function tipLines(id) {
+  const ench = id.match(/stored_enchantments=\{"minecraft:([a-z_]+)":(\d+)\}/);
+  if (ench) {
+    const lvl = ONE_LEVEL.has(ench[1]) && ench[2] === '1' ? '' : ` ${ROMAN[ench[2]] || ench[2]}`;
+    return [['Enchanted Book', 'name rare'], [`${title(ench[1].replace(/_curse$/, ''))}${ench[1].endsWith('_curse') ? ' Curse' : ''}${lvl}`, ench[1].endsWith('_curse') ? 'lore curse' : 'lore']];
+  }
+  return [[title(id.split('[')[0].replace('minecraft:', '')), 'name']];
+}
+
+function placeTip(slot) {
+  slot.classList.remove('tip-left');
+  const tip = slot.querySelector('.mc-tip');
+  if (tip && tip.getBoundingClientRect().right > document.documentElement.clientWidth - 8) slot.classList.add('tip-left');
+}
+
+function slotsFor(items) {
+  const row = el('div', 'slots');
+  (items || []).forEach((i) => {
+    const slot = el('span', 'slot');
+    slot.tabIndex = 0;
+    slot.setAttribute('role', 'img');
+    slot.setAttribute('aria-label', `${i.count} × ${itemName(i.item)}`);
+    const img = el('img');
     img.src = `/api/icon/${i.item.split('[')[0].replace('minecraft:', '')}.png`;
     img.alt = '';
     img.loading = 'lazy';
-    img.addEventListener('error', () => img.remove());
-    span.append(img, document.createTextNode(`${i.count} × ${itemName(i.item)}`));
-    frag.append(span);
+    img.addEventListener('error', () => { img.remove(); slot.classList.add('no-pic'); });
+    slot.append(img);
+    if (i.count > 1) slot.append(el('span', 'count', String(i.count)));
+    const tip = el('span', 'mc-tip');
+    tip.setAttribute('aria-hidden', 'true');
+    tipLines(i.item).forEach(([text, cls]) => tip.append(el('span', cls, text)));
+    slot.append(tip);
+    slot.addEventListener('mouseenter', () => placeTip(slot));
+    slot.addEventListener('focus', () => placeTip(slot));
+    row.append(slot);
   });
-  return frag;
+  return row;
 }
 
 function el(tag, cls, text) {
@@ -83,12 +111,12 @@ function claimButton(key, label) {
 function card(c, weekly) {
   const art = el('article', 'ch card');
   art.append(el('h3', '', c.text));
-  const rw = el('p', 'ch-reward');
-  rw.append(el('b', '', 'Reward: '), itemsNodes(c.reward));
+  const rw = el('div', 'ch-reward');
+  rw.append(el('b', '', 'Reward'), slotsFor(c.reward));
   art.append(rw);
   if (weekly) {
-    const bonus = el('p', 'ch-reward bonus');
-    bonus.append(el('b', '', 'First to finish: '), itemsNodes(c.bonus));
+    const bonus = el('div', 'ch-reward bonus');
+    bonus.append(el('b', '', 'First to finish'), slotsFor(c.bonus));
     if (c.bonus_winner) bonus.append(el('span', 'tag', `won by ${c.bonus_winner}`));
     art.append(bonus);
   }
@@ -123,10 +151,8 @@ function renderClaims(me) {
   $('claims').replaceChildren(...me.claimable.map((c) => {
     const li = el('li');
     const txt = el('div');
-    const what = el('b', '', c.tier === 'bonus' ? 'Bonus: ' : '');
-    what.append(itemsNodes(c.items));
-    txt.append(what, el('span', 'muted', ` for "${c.title}" · ${left(c.expires).replace('left', 'to claim')}`));
-    li.append(txt, claimButton(c.key));
+    txt.append(el('b', '', `${c.tier === 'bonus' ? 'Bonus for' : 'For'} "${c.title}"`), el('span', 'muted', left(c.expires).replace('left', 'to claim')));
+    li.append(slotsFor(c.items), txt, claimButton(c.key));
     return li;
   }));
 }
