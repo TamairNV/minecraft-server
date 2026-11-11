@@ -24,6 +24,10 @@ function tipLines(id) {
   return [[title(id.split('[')[0].replace('minecraft:', '')), 'name']];
 }
 
+// Items the game draws with the purple enchantment glint.
+const GLINTY = new Set(['enchanted_book', 'enchanted_golden_apple', 'experience_bottle', 'nether_star', 'end_crystal', 'debug_stick']);
+const shines = (id) => GLINTY.has(id.split('[')[0].replace('minecraft:', '')) || /[[,]enchantments=/.test(id);
+
 function placeTip(slot) {
   slot.classList.remove('tip-left');
   const tip = slot.querySelector('.mc-tip');
@@ -43,6 +47,12 @@ function slotsFor(items) {
     img.loading = 'lazy';
     img.addEventListener('error', () => { img.remove(); slot.classList.add('no-pic'); });
     slot.append(img);
+    if (shines(i.item)) {
+      const glint = el('span', 'glint');
+      glint.style.setProperty('--icon', `url("${img.src}")`);
+      img.addEventListener('error', () => glint.remove());
+      slot.append(glint);
+    }
     if (i.count > 1) slot.append(el('span', 'count', String(i.count)));
     const tip = el('span', 'mc-tip');
     tip.setAttribute('aria-hidden', 'true');

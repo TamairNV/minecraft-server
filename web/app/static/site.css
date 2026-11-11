@@ -231,3 +231,9 @@ a{color:var(--grass)}
 .btn.primary:disabled{background:#4a4f45;color:#b7bdb0;filter:grayscale(1)}
 .ch-reward .tag{justify-self:start;margin-left:0}
 .mc-tip .curse{color:#ff5555}
+.glint{position:absolute;left:50%;top:50%;width:36px;height:36px;transform:translate(-50%,-50%);pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(120deg,transparent 0 35%,rgba(150,70,255,.6) 45%,rgba(215,160,255,.85) 50%,rgba(150,70,255,.6) 55%,transparent 65% 100%),rgba(120,50,255,.12);
+  background-size:300% 100%,auto;background-repeat:no-repeat;animation:glint 2.8s linear infinite;
+  -webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
+@keyframes glint{from{background-position:100% 0,0 0}to{background-position:0 0,0 0}}
+@media (prefers-reduced-motion:reduce){.glint{animation:none;background-position:50% 0,0 0}}
