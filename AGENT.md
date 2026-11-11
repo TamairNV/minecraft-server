@@ -59,6 +59,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 - Crafty 4.11 scheduler crash: users with emails make refresh_gravatar lock the DB; blank emails on new Crafty users (default@example.com) or backups silently stop.
 - Crafty schedules need command=backup_server or they do nothing.
 - CoreProtect is off (no 26.3 release). DHSupport is a 0.15.0-SNAPSHOT build; replace with 0.15.0 when released.
+- nginx (web/nginx/default.conf) only lets GET/HEAD through, except /admin/api/ and /api/claim. A new player-facing POST route needs its own location block or it gets nginx's 403 (app tests don't go through nginx). Apply with `docker compose up -d --force-recreate proxy`.
 - Files in web/app must be chmod 644 (app runs as uid 1000 and hashes every static file at startup).
 - Sharing over Tailscale must restrict autogroup:shared to 25565/24454, or a share reaches every 0.0.0.0 service.
 
@@ -76,3 +77,4 @@ Agents: add a dated line here at the end of every session, newest last, and trim
 - 2026-11-11: Claim buttons grey out while the player isn't in game (server list ping, 10 s cache) and rewards show item pictures from the BlueMap client jar (web/app/icons.py, /api/icon/<item>.png; chest has none). Test data added for RadioactiveAnt7 (manual link, swapped challenges, lowered marks): clear it with Reset on the Challenges tab. Rollback image minecraft-web:rollback-20261111d. Commit f1b4a6c.
 - 2026-11-11: rewards now show as inventory slots (count in the corner, game-style tooltip); blocks are drawn as shaded isometric cubes from the client jar's models, chests from the entity texture (web/app/icons.py, needs Pillow, added to requirements). Rollback image minecraft-web:rollback-20261111e.
 - 2026-11-11: enchantment glint on enchanted rewards (CSS mask over the icon, still with reduced motion); README Challenges section now covers greyed Claim buttons and reward pictures. Commit ca08db4. Test data for RadioactiveAnt7 still in place until Tamair presses Reset.
+- 2026-11-11: claims failed in production with "something went wrong": nginx denied every POST outside /admin/api/. Added `location = /api/claim` (POST only). Backup ~/backups/minecraft-nginx-default.conf_*.
