@@ -441,6 +441,7 @@ async function loadSettings() {
   $('settings-advanced').replaceChildren(...d.advanced.map((a) => settingControl({ ...a, label: a.key, kind: 'raw', help: '' })));
   showRestart(d.pending);
   loadBorders();
+  loadDimensions();
 }
 
 submitBusy($('settings-form'), async () => {
@@ -511,6 +512,39 @@ async function loadBorders() {
     return tr;
   });
   return d.borders;
+}
+
+async function loadDimensions() {
+  const d = await act('dimensions');
+  if (!d) return;
+  if (!d.installed) {
+    $('dim-rows').dataset.sig = '';
+    $('dim-rows').replaceChildren(Object.assign(document.createElement('tr'), { innerHTML: '<td class="muted" colspan="3">The DimLock plugin isn\'t installed on the server.</td>' }));
+    return;
+  }
+  fill('dim-rows', d.dims, [d.dims, d.running], (x) => {
+    const tr = document.createElement('tr');
+    const state = cell('');
+    const tag = document.createElement('span');
+    tag.className = x.locked ? 'tag warn' : 'tag';
+    tag.style.marginLeft = '0';
+    tag.textContent = x.locked ? 'Locked' : 'Open';
+    state.append(tag);
+    const a = cell('', 'act');
+    const want = !x.locked;
+    const btn = button(want ? `Lock ${x.name}` : `Unlock ${x.name}`, async () => {
+      const text = want
+        ? `Nobody else will be able to go in through a portal. Players already in ${x.name} can stay and leave.`
+        : `Everyone will be able to go in straight away${d.running ? ', and it will be announced in chat and on Discord' : ' once the server starts'}.`;
+      if (!await ask(`${want ? 'Lock' : 'Unlock'} ${x.name}?`, text, want ? 'Lock' : 'Unlock')) return;
+      const r = await act('dimensions', { dim: x.dim, locked: want });
+      if (r) toast(`${x.name} is now ${r.locked ? 'locked' : 'open'}.`, true);
+      loadDimensions();
+    }, want ? '' : 'primary');
+    a.append(btn);
+    tr.append(cell(x.name), state, a);
+    return tr;
+  });
 }
 
 // ---- pre-generate

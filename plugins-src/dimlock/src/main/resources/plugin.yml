@@ -1,0 +1,14 @@
+name: DimLock
+version: ${project.version}
+main: uk.tamairnv.dimlock.DimLock
+api-version: "26.3"
+description: Locks the Nether and the End until an admin unlocks them (mc.tamairnv.co.uk/admin).
+softdepend: [DiscordSRV]
+commands:
+  dimlock:
+    description: Lock or unlock the Nether or the End.
+    usage: /dimlock <nether|end> <lock|unlock|status>
+    permission: dimlock.admin
+permissions:
+  dimlock.admin:
+    default: op

@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.tamairnv.co.uk) with status, whitelist with 3D skins, BlueMap world map, client modpack and an admin area (console, backups, whitelist, world swap, server settings and borders, Chunky pre-generation). Currently a TEST WORLD on Paper 26.3 until 26.4 ships. Full details in README.md.
+Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.tamairnv.co.uk) with status, whitelist with 3D skins, BlueMap world map, client modpack and an admin area (console, backups, whitelist, world swap, server settings and borders, Nether/End lock, Chunky pre-generation). Currently a TEST WORLD on Paper 26.3 until 26.4 ships. Full details in README.md.
 
 ## Where it lives
 
@@ -16,7 +16,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 | Login | Cloudflare Access on the whole site, panel card `mc` (roles user, admin); /admin needs admin |
 | Folder | `~/minecraft` |
 | Repo | TamairNV/minecraft-server (public: scan before pushing) |
-| Branch state | `main`, in sync with GitHub at ebf705b (2026-11-08). The server has no push credentials: push from the Mac by fetching over ssh |
+| Branch state | `main`, local is ahead of GitHub (2026-11-11: dimension lock commit not pushed yet). The server has no push credentials: push from the Mac by fetching over ssh |
 
 ## Run, deploy, roll back
 
@@ -67,5 +67,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 Agents: add a dated line here at the end of every session, newest last, and trim old lines once they stop mattering.
 
 - 2026-11-08: AGENT.md created from the code, compose files and infra notes (server map work).
-- 2026-11-08: added Admin tabs Server settings (server.properties form, live/restart tags, per-dimension world borders) and Pre-generate (Chunky per dimension with progress). Code in web/app/settings.py and pregen.py, tests in web/tests/test_settings.py. Web image before this tagged minecraft-web:rollback-20261108. Not committed to git yet.
+- 2026-11-08: added Admin tabs Server settings (server.properties form, live/restart tags, per-dimension world borders) and Pre-generate (Chunky per dimension with progress). Code in web/app/settings.py and pregen.py, tests in web/tests/test_settings.py. Web image before this tagged minecraft-web:rollback-20261108. Committed as ebf705b and 092e931.
 - 2026-11-08: map cache fix in web/nginx/default.conf (BlueMap's day-long cache on empty 204 tiles hid newly rendered areas) and BlueMap status + Render map button on the Pre-generate tab. Rollback image minecraft-web:rollback-20261108b.
+- 2026-11-10: blanked the Crafty system user email (DB backup ~/backups/crafty.sqlite.20261110-190346). Added scripts/backup-drive-guard.sh (Tamair runs with sudo) so a missing 2TB drive makes backups fail instead of filling the main disk.
+- 2026-11-11: Nether/End lock: own Paper plugin DimLock (plugins-src/dimlock, jar in server plugins/) plus a Dimensions card on Admin > Server settings (web/app/dimensions.py, tests web/tests/test_dimensions.py). Both dimensions locked now; Tamair unlocks from the site. Rollback image minecraft-web:rollback-20261111, backup ~/backups/minecraft_20261111-131251.tgz. Committed on local main; push from the Mac.

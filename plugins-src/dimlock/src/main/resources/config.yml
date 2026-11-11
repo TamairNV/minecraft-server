@@ -1,0 +1,4 @@
+# Written by /dimlock and by the admin site (mc.tamairnv.co.uk/admin). true = nobody can travel in.
+locked:
+  nether: true
+  end: true

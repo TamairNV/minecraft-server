@@ -127,3 +127,11 @@ web/app/            FastAPI site, world swaps and modpack builder
 web/nginx/          Proxy config, with the map's login check
 web/tests/          Test suite
 ```
+
+## Dimension lock (2026-11-11)
+
+- The Nether and the End start **locked**. Admin, **Server settings** tab, **Dimensions**: Lock/Unlock buttons, live, no restart. Unlocking announces "The End is now open!" in chat and on Discord (`discord broadcast`).
+- Enforced by our own plugin **DimLock** (source `plugins-src/dimlock`, build with `plugins-src/dimlock/build.sh`, which runs Maven in Docker, then copy `target/DimLock-*.jar` into the server's `plugins/`). It cancels portal travel (players and entities) into a locked dimension. Players already inside can stay and leave. Commands like `/tp` still work, so ops can go in.
+- State: `plugins/DimLock/config.yml` (`locked.nether`, `locked.end`). Console: `scripts/mc dimlock <nether|end> <lock|unlock|status>`. The site (`web/app/dimensions.py`) sends that command while running and edits the file while stopped.
+- After a Paper update, rebuild DimLock against the new paper-api version in `pom.xml` if it fails to load.
+

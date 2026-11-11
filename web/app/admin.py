@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from .crafty import CraftyError
+from .dimensions import DimensionError, Dimensions
 from .pregen import Pregen
 from .settings import ServerSettings, SettingsError
 from .tnv_access import AccessUser, require_role
@@ -69,6 +70,11 @@ class Border(BaseModel):
     center_z: float = 0
 
 
+class DimensionLock(BaseModel):
+    dim: str
+    locked: bool
+
+
 class PregenStart(BaseModel):
     dim: str
     radius: float
@@ -84,6 +90,7 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
     audit_lock = threading.Lock()
     settings = ServerSettings(server, data, crafty)
     chunks = Pregen(server, data, crafty, query=settings.query)
+    dimensions = Dimensions(server, crafty, query=settings.query)
 
     def audit(user: AccessUser, action: str, detail: str = "") -> None:
         line = json.dumps({"time": int(time.time()), "who": user.email, "action": action, "detail": detail})
@@ -259,6 +266,22 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
         commands = settings_do(settings.set_border, body.dim, body.size, body.center_x, body.center_z)
         audit(user, "border", "; ".join(commands))
         return {"ok": True}
+
+    @router.get("/dimensions")
+    def dimensions_view():
+        return {**dimensions.view(), "running": is_running()}
+
+    @router.post("/dimensions", dependencies=[Depends(same_origin)])
+    def dimensions_set(body: DimensionLock, user: AccessUser = Depends(admin_user)):
+        idle()
+        try:
+            now = dimensions.set(body.dim, body.locked, is_running())
+        except DimensionError as e:
+            raise HTTPException(400, str(e)) from None
+        except CraftyError as e:
+            raise HTTPException(502, str(e)) from None
+        audit(user, "dimension", f"{body.dim} {'locked' if now else 'unlocked'}")
+        return {"ok": True, "locked": now}
 
     @router.get("/pregen")
     def pregen_state():
