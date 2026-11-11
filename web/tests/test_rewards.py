@@ -75,23 +75,37 @@ def test_links_missing_onboard_db(tmp_path):
 
 
 class Game:
-    """Answers console commands like the server would."""
+    """Answers console commands the way the server logs them (feedback is "System chat: ...")."""
 
-    def __init__(self, online=("Alex",), fail_give=False):
+    def __init__(self, online=("Alex",), fail_give=False, noise="", silent_give=False, raise_on=None):
         self.online, self.fail_give, self.sent = list(online), fail_give, []
+        self.noise, self.silent_give, self.raise_on = noise, silent_give, raise_on
         self.lock = threading.Lock()
 
     def query(self, command, pattern, timeout=3.0):
         with self.lock:
             self.sent.append(command)
+        if self.raise_on and command.startswith(self.raise_on):
+            from app.crafty import CraftyError
+            raise CraftyError("Crafty is restarting")
+        sys = "[12:00:00] [Server thread/INFO]: System chat: "
         if command == "list":
-            text = f"There are {len(self.online)} of a max of 25 players online: {', '.join(self.online)}"
+            text = f"{sys}There are {len(self.online)} of a max of 25 players online: {', '.join(self.online)}"
         elif command.startswith("give "):
+            if self.silent_give:
+                return None
             _, name, item, count = command.split(" ", 3)
-            text = "Unknown item" if self.fail_give else f"Gave {count} [Thing] to {name}"
+            real = next((n for n in self.online if n.lower() == name.lower()), None)
+            if self.fail_give:
+                text = f"{sys}Unknown item '{item}'"
+            elif real is None:
+                text = f"{sys}No player was found"
+            else:
+                text = f"{sys}Gave {count} [Thing] to {real}"
+            time.sleep(0.05)
         else:
             return None
-        return pattern.search(text)
+        return pattern.search(self.noise + text)
 
     def gives(self):
         return [c for c in self.sent if c.startswith("give ")]
@@ -107,7 +121,10 @@ def setup_claims(tmp_path, game, bonus_for=None):
                                                     "metric": {"cat": "custom", "keys": ["minecraft:jump"]},
                                                     "reward": [{"item": "minecraft:oak_log", "count": 32}]})
     pg.record_completions(store, iid, {"u-alex": 5, "u-bea": 2}, 1, DAY + 10, {})
-    claims = rw.Claims(store, game.query, Links(db, tmp_path / "data", server), sleep=lambda s: None)
+    audit = []
+    claims = rw.Claims(store, game.query, Links(db, tmp_path / "data", server), sleep=lambda s: None,
+                       audit=lambda *a: audit.append(a))
+    claims.audited = audit
     return claims, iid
 
 
@@ -139,17 +156,94 @@ def test_claim_twice_gives_once(tmp_path):
     claims, iid = setup_claims(tmp_path, game)
     results = []
 
-    def go():
+    def go(i):
         try:
-            claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+            claims.claim("alex@example.com", f"{iid}:reward", DAY + 60 + 10 * i)  # past the rate limit
             results.append("ok")
         except rw.ClaimError:
             results.append("no")
 
-    ts = [threading.Thread(target=go) for _ in range(4)]
+    ts = [threading.Thread(target=go, args=(i,)) for i in range(4)]
     [t.start() for t in ts]
     [t.join() for t in ts]
     assert results.count("ok") == 1 and len(game.gives()) == 1
+
+
+def test_link_name_case_uses_whitelist_name(tmp_path):
+    server, db = setup_server(tmp_path, [("alex@example.com", "ALEX", "approved")])
+    links = Links(db, tmp_path / "data", server)
+    assert links.player_for("alex@example.com") == {"name": "Alex", "uuid": "u-alex"}
+
+
+def test_claim_with_differently_cased_link(tmp_path):
+    game = Game(online=("Alex",))
+    claims, iid = setup_claims(tmp_path, game)
+    (tmp_path / "data").mkdir(exist_ok=True)
+    claims.links.set_manual("alex@example.com", "aLeX")
+    claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+    assert game.gives() == ["give Alex minecraft:oak_log 32"]
+    assert claims.claimable("u-alex", DAY + 120) == []
+
+
+def test_unconfirmed_give_is_not_retryable(tmp_path):
+    game = Game(silent_give=True)
+    claims, iid = setup_claims(tmp_path, game)
+    try:
+        claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+        raise AssertionError("should have failed")
+    except rw.ClaimError as e:
+        assert "Tamair" in str(e)
+    assert claims.claimable("u-alex", DAY + 120) == []
+    assert [r["state"] for r in claims.log()] == ["unconfirmed"]
+
+
+def test_chat_noise_doesnt_break_confirmation(tmp_path):
+    noise = ("[12:00:00] [Async Chat Thread - #1/INFO]: <Bea> Expected whitespace lol\n"
+             "[12:00:00] [Server thread/INFO]: <Bea> Gave 32 [Oak Log] to Alex\n")
+    game = Game(noise=noise)
+    claims, iid = setup_claims(tmp_path, game)
+    claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+    assert [r["state"] for r in claims.log()] == ["done"]
+
+
+def test_fake_gave_in_chat_is_not_trusted(tmp_path):
+    noise = "[12:00:00] [Async Chat Thread - #1/INFO]: <Alex> Gave 32 [Oak Log] to Alex\n"
+    game = Game(noise=noise, silent_give=True)
+    claims, iid = setup_claims(tmp_path, game)
+    try:
+        claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+    except rw.ClaimError:
+        pass
+    assert [r["state"] for r in claims.log()] == ["unconfirmed"]
+
+
+def test_crafty_error_before_give_is_retryable(tmp_path):
+    game = Game(raise_on="list")
+    claims, iid = setup_claims(tmp_path, game)
+    try:
+        claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+        raise AssertionError("should have failed")
+    except rw.ClaimError:
+        pass
+    assert [c["key"] for c in claims.claimable("u-alex", DAY + 70)] == [f"{iid}:reward"]
+
+
+def test_crafty_error_during_give_is_unconfirmed(tmp_path):
+    game = Game(raise_on="give")
+    claims, iid = setup_claims(tmp_path, game)
+    try:
+        claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+        raise AssertionError("should have failed")
+    except rw.ClaimError:
+        pass
+    assert [r["state"] for r in claims.log()] == ["unconfirmed"]
+
+
+def test_claims_are_audited(tmp_path):
+    game = Game()
+    claims, iid = setup_claims(tmp_path, game)
+    claims.claim("alex@example.com", f"{iid}:reward", DAY + 60)
+    assert claims.audited == [("alex@example.com", "claim", f"{iid}:reward to Alex: done")]
 
 
 def test_claim_expired_refused(tmp_path):

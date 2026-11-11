@@ -126,6 +126,7 @@ function renderHall(hall) {
       const top = (w.boards[key] || [])[0];
       if (top) ul.append(el('li', '', `${label}: ${top.name} (${fmt(top.value)}${unit})`));
     });
+    (w.firsts || []).forEach((f) => ul.append(el('li', '', `First to finish "${f.text}": ${f.name}`)));
     box.append(ul);
     return box;
   }));

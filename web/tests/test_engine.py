@@ -22,7 +22,7 @@ class World:
         self.stats = self.server / "world" / "players" / "stats"
         self.stats.mkdir(parents=True)
         (self.server / "whitelist.json").write_text(json.dumps([{"uuid": "u-a", "name": "Alex"}, {"uuid": "u-b", "name": "Bea"}]))
-        self.sent, self.up = [], True
+        self.sent, self.up, self.pending = [], True, {}
 
     def set(self, uuid, **custom):
         stats = {"minecraft:custom": {f"minecraft:{k}": v for k, v in custom.items()}}
@@ -30,7 +30,12 @@ class World:
 
     def query(self, command, pattern, timeout=3.0):
         self.sent.append(command)
-        return pattern.search("Saved the game") if self.up and command == "save-all" else None
+        if self.up and command == "save-all":
+            for uuid, custom in self.pending.items():  # the game flushes what it had in memory
+                self.set(uuid, **custom)
+            self.pending = {}
+            return pattern.search("Saved the game")
+        return None
 
     def command(self, text):
         if not self.up:
@@ -57,7 +62,7 @@ def engine(tmp_path, world, clock):
         {"id": "g1", "text": "Jump {n} times together", "metric": {"cat": "custom", "keys": ["minecraft:jump"]}, "target": 30},
         {"id": "g2", "text": "Jump {n} times together", "metric": {"cat": "custom", "keys": ["minecraft:jump"]}, "target": 1000}]))
     store = pg.Store(data / "progress.db")
-    return Engine(world.server, data, world, world.query, store, clock=clock, rng=random.Random(3)), store
+    return Engine(world.server, data, world, world.query, store, clock=clock, rng=random.Random(3), sleep=lambda s: None), store
 
 
 def test_first_tick_takes_season_day_week_and_picks(tmp_path):
@@ -177,3 +182,45 @@ def test_announce_text_is_json_safe(tmp_path):
     tell = [t for t in w.sent if t.startswith("tellraw")][0]
     assert json.loads(tell[len("tellraw @a "):])["text"] == 'A "quoted" thing'
     assert "\n" not in [t for t in w.sent if t.startswith("discord")][0]
+
+
+def test_unreadable_stats_file_at_mark_keeps_previous_totals(tmp_path):
+    w = World(tmp_path)
+    w.set("u-a", jump=1000, mob_kills=500)
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    (w.stats / "u-a.json").write_text('{"stats": {"minecraft:cus')  # half written at midnight
+    now[0] = at(2026, 11, 12, 0, 1)
+    e.tick()
+    assert s.mark("day:2026-11-12")["u-a"] == {"custom:minecraft:jump": 1000, "custom:minecraft:mob_kills": 500}
+    w.set("u-a", jump=1001, mob_kills=500)
+    e.tick()
+    assert not any(pg.completed(s, i["iid"]) for i in s.current("daily", "2026-11-12"))
+
+
+def test_last_minutes_before_rollover_count_for_old_day(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 11, 23, 50)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    old = s.current("daily", "2026-11-11")
+    w.pending = {"u-a": {"jump": 50}}  # played at 23:58, not saved to disk yet
+    now[0] = at(2026, 11, 12, 0, 0, 30)
+    e.tick()
+    assert all(pg.completed(s, i["iid"]) == {"u-a"} for i in old)
+    assert s.mark("day:2026-11-12") == {"u-a": {"custom:minecraft:jump": 50}}
+
+
+def test_hall_records_weekly_first_finishers(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 15, 12)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    w.set("u-b", jump=20)
+    e.tick()
+    now[0] = at(2026, 11, 16, 0, 1)
+    e.tick()
+    week = e.hall()[0]
+    assert len(week["firsts"]) == 3 and all(f["name"] == "Bea" and f["text"] == "Jump 10 times" for f in week["firsts"])
+    assert e.hall_counts() == {"u-b": 3}

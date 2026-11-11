@@ -40,9 +40,9 @@ def fmt(n: float) -> str:
 
 
 class Engine:
-    def __init__(self, server: Path, data: Path, crafty, query, store: pg.Store, clock=time.time, rng=None):
+    def __init__(self, server: Path, data: Path, crafty, query, store: pg.Store, clock=time.time, rng=None, sleep=time.sleep):
         self.server, self.data, self.crafty, self.query, self.store = server, data, crafty, query, store
-        self.clock, self.rng = clock, rng or random.Random()
+        self.clock, self.rng, self.sleep = clock, rng or random.Random(), sleep
         self._lock = threading.RLock()
 
     # ---- helpers
@@ -52,9 +52,40 @@ class Engine:
     def totals(self) -> dict:
         return pg.read_totals(self.server)
 
-    def take_mark(self, name: str) -> dict:
-        self.query("save-all", SAVED_RE, timeout=10)  # None if the server is down: the files are then exact
-        totals = self.totals()
+    def fresh_totals(self) -> dict:
+        """Totals for a mark: ask the game to save first, retry files caught mid-write, and never let a missing or
+        unreadable file look like a brand-new player (that would count their whole history as this period's)."""
+        try:
+            self.query("save-all", SAVED_RE, timeout=10)  # None if the server is down: the files are then exact
+        except CraftyError:
+            pass
+        failed = []
+        totals = pg.read_totals(self.server, failed=failed)
+        for _ in range(3):
+            if not failed:
+                break
+            self.sleep(1)
+            failed = []
+            totals = pg.read_totals(self.server, failed=failed)
+        known = {}
+        for name in self._recent_marks():
+            known.update(self.store.mark(name) or {})
+        for uuid, flat in known.items():
+            if uuid not in totals:
+                totals[uuid] = flat
+        return totals
+
+    def _recent_marks(self) -> list:
+        """Mark names oldest first, so later ones win when merged."""
+        names = ["season"]
+        if self.store.get("week"):
+            names.append("week:" + self.store.get("week"))
+        if self.store.get("day"):
+            names.append("day:" + self.store.get("day"))
+        return names
+
+    def take_mark(self, name: str, totals: dict | None = None) -> dict:
+        totals = self.fresh_totals() if totals is None else totals
         self.store.save_mark(name, totals, at=self.clock())
         return totals
 
@@ -76,13 +107,17 @@ class Engine:
             now = self.clock()
             if self.store.mark("season") is None:
                 self.take_mark("season")
-            self.check_completions()
-            week = pg.week_name(now)
-            if self.store.mark("week:" + week) is None:
-                self.rollover_week(week)
-            day = pg.day_name(now)
-            if self.store.mark("day:" + day) is None:
-                self.rollover_day(day)
+            week, day = pg.week_name(now), pg.day_name(now)
+            due = self.store.mark("week:" + week) is None or self.store.mark("day:" + day) is None
+            if due:
+                # One fresh read decides both the old period's last completions and the new period's mark,
+                # so play just before midnight counts for the old day/week and nothing falls between them.
+                totals = self.fresh_totals()
+                self.check_completions(totals)
+                if self.store.mark("week:" + week) is None:
+                    self.rollover_week(week, totals)
+                if self.store.mark("day:" + day) is None:
+                    self.rollover_day(day, totals)
             self.check_completions()
             self.check_goals()
 
@@ -91,16 +126,16 @@ class Engine:
         for entry in pg.pick(cd.load_pools(self.data)[kind], count, avoid, self.rng):
             self.store.add_instance(kind, period, entry)
 
-    def rollover_day(self, day: str) -> None:
+    def rollover_day(self, day: str, totals: dict | None = None) -> None:
         previous = self.store.get("day")
-        self.take_mark("day:" + day)
+        self.take_mark("day:" + day, totals)
         if not self.store.current("daily", day):
             self._pick("daily", day, DAILY_PICKS, previous)
         self.store.put("day", day)
 
-    def rollover_week(self, week: str) -> None:
+    def rollover_week(self, week: str, totals: dict | None = None) -> None:
         previous = self.store.get("week")
-        totals = self.take_mark("week:" + week)
+        totals = self.take_mark("week:" + week, totals)
         if previous and previous != week:
             self._write_hall(previous, totals)
         if not self.store.current("weekly", week):
@@ -130,6 +165,11 @@ class Engine:
                               (week, board, rank, row["uuid"], row["value"]))
                 if top:
                     lines.append(f"{top[0]['name']} ({fmt(top[0]['value'])} {BOARD_LABELS[board]})")
+            for inst in self.store.current("weekly", week):
+                first = pg.first_finisher(self.store, inst["iid"])
+                if first:
+                    c.execute("INSERT OR REPLACE INTO hall (week, board, rank, uuid, value) VALUES (?,?,?,?,?)",
+                              (week, f"first:{inst['iid']}", 1, first, 0))
         if lines:
             self.announce("Last week's winners: " + ", ".join(lines) + ". New weekly challenges are up!")
 
@@ -147,11 +187,12 @@ class Engine:
         mark = ("week:" if inst["kind"] == "weekly" else "day:") + inst["period"]
         return pg.progress(totals, self.store, mark, inst["metric"])
 
-    def check_completions(self) -> None:
+    def check_completions(self, totals: dict | None = None) -> None:
         insts = self.current_instances()
         if not insts:
             return
-        totals, names, now = self.totals(), self.names(), self.clock()
+        totals = self.totals() if totals is None else totals
+        names, now = self.names(), self.clock()
         for inst in insts:
             first_before = pg.first_finisher(self.store, inst["iid"])
             new = pg.record_completions(self.store, inst["iid"], self.instance_progress(inst, totals), inst["target"], now, names)
@@ -195,9 +236,20 @@ class Engine:
             rows = c.execute("SELECT * FROM hall ORDER BY week DESC, board, rank").fetchall()
         out = {}
         for r in rows:
-            w = out.setdefault(r["week"], {"week": r["week"], "boards": {}})
-            w["boards"].setdefault(r["board"], []).append({"name": names.get(r["uuid"], r["uuid"][:8]), "uuid": r["uuid"], "value": r["value"]})
+            w = out.setdefault(r["week"], {"week": r["week"], "boards": {}, "firsts": []})
+            who = {"name": names.get(r["uuid"], r["uuid"][:8]), "uuid": r["uuid"]}
+            if r["board"].startswith("first:"):
+                inst = self.store.instance(int(r["board"][6:]))
+                w["firsts"].append({**who, "text": pg.describe(inst) if inst else "a weekly challenge"})
+            else:
+                w["boards"].setdefault(r["board"], []).append({**who, "value": r["value"]})
         return list(out.values())[:weeks]
+
+    def hall_counts(self) -> dict:
+        """uuid -> number of weekly wins (top of a board, or first to finish a weekly challenge)."""
+        with self.store.conn() as c:
+            rows = c.execute("SELECT uuid, COUNT(*) AS n FROM hall WHERE rank=1 GROUP BY uuid").fetchall()
+        return {r["uuid"]: r["n"] for r in rows}
 
     # ---- admin
     def reset(self, by: str) -> None:

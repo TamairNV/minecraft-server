@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import html
+import json
 import logging
 import os
 import threading
@@ -54,7 +55,17 @@ ONBOARD_DB = Path(os.environ.get("ONBOARD_DB", "/onboard/onboard.db"))
 console = ServerSettings(SERVER, DATA, crafty)  # its query() sends a command and reads the answer from the log
 progress_store = pg.Store(DATA / "progress.db")
 links = Links(ONBOARD_DB, DATA, SERVER)
-claims = rewards.Claims(progress_store, console.query, links)
+audit_lock = threading.Lock()
+
+
+def player_audit(who: str, action: str, detail: str) -> None:
+    """Players' claims go in the same audit log as admin actions."""
+    line = json.dumps({"time": int(time.time()), "who": who, "action": action, "detail": detail})
+    with audit_lock, open(DATA / "audit.jsonl", "a") as f:
+        f.write(line + "\n")
+
+
+claims = rewards.Claims(progress_store, console.query, links, audit=player_audit)
 engine = Engine(SERVER, DATA, crafty, console.query, progress_store)
 rewards.use_registry(SERVER)
 
@@ -86,6 +97,10 @@ async def status() -> dict:
 
 def build_overview(state: dict) -> dict:
     played = stats.collect(SERVER, mark=progress_store.mark("season") or {})
+    wins = engine.hall_counts()
+    for p in played:
+        if wins.get(p["uuid"]):
+            p["facts"].append(f"Weekly wins this season: {wins[p['uuid']]}")
     whitelist = read_json(SERVER / "whitelist.json", []) or []
     ops = {e.get("uuid") for e in read_json(SERVER / "ops.json", []) or []}
     players = stats.merge_players(whitelist, state["players"], played, ops)
@@ -149,7 +164,7 @@ async def errors(request: Request, exc: StarletteHTTPException):
     return HTMLResponse(f"<!doctype html><title>TNV SMP</title><p>{html.escape(str(exc.detail))}</p>", status_code=exc.status_code)
 
 
-app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs, engine=engine, claims=claims))
+app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs, engine=engine, claims=claims, console=console))
 app.include_router(play.build(engine, claims))
 
 

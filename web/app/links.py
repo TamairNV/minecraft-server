@@ -41,22 +41,27 @@ class Links:
         except (OSError, ValueError):
             return {}
 
-    def _uuids(self) -> dict:
-        out = {}
-        for f in ("usercache.json", "whitelist.json"):
+    def _accounts(self) -> list:
+        out = []
+        for f in ("usercache.json", "whitelist.json"):  # whitelist last: its names win
             try:
-                out.update({e["name"].lower(): e["uuid"] for e in json.loads((self.server / f).read_text()) if e.get("uuid")})
+                out += [(e["uuid"], e["name"]) for e in json.loads((self.server / f).read_text()) if e.get("uuid") and e.get("name")]
             except (OSError, ValueError, TypeError, KeyError):
                 pass
         return out
 
     def player_for(self, email: str) -> dict | None:
+        """The player for a login, with the name exactly as the game has it (the link may differ in case)."""
         email = (email or "").strip().lower()
         name = self._manual().get(email) or self._onboard().get(email)
         if not name or not NAME_RE.fullmatch(name):
             return None
-        uuid = self._uuids().get(name.lower())
-        return {"name": name, "uuid": uuid} if uuid else None
+        accounts = self._accounts()
+        uuid = next((u for u, n in reversed(accounts) if n.lower() == name.lower()), None)
+        if not uuid:
+            return None
+        real = next((n for u, n in reversed(accounts) if u == uuid), name)
+        return {"name": real, "uuid": uuid}
 
     def list(self) -> dict:
         return {"onboard": [{"email": e, "name": n} for e, n in self._onboard().items()],

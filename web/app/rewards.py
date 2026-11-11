@@ -5,6 +5,7 @@ A reward is given with console `give <name> <item> <count>` and only counts as g
 """
 import json
 import re
+import sqlite3
 import threading
 import time
 import zipfile
@@ -12,6 +13,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from . import challenges_default
+from .crafty import CraftyError
 from .links import NAME_RE, LinkError
 from .progress import LONDON, Store, completed, describe, first_finisher
 
@@ -19,7 +21,11 @@ ITEM_RE = re.compile(r"^minecraft:[a-z0-9_]+(\[[A-Za-z0-9_:{}\[\]=\",. '-]{1,200
 MAX_ITEMS = 5
 DAILY_DAYS, WEEKLY_DAYS = 8, 21  # claimable until 7 days after the day ends / 14 days after the week ends
 RATE_SECONDS = 3
-LIST_RE = re.compile(r"players online:[ ]?(.*)$", re.M)
+# Console command feedback is logged as "[time] [Server thread/INFO]: System chat: ...". Player chat never is,
+# so anchoring on that stops chat (or DiscordSRV relays) faking or spoiling a confirmation.
+FEEDBACK = r"^\[[^\]\n]*\] \[Server thread/INFO\]: System chat: "
+LIST_RE = re.compile(FEEDBACK + r"There are \d+ of a max of \d+ players online:[ ]?(.*)$", re.M)
+GIVE_FAIL = r"No player was found|Unknown item\b.*|Incorrect argument\b.*|Unknown or incomplete command\b.*|Expected\b.*"
 
 
 class RewardError(Exception):
@@ -84,8 +90,9 @@ def expires(kind: str, period: str) -> float:
 
 
 class Claims:
-    def __init__(self, store: Store, query, links, sleep=time.sleep):
+    def __init__(self, store: Store, query, links, sleep=time.sleep, audit=None):
         self.store, self.query, self.links, self.sleep = store, query, links, sleep
+        self.audit = audit or (lambda who, action, detail: None)
         self._recent: dict = {}
         self._lock = threading.Lock()
 
@@ -136,37 +143,53 @@ class Claims:
         try:
             with self.store.conn() as c:
                 c.execute("INSERT INTO claims (key, uuid, state, at, name) VALUES (?,?,?,?,?)", (key, uuid, "giving", now, name))
-        except Exception:
+        except sqlite3.IntegrityError:
             raise ClaimError("That reward is already being claimed.") from None
+        # Before any give is sent, every failure leaves the reward claimable again.
         try:
-            m = self.query("list", LIST_RE)
-            if m is None:
-                raise ClaimError("The server didn't answer. Is it running?")
-            online = {n.strip().lower() for n in m[1].split(",") if n.strip()}
-            if name.lower() not in online:
-                raise ClaimError(f"Join the server as {name}, then press Claim.")
-            given = self._give(name, wanted["items"])
-        except ClaimError:
+            name = self._online_name(name)
+        except (ClaimError, CraftyError) as e:
             self._forget(key, uuid)
-            raise
-        state = "done" if len(given) == len(wanted["items"]) else "partial"
+            raise ClaimError(str(e) if isinstance(e, ClaimError) else "The server didn't answer. Try again in a moment.") from None
+        given, state = self._give(name, wanted["items"])
+        if state == "failed":  # the game refused before giving anything
+            self._forget(key, uuid)
+            raise ClaimError("The game wouldn't give that reward. Tell Tamair.")
         with self.store.conn() as c:
-            c.execute("UPDATE claims SET state=? WHERE key=? AND uuid=?", (state, key, uuid))
+            c.execute("UPDATE claims SET state=?, name=? WHERE key=? AND uuid=?", (state, name, key, uuid))
+        self.audit(email, "claim", f"{key} to {name}: {state}")
+        if state == "unconfirmed":
+            raise ClaimError("The game didn't confirm the reward. Check your inventory; Tamair can see it and sort it out.")
         if state == "partial":
             raise ClaimError("Only part of the reward could be given. Tamair can give the rest from the admin page.")
         return {"given": given, "name": name}
 
-    def _give(self, name: str, items: list) -> list:
+    def _online_name(self, name: str) -> str:
+        """The player's name as the game lists it, or ClaimError if they aren't online."""
+        m = self.query("list", LIST_RE)
+        if m is None:
+            raise ClaimError("The server didn't answer. Is it running?")
+        online = {n.strip().lower(): n.strip() for n in m[1].split(",") if n.strip()}
+        if name.lower() not in online:
+            raise ClaimError(f"Join the server as {name}, then press Claim.")
+        return online[name.lower()] if NAME_RE.fullmatch(online[name.lower()]) else name
+
+    def _give(self, name: str, items: list) -> tuple:
+        """(given items, state): done, partial (refused after some), failed (refused first), unconfirmed (no answer)."""
         given = []
         for it in items:
-            pattern = re.compile(rf"Gave {it['count']} \[.*?\] to {re.escape(name)}\b|No player was found|Unknown item|Expected|Incorrect")
-            m = self.query(f"give {name} {it['item']} {it['count']}", pattern)
-            if m is None or not m[0].startswith("Gave"):
-                if not given:
-                    raise ClaimError("The game didn't give the reward. Try again in a moment.")
-                break
+            pattern = re.compile(FEEDBACK + rf"(?:(?P<ok>Gave {it['count']} \[.*?\] to {re.escape(name)})|(?P<fail>{GIVE_FAIL}))\s*$",
+                                 re.M | re.I)
+            try:
+                m = self.query(f"give {name} {it['item']} {it['count']}", pattern)
+            except CraftyError:
+                m = None
+            if m is None:
+                return given, "unconfirmed"
+            if not m["ok"]:
+                return given, ("partial" if given else "failed")
             given.append(it)
-        return given
+        return given, "done"
 
     def _forget(self, key: str, uuid: str) -> None:
         with self.store.conn() as c:
@@ -176,10 +199,14 @@ class Claims:
         """Admin: give items now (Give again / Test reward). The player must be online."""
         if not NAME_RE.fullmatch(name or ""):
             raise ClaimError("That isn't a Minecraft name.")
-        m = self.query("list", LIST_RE)
-        if m is None or name.lower() not in {n.strip().lower() for n in m[1].split(",")}:
-            raise ClaimError(f"{name} isn't online.")
-        return self._give(name, items)
+        try:
+            name = self._online_name(name)
+            given, state = self._give(name, items)
+        except CraftyError:
+            raise ClaimError("The server didn't answer. Try again in a moment.") from None
+        if state != "done":
+            raise ClaimError(f"Gave {len(given)} of {len(items)} items; the rest {'was refused' if state != 'unconfirmed' else 'was not confirmed'}.")
+        return given
 
     def log(self, limit: int = 200) -> list:
         with self.store.conn() as c:

@@ -123,12 +123,13 @@ class PregenStart(BaseModel):
     shape: str = "square"
 
 
-def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time) -> APIRouter:
+def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
     audit_lock = threading.Lock()
-    settings = ServerSettings(server, data, crafty)
+    # One console for the whole app, so only one command waits on the log at a time (see settings.query).
+    settings = console or ServerSettings(server, data, crafty)
     chunks = Pregen(server, data, crafty, query=settings.query)
     dimensions = Dimensions(server, crafty, query=settings.query)
     cpu_meter = CpuMeter()

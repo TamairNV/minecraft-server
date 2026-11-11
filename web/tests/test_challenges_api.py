@@ -84,7 +84,7 @@ def client(tmp_path, email="alex@example.com"):
         if command.startswith("give "):
             _, name, item, count = command.split(" ", 3)
             text = f"Gave {count} [X] to {name}"
-        return pattern.search(text) if text else None
+        return pattern.search("[12:00:00] [Server thread/INFO]: System chat: " + text) if text else None
 
     store = pg.Store(data / "progress.db")
     engine = Engine(server, data, Crafty(), query, store, clock=lambda: NOW, rng=random.Random(1))

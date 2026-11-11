@@ -53,7 +53,7 @@ def client(tmp_path, role="admin"):
         if command.startswith("give "):
             _, name, item, count = command.split(" ", 3)
             text = f"Gave {count} [X] to {name}"
-        return pattern.search(text) if text else None
+        return pattern.search("[12:00:00] [Server thread/INFO]: System chat: " + text) if text else None
 
     store = pg.Store(data / "progress.db")
     engine = Engine(server, data, Crafty(), query, store, clock=lambda: NOW, rng=random.Random(2))
@@ -138,3 +138,34 @@ def test_other_sites_cant_post(tmp_path):
     c, *_ = client(tmp_path)
     bad = {**HEAD, "Origin": "https://evil.example"}
     assert c.post("/admin/api/progress/reset", json={"confirm": "reset"}, headers=bad).status_code == 403
+
+
+def test_admin_shares_the_console_query(tmp_path):
+    """One query lock for the whole app: admin features must use the console they're given."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app import admin, modpack, settings as st
+
+    c, *_ = client(tmp_path)  # configures the access guard
+    server = tmp_path / "server"
+    (server / "plugins").mkdir()
+    (server / "plugins" / "DimLock-1.0.0.jar").write_bytes(b"")
+    (server / "server.properties").write_text("difficulty=normal\n")
+    asked = []
+
+    class Crafty:
+        running = lambda self: True
+        command = lambda self, text: None
+
+    class Worlds:
+        backups = tmp_path
+        busy = lambda self: False
+
+    shared = st.ServerSettings(server, tmp_path / "data", Crafty())
+    shared.query = lambda command, pattern, timeout=3.0: (asked.append(command), pattern.search(f"DimLock: end is unlocked"))[1]
+    app = FastAPI()
+    app.include_router(admin.build(server, tmp_path / "data", Crafty(), Worlds(), None,
+                                   modpack.Packs(server, tmp_path / "modpack", fetch=lambda u: None), console=shared))
+    r = TestClient(app).post("/admin/api/dimensions", json={"dim": "end", "locked": False}, headers=HEAD)
+    assert r.status_code == 200 and asked == ["dimlock end unlock"]

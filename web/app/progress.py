@@ -42,13 +42,15 @@ def flatten(raw: dict) -> dict:
     return out
 
 
-def read_totals(server: Path, world: str = "world") -> dict:
+def read_totals(server: Path, world: str = "world", failed: list | None = None) -> dict:
+    """uuid -> flat totals. Unreadable files (e.g. half written by a save) are skipped and listed in `failed`."""
     out = {}
     for path in sorted((server / world / "players" / "stats").glob("*.json")):
         try:
             out[path.stem] = flatten(json.loads(path.read_text()))
         except (OSError, ValueError, AttributeError, TypeError):
-            continue
+            if failed is not None:
+                failed.append(path.stem)
     return out
 
 
