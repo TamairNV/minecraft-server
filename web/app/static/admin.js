@@ -796,7 +796,14 @@ async function loadChallenges() {
     a.append(button('Swap', async () => {
       if (await act('progress/swap', { iid: x.iid, pool_id: sel.value }, 'Swapped.')) loadChallenges();
     }));
-    tr.append(cell(label), cell(x.text), cell(itemsToText(x.reward) + (x.bonus ? ` · first: ${itemsToText(x.bonus)}` : '')), swapTd, a);
+    const rewards = cell('', 'ch-rewards');
+    rewards.append(slotsFor(x.reward));
+    if (x.bonus && x.bonus.length) {
+      const first = slotsFor(x.bonus);
+      first.prepend(itemEl('span', 'first-label', 'First:'));
+      rewards.append(first);
+    }
+    tr.append(cell(label), cell(x.text), rewards, swapTd, a);
     return tr;
   }));
   $('ch-log-empty').hidden = d.log.length > 0;
