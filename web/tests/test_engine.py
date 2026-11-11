@@ -1,0 +1,179 @@
+import json
+import os
+import random
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+os.environ.update(ACCESS_SITE="mc", CF_TEAM_DOMAIN="t.example", CF_AUD="aud", MC_SERVER_DIR="", MC_BACKUP_DIR="", MC_DATA_DIR="")
+
+from app import progress as pg  # noqa: E402
+from app.engine import Engine  # noqa: E402
+
+LONDON = ZoneInfo("Europe/London")
+
+
+def at(*a):
+    return datetime(*a, tzinfo=LONDON).timestamp()
+
+
+class World:
+    def __init__(self, tmp_path):
+        self.server = tmp_path / "server"
+        self.stats = self.server / "world" / "players" / "stats"
+        self.stats.mkdir(parents=True)
+        (self.server / "whitelist.json").write_text(json.dumps([{"uuid": "u-a", "name": "Alex"}, {"uuid": "u-b", "name": "Bea"}]))
+        self.sent, self.up = [], True
+
+    def set(self, uuid, **custom):
+        stats = {"minecraft:custom": {f"minecraft:{k}": v for k, v in custom.items()}}
+        (self.stats / f"{uuid}.json").write_text(json.dumps({"stats": stats}))
+
+    def query(self, command, pattern, timeout=3.0):
+        self.sent.append(command)
+        return pattern.search("Saved the game") if self.up and command == "save-all" else None
+
+    def command(self, text):
+        if not self.up:
+            from app.crafty import CraftyError
+            raise CraftyError("down")
+        self.sent.append(text)
+
+
+def pools():
+    def e(i, kind):
+        x = {"id": f"{kind[0]}{i}", "text": "Jump {n} times", "metric": {"cat": "custom", "keys": ["minecraft:jump"]},
+             "target": 10, "reward": [{"item": "minecraft:dirt", "count": 1}], "enabled": True}
+        if kind == "weekly":
+            x["bonus"] = [{"item": "minecraft:diamond", "count": 1}]
+        return x
+    return {"daily": [e(i, "daily") for i in range(5)], "weekly": [e(i, "weekly") for i in range(6)]}
+
+
+def engine(tmp_path, world, clock):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "challenges.json").write_text(json.dumps(pools()))
+    (data / "goals.json").write_text(json.dumps([
+        {"id": "g1", "text": "Jump {n} times together", "metric": {"cat": "custom", "keys": ["minecraft:jump"]}, "target": 30},
+        {"id": "g2", "text": "Jump {n} times together", "metric": {"cat": "custom", "keys": ["minecraft:jump"]}, "target": 1000}]))
+    store = pg.Store(data / "progress.db")
+    return Engine(world.server, data, world, world.query, store, clock=clock, rng=random.Random(3)), store
+
+
+def test_first_tick_takes_season_day_week_and_picks(tmp_path):
+    w = World(tmp_path)
+    w.set("u-a", jump=100)  # test data from before: must not count
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    assert s.mark("season") == s.mark("day:2026-11-11") == s.mark("week:2026-11-09") == {"u-a": {"custom:minecraft:jump": 100}}
+    assert len(s.current("daily", "2026-11-11")) == 2 and len(s.current("weekly", "2026-11-09")) == 3
+    assert "save-all" in w.sent
+    e.tick()  # nothing new
+    assert len(s.current("daily", "2026-11-11")) == 2
+
+
+def test_completion_and_first_finisher_announced(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    w.set("u-b", jump=12)
+    now[0] += 60
+    e.tick()
+    weekly = s.current("weekly", "2026-11-09")
+    assert all(pg.first_finisher(s, i["iid"]) == "u-b" for i in weekly)
+    assert any(t.startswith("tellraw @a") and "Bea" in t for t in w.sent)
+    assert any(t.startswith("discord broadcast") and "Bea" in t for t in w.sent)
+
+
+def test_day_rollover_picks_new_dailies(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 11, 23, 59)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    first = {i["id"] for i in s.current("daily", "2026-11-11")}
+    now[0] = at(2026, 11, 12, 0, 1)
+    e.tick()
+    second = {i["id"] for i in s.current("daily", "2026-11-12")}
+    assert len(second) == 2 and not (first & second)
+    assert s.mark("day:2026-11-12") is not None
+
+
+def test_week_rollover_writes_hall_and_announces(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 15, 12)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    w.set("u-a", jump=5, play_time=72000 * 3, mob_kills=4)
+    w.set("u-b", jump=50, play_time=72000, mob_kills=9)
+    now[0] = at(2026, 11, 16, 0, 1)
+    e.sent_before = len(w.sent)
+    e.tick()
+    hall = e.hall()
+    week = hall[0]
+    assert week["week"] == "2026-11-09"
+    assert week["boards"]["hours"][0] == {"name": "Alex", "uuid": "u-a", "value": 3.0}
+    assert week["boards"]["mob_kills"][0]["name"] == "Bea"
+    assert any("winners" in t.lower() for t in w.sent if t.startswith("discord broadcast"))
+    assert len(s.current("weekly", "2026-11-16")) == 3
+
+
+def test_rollover_survives_server_down(tmp_path):
+    w = World(tmp_path)
+    w.up = False
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    assert s.mark("season") == {} and len(s.current("daily", "2026-11-11")) == 2
+
+
+def test_goal_reached_announces_once_and_advances(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    assert e.goals_state()["current"]["id"] == "g1"
+    w.set("u-a", jump=20)
+    w.set("u-b", jump=15)
+    e.tick()
+    e.tick()
+    assert [t for t in w.sent if t.startswith("discord broadcast") and "together" in t.lower()].__len__() == 1
+    st = e.goals_state()
+    assert st["current"]["id"] == "g2" and st["current"]["value"] == 35 and st["done"] == ["g1"]
+
+
+def test_reset_backs_up_and_zeroes(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    w.set("u-a", jump=40)
+    e.tick()
+    assert e.goals_state()["done"] == ["g1"]
+    e.reset("admin@example.com")
+    assert list((tmp_path / "data" / "progress-backups").glob("progress-*.db"))
+    assert e.goals_state()["done"] == [] and e.goals_state()["current"]["value"] == 0
+    assert s.mark("season") == {"u-a": {"custom:minecraft:jump": 40}}
+    assert len(s.current("daily", "2026-11-11")) == 2
+    assert all(not pg.completed(s, i["iid"]) for i in s.current("weekly", "2026-11-09"))
+
+
+def test_week_boards(tmp_path):
+    w = World(tmp_path)
+    now = [at(2026, 11, 11, 15)]
+    e, s = engine(tmp_path, w, lambda: now[0])
+    e.tick()
+    w.set("u-a", walk_one_cm=250_000)
+    b = e.week_boards()
+    assert b["km"][0] == {"name": "Alex", "uuid": "u-a", "value": 2.5}
+    assert b["hours"] == []
+
+
+def test_announce_text_is_json_safe(tmp_path):
+    w = World(tmp_path)
+    e, s = engine(tmp_path, w, lambda: at(2026, 11, 11, 15))
+    e.announce('A "quoted"\nthing')
+    tell = [t for t in w.sent if t.startswith("tellraw")][0]
+    assert json.loads(tell[len("tellraw @a "):])["text"] == 'A "quoted" thing'
+    assert "\n" not in [t for t in w.sent if t.startswith("discord")][0]
