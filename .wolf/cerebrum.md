@@ -24,3 +24,7 @@ budget_tokens: 2000
 ## Decision Log
 
 <!-- Significant technical decisions with rationale. Why X was chosen over Y. -->
+
+## Where the facts live
+
+- Human-curated facts about this project (URL, ports, containers, deploy and rollback, secret names, gotchas, where we left off) are in `AGENT.md` at the project root. Keep this file for learned preferences, decisions and do-not-repeat mistakes; don't copy facts from AGENT.md here, and update AGENT.md's "Current state / where we left off" before finishing.
