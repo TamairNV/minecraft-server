@@ -3,3 +3,5 @@ uvicorn==0.32.*
 jinja2==3.1.*
 httpx==0.27.*
 PyJWT[crypto]==2.*
+tzdata==2025.*
+Pillow==11.*

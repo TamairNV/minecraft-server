@@ -39,13 +39,19 @@
     </div>
   </section>
 
+  <section aria-labelledby="week-h" class="home-week">
+    <div class="sec-head"><h2 id="week-h">This week</h2><a href="/challenges">Challenges and rewards →</a></div>
+    <div class="goal card" id="home-goal" hidden></div>
+    <div class="boards" id="home-boards"></div>
+  </section>
+
   <section aria-labelledby="awards-h">
-    <h2 id="awards-h">Hall of fame</h2>
+    <h2 id="awards-h">Season awards</h2>
     <div class="awards" id="awards"></div>
     <p class="empty" id="awards-empty" hidden>No legends yet. The first person to play takes every award.</p>
   </section>
 
-  <p class="more"><a class="btn" href="/players">Meet everyone</a> <a class="btn" href="/world">Explore the map</a></p>
+  <p class="more"><a class="btn primary" href="/challenges">Today's challenges</a> <a class="btn" href="/players">Meet everyone</a> <a class="btn" href="/world">Explore the map</a></p>
 </main>
 {% endblock %}
 {% block script %}<script src="/static/site.js?v={{ v }}"></script>{% endblock %}

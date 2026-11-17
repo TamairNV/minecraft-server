@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Copy the DiscordSRV settings from the keys vault (service "minecraft") into DiscordSRV's config.yml.
+
+  scripts/discord-apply [--dry-run]
+
+Required: DISCORDSRV_BOT_TOKEN, DISCORD_CHAT_CHANNEL_ID. Optional: DISCORD_CONSOLE_CHANNEL_ID, DISCORD_INVITE_LINK.
+Also points the "!ip" canned response at MC_PUBLIC_ADDRESS from ~/minecraft/.env when that is set.
+Never prints values. Backs config.yml up to ~/minecraft/.backups first. Doesn't restart the server.
+"""
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CONFIG = ROOT / "crafty/servers/bbcec7f2-5e56-4d6c-95f6-64f4635787f2/plugins/DiscordSRV/config.yml"
+BACKUPS = ROOT / ".backups"
+REQUIRED = ["DISCORDSRV_BOT_TOKEN", "DISCORD_CHAT_CHANNEL_ID"]
+OPTIONAL = ["DISCORD_CONSOLE_CHANNEL_ID", "DISCORD_INVITE_LINK"]
+
+# Runs inside the keys container; prints JSON to our pipe only.
+READER = f"""
+import json
+from app.main import db, dec
+names = {REQUIRED + OPTIONAL!r}
+out = {{}}
+with db() as con:
+    for n in names:
+        r = con.execute("SELECT value_enc FROM keys WHERE service='minecraft' AND name=?", (n,)).fetchone()
+        v = dec(r["value_enc"]) if r and r["value_enc"] else None
+        out[n] = v.strip() if v and v.strip() else None
+print(json.dumps(out))
+"""
+
+
+def vault_values() -> dict:
+    p = subprocess.run(["docker", "exec", "-i", "keys", "python", "-"], input=READER,
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        sys.exit("Couldn't read the vault (is the keys container up?)")
+    return json.loads(p.stdout)
+
+
+def env_value(name: str) -> str | None:
+    try:
+        for line in (ROOT / ".env").read_text().splitlines():
+            k, sep, v = line.partition("=")
+            if sep and k.strip() == name:
+                return v.strip().strip('"').strip("'") or None
+    except FileNotFoundError:
+        pass
+    return None
+
+
+def set_line(text: str, key: str, new_line: str, changed: list) -> str:
+    pat = re.compile(rf"^{key}:.*$", re.M)
+    m = pat.search(text)
+    if not m:
+        sys.exit(f"{key} not found in config.yml")
+    if m.group(0) != new_line:
+        changed.append(key)
+        text = text[:m.start()] + new_line + text[m.end():]
+    return text
+
+
+def main() -> None:
+    dry = "--dry-run" in sys.argv[1:]
+    vals = vault_values()
+    missing = [n for n in REQUIRED if not vals.get(n)]
+    if missing:
+        sys.exit("Missing in the vault (keys.tamairnv.co.uk, service minecraft): " + ", ".join(missing))
+    for n in ("DISCORD_CHAT_CHANNEL_ID", "DISCORD_CONSOLE_CHANNEL_ID"):
+        if vals.get(n) and not vals[n].isdigit():
+            sys.exit(f"{n} should be a numeric Discord channel ID")
+
+    q = json.dumps  # YAML accepts JSON-style quoted strings
+    text = CONFIG.read_text()
+    changed: list[str] = []
+    text = set_line(text, "BotToken", f"BotToken: {q(vals['DISCORDSRV_BOT_TOKEN'])}", changed)
+    text = set_line(text, "Channels", f"Channels: {{\"global\": {q(vals['DISCORD_CHAT_CHANNEL_ID'])}}}", changed)
+    if vals.get("DISCORD_CONSOLE_CHANNEL_ID"):
+        text = set_line(text, "DiscordConsoleChannelId",
+                        f"DiscordConsoleChannelId: {q(vals['DISCORD_CONSOLE_CHANNEL_ID'])}", changed)
+    if vals.get("DISCORD_INVITE_LINK"):
+        text = set_line(text, "DiscordInviteLink", f"DiscordInviteLink: {q(vals['DISCORD_INVITE_LINK'])}", changed)
+    addr = env_value("MC_PUBLIC_ADDRESS")
+    if addr:
+        m = re.search(r"^DiscordCannedResponses:.*$", text, re.M)
+        if m:
+            line = re.sub(r'("!ip":\s*)"[^"]*"', lambda g: g.group(1) + q(addr), m.group(0))
+            text = set_line(text, "DiscordCannedResponses", line, changed)
+
+    if not changed:
+        print("config.yml already matches the vault; nothing to do.")
+        return
+    if dry:
+        print("Dry run, would change: " + ", ".join(changed))
+        return
+    BACKUPS.mkdir(exist_ok=True)
+    backup = BACKUPS / f"discordsrv-config.yml.{time.strftime('%Y%m%d-%H%M%S')}"
+    shutil.copy2(CONFIG, backup)
+    os.chmod(backup, 0o600)  # the old file may already hold a token
+    with open(CONFIG, "r+") as f:  # in place: owner, group and mode stay as they are
+        f.write(text)
+        f.truncate()
+    print(f"Backed up to {backup}")
+    print("Changed: " + ", ".join(changed))
+    print("Restart Paper to apply (scripts/mc, or the site's admin page).")
+
+
+if __name__ == "__main__":
+    main()

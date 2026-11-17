@@ -89,6 +89,53 @@ function renderAwards(list) {
   }));
 }
 
+const WEEK_BOARDS = { hours: ['Hours played', 'h'], mined: ['Blocks mined', ''], km: ['Distance', ' km'], mob_kills: ['Mobs defeated', ''] };
+function renderWeek(week, goal) {
+  const g = $('home-goal');
+  g.hidden = !goal;
+  if (goal) {
+    const key = JSON.stringify(goal);
+    if (g.dataset.key !== key) {
+      g.dataset.key = key;
+      const h = document.createElement('h3');
+      h.textContent = `Community goal: ${goal.text}`;
+      const bar = document.createElement('div');
+      bar.className = 'pbar';
+      const fill = document.createElement('span');
+      fill.style.width = `${Math.min(100, (100 * goal.value) / goal.target)}%`;
+      bar.append(fill);
+      const p = document.createElement('p');
+      p.className = 'muted';
+      p.textContent = `${fmt(goal.value)} / ${fmt(goal.target)}`;
+      g.replaceChildren(h, bar, p);
+    }
+  }
+  const wrap = $('home-boards');
+  const key = JSON.stringify(week || {});
+  if (wrap.dataset.key === key) return;
+  wrap.dataset.key = key;
+  wrap.replaceChildren(...Object.entries(WEEK_BOARDS).map(([k, [label, unit]]) => {
+    const box = document.createElement('article');
+    box.className = 'board card';
+    const h = document.createElement('h3');
+    h.textContent = label;
+    const ol = document.createElement('ol');
+    ((week || {})[k] || []).forEach((r) => {
+      const li = document.createElement('li');
+      li.textContent = `${r.name}: ${fmt(r.value)}${unit}`;
+      ol.append(li);
+    });
+    if (!ol.childElementCount) {
+      const li = document.createElement('li');
+      li.className = 'muted';
+      li.textContent = 'Up for grabs';
+      ol.append(li);
+    }
+    box.append(h, ol);
+    return box;
+  }));
+}
+
 async function refreshHome() {
   let d;
   try { d = await loadOverview(); } catch { return; }
@@ -96,6 +143,7 @@ async function refreshHome() {
   d.players.forEach((p) => skinOf.set(p.uuid, p.skin));
   renderScene(d);
   renderAwards(d.awards);
+  renderWeek(d.week, d.goal);
   setText($('t-whitelisted'), fmt(d.totals.whitelisted));
   setText($('t-hours'), fmt(d.totals.hours));
   setText($('t-mined'), fmt(d.totals.mined));
@@ -199,6 +247,11 @@ function openPlayer(uuid) {
     const dd = document.createElement('dd');
     dd.textContent = v;
     return [dt, dd];
+  }));
+  $('pd-facts').replaceChildren(...((p.played && p.stats.facts) || []).map((f) => {
+    const li = document.createElement('li');
+    li.textContent = f;
+    return li;
   }));
   if (!rows.length) {
     const dd = document.createElement('dd');

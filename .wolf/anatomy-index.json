@@ -1,23 +1,4887 @@
 {
   "version": 1,
   "meta": {
-    "lastScanned": "2026-11-06T14:40:26.688Z",
-    "fileCount": 1,
+    "lastScanned": "2026-11-11T18:15:49.469Z",
+    "fileCount": 75,
     "hits": 0,
     "misses": 0,
-    "renderedHash": "750a3ea53546958c38226cfa1c922612d53acdc20513f5f663122ab4c8f67260",
-    "storeUpdatedAt": "2026-11-06T14:40:26.688Z",
-    "rootHash": "61a6df7b2297aebf"
+    "renderedHash": "1c3883e0860570aef1e52a5c72c0dde5c9998f63479708346f7f15baa30ca2e0",
+    "storeUpdatedAt": "2026-11-11T18:15:49.470Z",
+    "rootHash": "57ddde8413853b05"
   },
   "files": {
+    ".gitignore": {
+      "description": "Git ignore rules",
+      "tokens": 15,
+      "hash": "6e617c3a3bbb4f79",
+      "size": 56,
+      "mtimeMs": 1794001283593.271,
+      "updatedAt": "2026-11-11T18:15:49.339Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    ".kick-investigation-20261106.txt": {
+      "description": "",
+      "tokens": 2318,
+      "hash": "2b5f5f31390c4cc0",
+      "size": 9272,
+      "mtimeMs": 1794002793174.1282,
+      "updatedAt": "2026-11-11T18:15:49.339Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "AGENT.md": {
+      "description": "TNV SMP (Minecraft): AGENT.md",
+      "tokens": 2036,
+      "hash": "96638ce512707a54",
+      "size": 8142,
+      "mtimeMs": 1794419532344.2783,
+      "updatedAt": "2026-11-11T18:15:49.339Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
     "CLAUDE.md": {
       "description": "OpenWolf",
-      "tokens": 99,
-      "hash": "074d6b42b583729a",
-      "size": 395,
-      "mtimeMs": 1793976026663.6865,
-      "updatedAt": "2026-11-06T14:40:26.684Z",
-      "source": "scan"
+      "tokens": 102,
+      "hash": "17fa220981c1f24d",
+      "size": 406,
+      "mtimeMs": 1794152362550.8306,
+      "updatedAt": "2026-11-11T18:15:49.339Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "docker-compose.yml": {
+      "description": "Docker Compose services",
+      "tokens": 936,
+      "hash": "1f9b7b170cd0b7b2",
+      "size": 3274,
+      "mtimeMs": 1794407358658.6948,
+      "updatedAt": "2026-11-11T18:15:49.340Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "docs/superpowers/plans/2026-11-11-stats-challenges.md": {
+      "description": "Stats, Challenges and Rewards Implementation Plan",
+      "tokens": 4071,
+      "hash": "c7e11b91bb92d718",
+      "size": 16342,
+      "mtimeMs": 1794406421700.985,
+      "updatedAt": "2026-11-11T18:15:49.340Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "docs/superpowers/specs/2026-11-11-stats-challenges-design.md": {
+      "description": "Stats, challenges and rewards: design",
+      "tokens": 2408,
+      "hash": "9580628fa42a4dc1",
+      "size": 9629,
+      "mtimeMs": 1794405999083.819,
+      "updatedAt": "2026-11-11T18:15:49.340Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "plugins-src/.gitignore": {
+      "description": "Git ignore rules",
+      "tokens": 4,
+      "hash": "462948a1e1835553",
+      "size": 15,
+      "mtimeMs": 1794402820226.2112,
+      "updatedAt": "2026-11-11T18:15:49.340Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "plugins-src/dimlock/build.sh": {
+      "description": "Builds target/DimLock-<version>.jar in a throwaway Maven container (nothing installed on the host).",
+      "tokens": 100,
+      "hash": "3220375b6cd5ee8c",
+      "size": 348,
+      "mtimeMs": 1794402820224.1902,
+      "updatedAt": "2026-11-11T18:15:49.340Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "plugins-src/dimlock/pom.xml": {
+      "description": "Maven project configuration",
+      "tokens": 345,
+      "hash": "7534b4ad8a7fe0eb",
+      "size": 1205,
+      "mtimeMs": 1794402803004.09,
+      "updatedAt": "2026-11-11T18:15:49.340Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "plugins-src/dimlock/src/main/java/uk/tamairnv/dimlock/DimLock.java": {
+      "description": "Locks portal travel into the Nether and the End until an admin unlocks it.",
+      "tokens": 1344,
+      "hash": "7d84b7ff9934eeab",
+      "size": 4702,
+      "mtimeMs": 1794402819929.667,
+      "updatedAt": "2026-11-11T18:15:49.341Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "DimLock",
+          "kind": "class",
+          "startLine": 29,
+          "endLine": 122,
+          "tokens": 1046
+        },
+        {
+          "name": "DimLock.onEnable",
+          "kind": "method",
+          "startLine": 33,
+          "endLine": 38,
+          "tokens": 65
+        },
+        {
+          "name": "DimLock.locked",
+          "kind": "method",
+          "startLine": 40,
+          "endLine": 42,
+          "tokens": 31
+        },
+        {
+          "name": "DimLock.state",
+          "kind": "method",
+          "startLine": 44,
+          "endLine": 46,
+          "tokens": 28
+        },
+        {
+          "name": "DimLock.dimOf",
+          "kind": "method",
+          "startLine": 48,
+          "endLine": 55,
+          "tokens": 73
+        },
+        {
+          "name": "DimLock.lockedTarget",
+          "kind": "method",
+          "startLine": 58,
+          "endLine": 63,
+          "tokens": 67
+        },
+        {
+          "name": "DimLock.onPlayerPortal",
+          "kind": "method",
+          "startLine": 65,
+          "endLine": 71,
+          "tokens": 93
+        },
+        {
+          "name": "DimLock.onEntityPortal",
+          "kind": "method",
+          "startLine": 73,
+          "endLine": 77,
+          "tokens": 82
+        },
+        {
+          "name": "DimLock.warn",
+          "kind": "method",
+          "startLine": 79,
+          "endLine": 85,
+          "tokens": 107
+        },
+        {
+          "name": "DimLock.onCommand",
+          "kind": "method",
+          "startLine": 87,
+          "endLine": 107,
+          "tokens": 240
+        },
+        {
+          "name": "DimLock.announce",
+          "kind": "method",
+          "startLine": 109,
+          "endLine": 114,
+          "tokens": 84
+        },
+        {
+          "name": "DimLock.onTabComplete",
+          "kind": "method",
+          "startLine": 116,
+          "endLine": 121,
+          "tokens": 83
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "plugins-src/dimlock/src/main/resources/config.yml": {
+      "description": "Written by /dimlock and by the admin site (mc.tamairnv.co.uk/admin). true = nobody can travel in.",
+      "tokens": 39,
+      "hash": "53fac8e65b26f667",
+      "size": 135,
+      "mtimeMs": 1794402803006.8389,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "plugins-src/dimlock/src/main/resources/plugin.yml": {
+      "description": "",
+      "tokens": 122,
+      "hash": "9b6f96b0c2cb0954",
+      "size": 424,
+      "mtimeMs": 1794402803005.0903,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "README.md": {
+      "description": "Project documentation",
+      "tokens": 3497,
+      "hash": "d0d91b7624c12c86",
+      "size": 13988,
+      "mtimeMs": 1794418498287.8557,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/backup-drive-guard.sh": {
+      "description": "Run once with sudo. Makes the empty /mnt/fpv2tb folder on the main disk (the one hidden",
+      "tokens": 410,
+      "hash": "4ca88c5f53f64193",
+      "size": 1433,
+      "mtimeMs": 1794337455926.847,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/crafty.py": {
+      "description": "Tiny client for the local Crafty API. Reads ~/minecraft/.env. Prints no secrets.",
+      "tokens": 452,
+      "hash": "7a7f21c20b98697a",
+      "size": 1581,
+      "mtimeMs": 1793976361786.91,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/discord-apply": {
+      "description": "",
+      "tokens": 1201,
+      "hash": "9e573382179e5bbd",
+      "size": 4503,
+      "mtimeMs": 1794332346940.046,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/install-plugins.py": {
+      "description": "Download the Paper jar and plugins for one Minecraft version, verifying every hash.",
+      "tokens": 775,
+      "hash": "46cb6499533ca3f3",
+      "size": 2710,
+      "mtimeMs": 1793977323809.5776,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "fetch",
+          "kind": "fn",
+          "startLine": 19,
+          "endLine": 20,
+          "tokens": 32
+        },
+        {
+          "name": "getj",
+          "kind": "fn",
+          "startLine": 22,
+          "endLine": 23,
+          "tokens": 14
+        },
+        {
+          "name": "install_paper",
+          "kind": "fn",
+          "startLine": 25,
+          "endLine": 34,
+          "tokens": 135
+        },
+        {
+          "name": "install_plugin",
+          "kind": "fn",
+          "startLine": 36,
+          "endLine": 53,
+          "tokens": 286
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "scripts/mc": {
+      "description": "",
+      "tokens": 275,
+      "hash": "b85b8547d5a89024",
+      "size": 1028,
+      "mtimeMs": 1793992867549.7937,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/ping.py": {
+      "description": "Server-list ping a host: ping.py <host> [port]",
+      "tokens": 133,
+      "hash": "6a177a1120ec801c",
+      "size": 463,
+      "mtimeMs": 1793976990750.6711,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/pregen.sh": {
+      "description": "Queue pre-generation of the whole 10,000 x 10,000 block border. Chunky keeps one",
+      "tokens": 143,
+      "hash": "1228ee4bf9ce57b6",
+      "size": 498,
+      "mtimeMs": 1793977323811.341,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "scripts/update-server.sh": {
+      "description": "Move the server and plugins to a new Minecraft version. Backs up first.",
+      "tokens": 464,
+      "hash": "25b7654cc0e5fffe",
+      "size": 1621,
+      "mtimeMs": 1793980293139.4255,
+      "updatedAt": "2026-11-11T18:15:49.342Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/admin.py": {
+      "description": "Admin area. Every route needs the `admin` role from the access panel.",
+      "tokens": 5765,
+      "hash": "91b3b6cbff5d6198",
+      "size": 20177,
+      "mtimeMs": 1794407881413.5176,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "same_origin",
+          "kind": "fn",
+          "startLine": 33,
+          "endLine": 37,
+          "tokens": 95
+        },
+        {
+          "name": "Command",
+          "kind": "class",
+          "startLine": 43,
+          "endLine": 44,
+          "tokens": 12
+        },
+        {
+          "name": "Player",
+          "kind": "class",
+          "startLine": 47,
+          "endLine": 49,
+          "tokens": 16
+        },
+        {
+          "name": "NewWorld",
+          "kind": "class",
+          "startLine": 52,
+          "endLine": 54,
+          "tokens": 17
+        },
+        {
+          "name": "Restore",
+          "kind": "class",
+          "startLine": 57,
+          "endLine": 59,
+          "tokens": 16
+        },
+        {
+          "name": "Swap",
+          "kind": "class",
+          "startLine": 62,
+          "endLine": 64,
+          "tokens": 16
+        },
+        {
+          "name": "Settings",
+          "kind": "class",
+          "startLine": 67,
+          "endLine": 68,
+          "tokens": 19
+        },
+        {
+          "name": "Border",
+          "kind": "class",
+          "startLine": 71,
+          "endLine": 75,
+          "tokens": 29
+        },
+        {
+          "name": "DimensionLock",
+          "kind": "class",
+          "startLine": 78,
+          "endLine": 80,
+          "tokens": 18
+        },
+        {
+          "name": "Pools",
+          "kind": "class",
+          "startLine": 83,
+          "endLine": 84,
+          "tokens": 12
+        },
+        {
+          "name": "Goals",
+          "kind": "class",
+          "startLine": 87,
+          "endLine": 88,
+          "tokens": 12
+        },
+        {
+          "name": "Swap2",
+          "kind": "class",
+          "startLine": 91,
+          "endLine": 93,
+          "tokens": 16
+        },
+        {
+          "name": "Kind",
+          "kind": "class",
+          "startLine": 96,
+          "endLine": 97,
+          "tokens": 11
+        },
+        {
+          "name": "LinkBody",
+          "kind": "class",
+          "startLine": 100,
+          "endLine": 102,
+          "tokens": 18
+        },
+        {
+          "name": "GiveAgain",
+          "kind": "class",
+          "startLine": 105,
+          "endLine": 107,
+          "tokens": 16
+        },
+        {
+          "name": "Items",
+          "kind": "class",
+          "startLine": 110,
+          "endLine": 111,
+          "tokens": 12
+        },
+        {
+          "name": "Confirm",
+          "kind": "class",
+          "startLine": 114,
+          "endLine": 115,
+          "tokens": 12
+        },
+        {
+          "name": "PregenStart",
+          "kind": "class",
+          "startLine": 118,
+          "endLine": 123,
+          "tokens": 39
+        },
+        {
+          "name": "build",
+          "kind": "fn",
+          "startLine": 126,
+          "endLine": 518,
+          "tokens": 5100
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def same_origin(request: Request) -> None:\nclass Command(BaseModel):\nclass Player(BaseModel):\nclass NewWorld(BaseModel):\nclass Restore(BaseModel):\nclass Swap(BaseModel):\nclass Settings(BaseModel):\nclass Border(BaseModel):\nclass DimensionLock(BaseModel):\nclass Pools(BaseModel):\nclass Goals(BaseModel):\nclass Swap2(BaseModel):\nclass Kind(BaseModel):\nclass LinkBody(BaseModel):\nclass GiveAgain(BaseModel):\nclass Items(BaseModel):\nclass Confirm(BaseModel):\nclass PregenStart(BaseModel):\ndef build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None) -> APIRouter:",
+      "imports": [
+        "web/app/cpu.py",
+        "web/app/crafty.py",
+        "web/app/progress.py",
+        "web/app/dimensions.py",
+        "web/app/links.py",
+        "web/app/rewards.py",
+        "web/app/pregen.py",
+        "web/app/settings.py",
+        "web/app/tnv_access.py",
+        "web/app/worlds.py"
+      ],
+      "importance": 0.4113
+    },
+    "web/app/challenges_default.py": {
+      "description": "Challenge pools and community goals: the defaults, and loading/saving the admin-edited copies.",
+      "tokens": 3938,
+      "hash": "0b8340df1c4f07bf",
+      "size": 13783,
+      "mtimeMs": 1794407264235.5388,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "PoolError",
+          "kind": "class",
+          "startLine": 17,
+          "endLine": 18,
+          "tokens": 11
+        },
+        {
+          "name": "c",
+          "kind": "fn",
+          "startLine": 21,
+          "endLine": 22,
+          "tokens": 18
+        },
+        {
+          "name": "r",
+          "kind": "fn",
+          "startLine": 25,
+          "endLine": 26,
+          "tokens": 26
+        },
+        {
+          "name": "d",
+          "kind": "fn",
+          "startLine": 35,
+          "endLine": 36,
+          "tokens": 42
+        },
+        {
+          "name": "w",
+          "kind": "fn",
+          "startLine": 39,
+          "endLine": 40,
+          "tokens": 33
+        },
+        {
+          "name": "_check_metric",
+          "kind": "fn",
+          "startLine": 118,
+          "endLine": 123,
+          "tokens": 109
+        },
+        {
+          "name": "_check_reward",
+          "kind": "fn",
+          "startLine": 126,
+          "endLine": 133,
+          "tokens": 117
+        },
+        {
+          "name": "check_entry",
+          "kind": "fn",
+          "startLine": 136,
+          "endLine": 150,
+          "tokens": 287
+        },
+        {
+          "name": "_write",
+          "kind": "fn",
+          "startLine": 153,
+          "endLine": 156,
+          "tokens": 42
+        },
+        {
+          "name": "save_pools",
+          "kind": "fn",
+          "startLine": 159,
+          "endLine": 171,
+          "tokens": 164
+        },
+        {
+          "name": "load_pools",
+          "kind": "fn",
+          "startLine": 174,
+          "endLine": 178,
+          "tokens": 57
+        },
+        {
+          "name": "save_goals",
+          "kind": "fn",
+          "startLine": 181,
+          "endLine": 199,
+          "tokens": 312
+        },
+        {
+          "name": "load_goals",
+          "kind": "fn",
+          "startLine": 202,
+          "endLine": 206,
+          "tokens": 55
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "class PoolError(Exception):\ndef c(cat, *keys):\ndef r(*pairs):\ndef d(id, text, metric, target, reward):\ndef w(id, text, metric, target, reward, bonus):\ndef _check_metric(m) -> None:\ndef _check_reward(items, label) -> list:\ndef check_entry(e: dict, weekly: bool) -> dict:\ndef _write(path: Path, value) -> None:\ndef save_pools(data: Path, pools: dict) -> dict:\ndef load_pools(data: Path) -> dict:\ndef save_goals(data: Path, goals: list) -> list:\ndef load_goals(data: Path) -> list:",
+      "imports": [
+        "web/app/progress.py"
+      ],
+      "importance": 0.3205
+    },
+    "web/app/cpu.py": {
+      "description": "CPU use like htop: per thread for the whole machine, plus the Minecraft container.",
+      "tokens": 904,
+      "hash": "b705161048ed766a",
+      "size": 3161,
+      "mtimeMs": 1794403926021.2278,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "read_stat",
+          "kind": "fn",
+          "startLine": 15,
+          "endLine": 25,
+          "tokens": 160
+        },
+        {
+          "name": "percents",
+          "kind": "fn",
+          "startLine": 28,
+          "endLine": 38,
+          "tokens": 131
+        },
+        {
+          "name": "read_cgroup_usec",
+          "kind": "fn",
+          "startLine": 41,
+          "endLine": 46,
+          "tokens": 66
+        },
+        {
+          "name": "CpuMeter",
+          "kind": "class",
+          "startLine": 49,
+          "endLine": 81,
+          "tokens": 376
+        },
+        {
+          "name": "CpuMeter.__init__",
+          "kind": "method",
+          "startLine": 52,
+          "endLine": 56,
+          "tokens": 94
+        },
+        {
+          "name": "CpuMeter._now",
+          "kind": "method",
+          "startLine": 58,
+          "endLine": 67,
+          "tokens": 80
+        },
+        {
+          "name": "CpuMeter.sample",
+          "kind": "method",
+          "startLine": 69,
+          "endLine": 81,
+          "tokens": 172
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3554
+    },
+    "web/app/crafty.py": {
+      "description": "Crafty API client, using the site's restricted account: it can send commands",
+      "tokens": 780,
+      "hash": "df81463d179dc20a",
+      "size": 2730,
+      "mtimeMs": 1793979695348.6526,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "CraftyError",
+          "kind": "class",
+          "startLine": 9,
+          "endLine": 10,
+          "tokens": 11
+        },
+        {
+          "name": "Crafty",
+          "kind": "class",
+          "startLine": 13,
+          "endLine": 65,
+          "tokens": 711
+        },
+        {
+          "name": "Crafty.__init__",
+          "kind": "method",
+          "startLine": 14,
+          "endLine": 23,
+          "tokens": 196
+        },
+        {
+          "name": "Crafty._login",
+          "kind": "method",
+          "startLine": 25,
+          "endLine": 29,
+          "tokens": 77
+        },
+        {
+          "name": "Crafty._call",
+          "kind": "method",
+          "startLine": 31,
+          "endLine": 48,
+          "tokens": 259
+        },
+        {
+          "name": "Crafty.stats",
+          "kind": "method",
+          "startLine": 50,
+          "endLine": 53,
+          "tokens": 61
+        },
+        {
+          "name": "Crafty.running",
+          "kind": "method",
+          "startLine": 55,
+          "endLine": 56,
+          "tokens": 23
+        },
+        {
+          "name": "Crafty.command",
+          "kind": "method",
+          "startLine": 58,
+          "endLine": 59,
+          "tokens": 35
+        },
+        {
+          "name": "Crafty.action",
+          "kind": "method",
+          "startLine": 61,
+          "endLine": 62,
+          "tokens": 30
+        },
+        {
+          "name": "Crafty.backup",
+          "kind": "method",
+          "startLine": 64,
+          "endLine": 65,
+          "tokens": 24
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.6666
+    },
+    "web/app/dimensions.py": {
+      "description": "Nether / End lock, enforced by the DimLock plugin (~/minecraft/plugins-src/dimlock).",
+      "tokens": 950,
+      "hash": "961572a4f22638fd",
+      "size": 3323,
+      "mtimeMs": 1794402911690.5806,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "DimensionError",
+          "kind": "class",
+          "startLine": 16,
+          "endLine": 17,
+          "tokens": 12
+        },
+        {
+          "name": "Dimensions",
+          "kind": "class",
+          "startLine": 20,
+          "endLine": 76,
+          "tokens": 785
+        },
+        {
+          "name": "Dimensions.__init__",
+          "kind": "method",
+          "startLine": 21,
+          "endLine": 25,
+          "tokens": 71
+        },
+        {
+          "name": "Dimensions._read",
+          "kind": "method",
+          "startLine": 27,
+          "endLine": 33,
+          "tokens": 88
+        },
+        {
+          "name": "Dimensions.view",
+          "kind": "method",
+          "startLine": 35,
+          "endLine": 41,
+          "tokens": 88
+        },
+        {
+          "name": "Dimensions.set",
+          "kind": "method",
+          "startLine": 43,
+          "endLine": 57,
+          "tokens": 226
+        },
+        {
+          "name": "Dimensions._write",
+          "kind": "method",
+          "startLine": 59,
+          "endLine": 76,
+          "tokens": 307
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3554
+    },
+    "web/app/engine.py": {
+      "description": "The background side of challenges: marks at day/week starts, picks, completions, goals, hall of fame, reset.",
+      "tokens": 3920,
+      "hash": "01264c15d5de89cf",
+      "size": 13720,
+      "mtimeMs": 1794407834598.285,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "fmt",
+          "kind": "fn",
+          "startLine": 38,
+          "endLine": 39,
+          "tokens": 33
+        },
+        {
+          "name": "Engine",
+          "kind": "class",
+          "startLine": 42,
+          "endLine": 296,
+          "tokens": 3441
+        },
+        {
+          "name": "Engine.__init__",
+          "kind": "method",
+          "startLine": 43,
+          "endLine": 46,
+          "tokens": 100
+        },
+        {
+          "name": "Engine.names",
+          "kind": "method",
+          "startLine": 49,
+          "endLine": 50,
+          "tokens": 20
+        },
+        {
+          "name": "Engine.totals",
+          "kind": "method",
+          "startLine": 52,
+          "endLine": 53,
+          "tokens": 21
+        },
+        {
+          "name": "Engine.fresh_totals",
+          "kind": "method",
+          "startLine": 55,
+          "endLine": 76,
+          "tokens": 273
+        },
+        {
+          "name": "Engine._recent_marks",
+          "kind": "method",
+          "startLine": 78,
+          "endLine": 85,
+          "tokens": 97
+        },
+        {
+          "name": "Engine.take_mark",
+          "kind": "method",
+          "startLine": 87,
+          "endLine": 90,
+          "tokens": 63
+        },
+        {
+          "name": "Engine.announce",
+          "kind": "method",
+          "startLine": 92,
+          "endLine": 98,
+          "tokens": 92
+        },
+        {
+          "name": "Engine.tick",
+          "kind": "method",
+          "startLine": 105,
+          "endLine": 122,
+          "tokens": 272
+        },
+        {
+          "name": "Engine._pick",
+          "kind": "method",
+          "startLine": 124,
+          "endLine": 127,
+          "tokens": 92
+        },
+        {
+          "name": "Engine.rollover_day",
+          "kind": "method",
+          "startLine": 129,
+          "endLine": 134,
+          "tokens": 87
+        },
+        {
+          "name": "Engine.rollover_week",
+          "kind": "method",
+          "startLine": 136,
+          "endLine": 143,
+          "tokens": 118
+        },
+        {
+          "name": "Engine._board",
+          "kind": "method",
+          "startLine": 145,
+          "endLine": 155,
+          "tokens": 149
+        },
+        {
+          "name": "Engine._write_hall",
+          "kind": "method",
+          "startLine": 157,
+          "endLine": 174,
+          "tokens": 313
+        },
+        {
+          "name": "Engine.current_instances",
+          "kind": "method",
+          "startLine": 176,
+          "endLine": 183,
+          "tokens": 81
+        },
+        {
+          "name": "Engine.instance_progress",
+          "kind": "method",
+          "startLine": 185,
+          "endLine": 188,
+          "tokens": 84
+        },
+        {
+          "name": "Engine.check_completions",
+          "kind": "method",
+          "startLine": 190,
+          "endLine": 201,
+          "tokens": 218
+        },
+        {
+          "name": "Engine.goals_state",
+          "kind": "method",
+          "startLine": 204,
+          "endLine": 216,
+          "tokens": 211
+        },
+        {
+          "name": "Engine.check_goals",
+          "kind": "method",
+          "startLine": 218,
+          "endLine": 224,
+          "tokens": 105
+        },
+        {
+          "name": "Engine.week_boards",
+          "kind": "method",
+          "startLine": 227,
+          "endLine": 231,
+          "tokens": 86
+        },
+        {
+          "name": "Engine.hall",
+          "kind": "method",
+          "startLine": 233,
+          "endLine": 246,
+          "tokens": 225
+        },
+        {
+          "name": "Engine.hall_counts",
+          "kind": "method",
+          "startLine": 248,
+          "endLine": 252,
+          "tokens": 94
+        },
+        {
+          "name": "Engine.reset",
+          "kind": "method",
+          "startLine": 255,
+          "endLine": 274,
+          "tokens": 256
+        },
+        {
+          "name": "Engine.swap",
+          "kind": "method",
+          "startLine": 276,
+          "endLine": 284,
+          "tokens": 127
+        },
+        {
+          "name": "Engine.reroll",
+          "kind": "method",
+          "startLine": 286,
+          "endLine": 296,
+          "tokens": 193
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def fmt(n: float) -> str:\nclass Engine:\n    def __init__(self, server: Path, data: Path, crafty, query, store: pg.Store, clock=time.time, rng=None, sleep=time.sleep):\n    def names(self) -> dict:\n    def totals(self) -> dict:\n    def fresh_totals(self) -> dict:\n    def _recent_marks(self) -> list:\n    def take_mark(self, name: str, totals: dict | None = None) -> dict:\n    def announce(self, text: str) -> None:\n    def tick(self) -> None:\n    def _pick(self, kind: str, period: str, count: int, previous: str | None) -> None:\n    def rollover_day(self, day: str, totals: dict | None = None) -> None:\n    def rollover_week(self, week: str, totals: dict | None = None) -> None:\n    def _board(self, totals: dict, mark: dict, board: str) -> list:\n    def _write_hall(self, week: str, totals: dict) -> None:\n    def current_instances(self) -> list:\n    def instance_progress(self, inst: dict, totals: dict | None = None) -> dict:\n    def check_completions(self, totals: dict | None = None) -> None:\n    def goals_state(self, totals: dict | None = None) -> dict:\n    def check_goals(self) -> None:\n    def week_boards(self, totals: dict | None = None) -> dict:\n    def hall(self, weeks: int = 8) -> list:\n    def hall_counts(self) -> dict:\n    def reset(self, by: str) -> None:\n    def swap(self, iid: int, pool_id: str) -> dict:\n    def reroll(self, kind: str) -> None:",
+      "imports": [
+        "web/app/crafty.py",
+        "web/app/stats.py"
+      ],
+      "importance": 0.3545
+    },
+    "web/app/icons.py": {
+      "description": "Item pictures for rewards, drawn the way the game's inventory shows them.",
+      "tokens": 2045,
+      "hash": "064ee8c62ab2427f",
+      "size": 7155,
+      "mtimeMs": 1794417346700.3125,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "_path",
+          "kind": "fn",
+          "startLine": 24,
+          "endLine": 25,
+          "tokens": 17
+        },
+        {
+          "name": "Icons",
+          "kind": "class",
+          "startLine": 28,
+          "endLine": 56,
+          "tokens": 303
+        },
+        {
+          "name": "Icons.__init__",
+          "kind": "method",
+          "startLine": 29,
+          "endLine": 32,
+          "tokens": 39
+        },
+        {
+          "name": "Icons._jar",
+          "kind": "method",
+          "startLine": 34,
+          "endLine": 36,
+          "tokens": 54
+        },
+        {
+          "name": "Icons.get",
+          "kind": "method",
+          "startLine": 38,
+          "endLine": 56,
+          "tokens": 206
+        },
+        {
+          "name": "_json",
+          "kind": "fn",
+          "startLine": 60,
+          "endLine": 62,
+          "tokens": 38
+        },
+        {
+          "name": "_texture",
+          "kind": "fn",
+          "startLine": 65,
+          "endLine": 73,
+          "tokens": 112
+        },
+        {
+          "name": "_model",
+          "kind": "fn",
+          "startLine": 76,
+          "endLine": 100,
+          "tokens": 269
+        },
+        {
+          "name": "_chest",
+          "kind": "fn",
+          "startLine": 106,
+          "endLine": 121,
+          "tokens": 218
+        },
+        {
+          "name": "_render",
+          "kind": "fn",
+          "startLine": 124,
+          "endLine": 143,
+          "tokens": 246
+        },
+        {
+          "name": "_png",
+          "kind": "fn",
+          "startLine": 147,
+          "endLine": 150,
+          "tokens": 34
+        },
+        {
+          "name": "_flat",
+          "kind": "fn",
+          "startLine": 153,
+          "endLine": 154,
+          "tokens": 27
+        },
+        {
+          "name": "_shade",
+          "kind": "fn",
+          "startLine": 157,
+          "endLine": 160,
+          "tokens": 56
+        },
+        {
+          "name": "_face",
+          "kind": "fn",
+          "startLine": 163,
+          "endLine": 174,
+          "tokens": 199
+        },
+        {
+          "name": "_cube",
+          "kind": "fn",
+          "startLine": 177,
+          "endLine": 190,
+          "tokens": 266
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def _path(ref: str) -> str:\nclass Icons:\n    def __init__(self, server: Path):\n    def _jar(self) -> Path | None:\n    def get(self, item: str) -> bytes | None:\ndef _json(z, names, path):\ndef _texture(z, names, ref) -> Image.Image | None:\ndef _model(z, names, item):\ndef _chest(z, names, kind) -> Image.Image | None:\ndef _render(z, names, item) -> bytes | None:\ndef _png(im: Image.Image) -> bytes:\ndef _flat(tex: Image.Image) -> Image.Image:\ndef _shade(tex: Image.Image, k: float) -> Image.Image:\ndef _face(canvas: Image.Image, tex: Image.Image, origin, du, dv) -> None:\ndef _cube(top: Image.Image, front: Image.Image, side: Image.Image) -> Image.Image:",
+      "importance": 0.3545
+    },
+    "web/app/links.py": {
+      "description": "Which Minecraft player a website login belongs to.",
+      "tokens": 976,
+      "hash": "e30db4450ae6e607",
+      "size": 3416,
+      "mtimeMs": 1794407795164.2546,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "LinkError",
+          "kind": "class",
+          "startLine": 16,
+          "endLine": 17,
+          "tokens": 11
+        },
+        {
+          "name": "Links",
+          "kind": "class",
+          "startLine": 20,
+          "endLine": 91,
+          "tokens": 854
+        },
+        {
+          "name": "Links.__init__",
+          "kind": "method",
+          "startLine": 21,
+          "endLine": 23,
+          "tokens": 56
+        },
+        {
+          "name": "Links._onboard",
+          "kind": "method",
+          "startLine": 25,
+          "endLine": 36,
+          "tokens": 137
+        },
+        {
+          "name": "Links._manual",
+          "kind": "method",
+          "startLine": 38,
+          "endLine": 42,
+          "tokens": 45
+        },
+        {
+          "name": "Links._accounts",
+          "kind": "method",
+          "startLine": 44,
+          "endLine": 51,
+          "tokens": 112
+        },
+        {
+          "name": "Links.player_for",
+          "kind": "method",
+          "startLine": 53,
+          "endLine": 64,
+          "tokens": 185
+        },
+        {
+          "name": "Links.list",
+          "kind": "method",
+          "startLine": 66,
+          "endLine": 68,
+          "tokens": 59
+        },
+        {
+          "name": "Links.set_manual",
+          "kind": "method",
+          "startLine": 70,
+          "endLine": 79,
+          "tokens": 136
+        },
+        {
+          "name": "Links.remove_manual",
+          "kind": "method",
+          "startLine": 81,
+          "endLine": 85,
+          "tokens": 54
+        },
+        {
+          "name": "Links._write",
+          "kind": "method",
+          "startLine": 87,
+          "endLine": 91,
+          "tokens": 65
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.5159
+    },
+    "web/app/main.py": {
+      "description": "API: GET (12 endpoints)",
+      "tokens": 2783,
+      "hash": "f1f9329864a929b4",
+      "size": 9739,
+      "mtimeMs": 1794414122282.2075,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "blocking_ping",
+          "kind": "fn",
+          "startLine": 42,
+          "endLine": 43,
+          "tokens": 25
+        },
+        {
+          "name": "player_audit",
+          "kind": "fn",
+          "startLine": 62,
+          "endLine": 66,
+          "tokens": 91
+        },
+        {
+          "name": "cached",
+          "kind": "fn",
+          "startLine": 74,
+          "endLine": 81,
+          "tokens": 88
+        },
+        {
+          "name": "status",
+          "kind": "fn",
+          "startLine": 84,
+          "endLine": 96,
+          "tokens": 164
+        },
+        {
+          "name": "build_overview",
+          "kind": "fn",
+          "startLine": 99,
+          "endLine": 123,
+          "tokens": 312
+        },
+        {
+          "name": "world_size",
+          "kind": "fn",
+          "startLine": 126,
+          "endLine": 127,
+          "tokens": 27
+        },
+        {
+          "name": "start_worlds",
+          "kind": "fn",
+          "startLine": 131,
+          "endLine": 134,
+          "tokens": 60
+        },
+        {
+          "name": "progress_loop",
+          "kind": "fn",
+          "startLine": 137,
+          "endLine": 145,
+          "tokens": 86
+        },
+        {
+          "name": "recover_when_ready",
+          "kind": "fn",
+          "startLine": 148,
+          "endLine": 158,
+          "tokens": 87
+        },
+        {
+          "name": "errors",
+          "kind": "fn",
+          "startLine": 162,
+          "endLine": 165,
+          "tokens": 100
+        },
+        {
+          "name": "online_names",
+          "kind": "fn",
+          "startLine": 172,
+          "endLine": 185,
+          "tokens": 208
+        },
+        {
+          "name": "healthz",
+          "kind": "fn",
+          "startLine": 192,
+          "endLine": 193,
+          "tokens": 13
+        },
+        {
+          "name": "authz",
+          "kind": "fn",
+          "startLine": 197,
+          "endLine": 199,
+          "tokens": 43
+        },
+        {
+          "name": "api_status",
+          "kind": "fn",
+          "startLine": 203,
+          "endLine": 204,
+          "tokens": 20
+        },
+        {
+          "name": "api_overview",
+          "kind": "fn",
+          "startLine": 208,
+          "endLine": 212,
+          "tokens": 83
+        },
+        {
+          "name": "api_skin",
+          "kind": "fn",
+          "startLine": 216,
+          "endLine": 220,
+          "tokens": 74
+        },
+        {
+          "name": "page",
+          "kind": "fn",
+          "startLine": 223,
+          "endLine": 226,
+          "tokens": 82
+        },
+        {
+          "name": "home",
+          "kind": "fn",
+          "startLine": 230,
+          "endLine": 231,
+          "tokens": 35
+        },
+        {
+          "name": "players_page",
+          "kind": "fn",
+          "startLine": 235,
+          "endLine": 236,
+          "tokens": 39
+        },
+        {
+          "name": "challenges_page",
+          "kind": "fn",
+          "startLine": 240,
+          "endLine": 241,
+          "tokens": 42
+        },
+        {
+          "name": "world_page",
+          "kind": "fn",
+          "startLine": 245,
+          "endLine": 246,
+          "tokens": 37
+        },
+        {
+          "name": "mods_page",
+          "kind": "fn",
+          "startLine": 250,
+          "endLine": 251,
+          "tokens": 43
+        },
+        {
+          "name": "mods_download",
+          "kind": "fn",
+          "startLine": 255,
+          "endLine": 259,
+          "tokens": 85
+        },
+        {
+          "name": "admin_page",
+          "kind": "fn",
+          "startLine": 263,
+          "endLine": 264,
+          "tokens": 48
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def blocking_ping():\ndef player_audit(who: str, action: str, detail: str) -> None:\nasync def cached(key: str, ttl: float, fn):\nasync def status() -> dict:\ndef build_overview(state: dict) -> dict:\nasync def world_size() -> int:\ndef start_worlds():\ndef progress_loop():\ndef recover_when_ready():\nasync def errors(request: Request, exc: StarletteHTTPException):\ndef online_names():\nasync def healthz():\ndef authz(user: AccessUser = Depends(current_user)):\nasync def api_status():\nasync def api_overview():\ndef api_skin(uuid: str):\ndef page(request: Request, user: AccessUser, name: str, active: str, **extra):\ndef home(request: Request, user: AccessUser = Depends(current_user)):\ndef players_page(request: Request, user: AccessUser = Depends(current_user)):\ndef challenges_page(request: Request, user: AccessUser = Depends(current_user)):\ndef world_page(request: Request, user: AccessUser = Depends(current_user)):\ndef mods_page(request: Request, user: AccessUser = Depends(current_user)):\ndef mods_download():\ndef admin_page(request: Request, user: AccessUser = Depends(require_role(\"admin\"))):",
+      "imports": [
+        "web/app/engine.py",
+        "web/app/icons.py",
+        "web/app/links.py",
+        "web/app/settings.py",
+        "web/app/crafty.py",
+        "web/app/skins.py",
+        "web/app/tnv_access.py",
+        "web/app/worlds.py"
+      ],
+      "importance": 0.3205
+    },
+    "web/app/modpack.py": {
+      "description": "Builds the client modpack (.mrpack) from Modrinth for whatever version the server runs.",
+      "tokens": 4018,
+      "hash": "0477be11083da54f",
+      "size": 14062,
+      "mtimeMs": 1793992867549.5774,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "Mod",
+          "kind": "class",
+          "startLine": 30,
+          "endLine": 33,
+          "tokens": 40
+        },
+        {
+          "name": "PackError",
+          "kind": "class",
+          "startLine": 52,
+          "endLine": 53,
+          "tokens": 11
+        },
+        {
+          "name": "NotFound",
+          "kind": "class",
+          "startLine": 56,
+          "endLine": 57,
+          "tokens": 10
+        },
+        {
+          "name": "http_fetch",
+          "kind": "fn",
+          "startLine": 60,
+          "endLine": 69,
+          "tokens": 118
+        },
+        {
+          "name": "server_version",
+          "kind": "fn",
+          "startLine": 72,
+          "endLine": 84,
+          "tokens": 218
+        },
+        {
+          "name": "pick",
+          "kind": "fn",
+          "startLine": 87,
+          "endLine": 93,
+          "tokens": 75
+        },
+        {
+          "name": "Resolver",
+          "kind": "class",
+          "startLine": 96,
+          "endLine": 170,
+          "tokens": 1063
+        },
+        {
+          "name": "Resolver.__init__",
+          "kind": "method",
+          "startLine": 97,
+          "endLine": 101,
+          "tokens": 88
+        },
+        {
+          "name": "Resolver.latest",
+          "kind": "method",
+          "startLine": 103,
+          "endLine": 107,
+          "tokens": 57
+        },
+        {
+          "name": "Resolver._pinned",
+          "kind": "method",
+          "startLine": 109,
+          "endLine": 114,
+          "tokens": 80
+        },
+        {
+          "name": "Resolver._dependency",
+          "kind": "method",
+          "startLine": 116,
+          "endLine": 120,
+          "tokens": 73
+        },
+        {
+          "name": "Resolver._gather",
+          "kind": "method",
+          "startLine": 122,
+          "endLine": 139,
+          "tokens": 273
+        },
+        {
+          "name": "Resolver.add",
+          "kind": "method",
+          "startLine": 141,
+          "endLine": 155,
+          "tokens": 208
+        },
+        {
+          "name": "Resolver.warnings",
+          "kind": "method",
+          "startLine": 157,
+          "endLine": 170,
+          "tokens": 279
+        },
+        {
+          "name": "stable_loader",
+          "kind": "fn",
+          "startLine": 173,
+          "endLine": 181,
+          "tokens": 93
+        },
+        {
+          "name": "index_file",
+          "kind": "fn",
+          "startLine": 184,
+          "endLine": 201,
+          "tokens": 278
+        },
+        {
+          "name": "titles",
+          "kind": "fn",
+          "startLine": 204,
+          "endLine": 210,
+          "tokens": 68
+        },
+        {
+          "name": "write_atomic",
+          "kind": "fn",
+          "startLine": 213,
+          "endLine": 216,
+          "tokens": 42
+        },
+        {
+          "name": "Packs",
+          "kind": "class",
+          "startLine": 219,
+          "endLine": 348,
+          "tokens": 1609
+        },
+        {
+          "name": "Packs.__init__",
+          "kind": "method",
+          "startLine": 220,
+          "endLine": 223,
+          "tokens": 62
+        },
+        {
+          "name": "Packs.build",
+          "kind": "method",
+          "startLine": 225,
+          "endLine": 280,
+          "tokens": 740
+        },
+        {
+          "name": "Packs._prune",
+          "kind": "method",
+          "startLine": 282,
+          "endLine": 290,
+          "tokens": 132
+        },
+        {
+          "name": "Packs._current_name",
+          "kind": "method",
+          "startLine": 292,
+          "endLine": 297,
+          "tokens": 95
+        },
+        {
+          "name": "Packs.current_file",
+          "kind": "method",
+          "startLine": 299,
+          "endLine": 303,
+          "tokens": 56
+        },
+        {
+          "name": "Packs.current",
+          "kind": "method",
+          "startLine": 305,
+          "endLine": 312,
+          "tokens": 75
+        },
+        {
+          "name": "Packs.builds",
+          "kind": "method",
+          "startLine": 314,
+          "endLine": 322,
+          "tokens": 130
+        },
+        {
+          "name": "Packs.job",
+          "kind": "method",
+          "startLine": 324,
+          "endLine": 325,
+          "tokens": 17
+        },
+        {
+          "name": "Packs.start",
+          "kind": "method",
+          "startLine": 327,
+          "endLine": 334,
+          "tokens": 133
+        },
+        {
+          "name": "Packs._run",
+          "kind": "method",
+          "startLine": 336,
+          "endLine": 348,
+          "tokens": 164
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "class Mod:\nclass PackError(Exception):\nclass NotFound(Exception):\ndef http_fetch(url: str):\ndef server_version(server: Path) -> str:\ndef pick(versions: list[dict]) -> dict | None:\nclass Resolver:\n    def __init__(self, mc: str, fetch):\n    def latest(self, project: str) -> dict | None:\n    def _pinned(self, version_id: str) -> dict | None:\n    def _dependency(self, dep: dict) -> dict | None:\n    def _gather(self, version: dict, client: str, via: str | None, plan: dict) -> str | None:\n    def add(self, mod: Mod) -> None:\n    def warnings(self) -> list[str]:\ndef stable_loader(mc: str, fetch) -> str:\ndef index_file(version: dict, client: str) -> tuple[dict, str]:\ndef titles(ids: list[str], fetch) -> dict[str, dict]:\ndef write_atomic(path: Path, data: bytes) -> None:\nclass Packs:\n    def __init__(self, server: Path, folder: Path, fetch=http_fetch):\n    def build(self, who: str) -> dict:\n    def _prune(self) -> None:\n    def _current_name(self) -> str | None:\n    def current_file(self) -> Path | None:\n    def current(self) -> dict | None:\n    def builds(self) -> list[dict]:\n    def job(self) -> dict | None:\n    def start(self, who: str, finished=None) -> bool:\n    def _run(self, who: str, finished) -> None:",
+      "importance": 0.3205
+    },
+    "web/app/play.py": {
+      "description": "Player-facing challenge routes: /api/challenges (what's on, everyone's progress, my rewards) and /api/claim.",
+      "tokens": 1327,
+      "hash": "e0c3a80c47c8c683",
+      "size": 4643,
+      "mtimeMs": 1794414122281.9443,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "Claim",
+          "kind": "class",
+          "startLine": 14,
+          "endLine": 15,
+          "tokens": 11
+        },
+        {
+          "name": "build",
+          "kind": "fn",
+          "startLine": 18,
+          "endLine": 104,
+          "tokens": 1206
+        }
+      ],
+      "symbolSource": "ts",
+      "imports": [
+        "web/app/admin.py",
+        "web/app/rewards.py",
+        "web/app/tnv_access.py"
+      ],
+      "importance": 0.3205
+    },
+    "web/app/pregen.py": {
+      "description": "Chunk pre-generation with the Chunky plugin, one task per dimension, and the",
+      "tokens": 2362,
+      "hash": "afe6ab7bb2bfac3c",
+      "size": 8267,
+      "mtimeMs": 1794166522362.5906,
+      "updatedAt": "2026-11-11T18:15:49.343Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "number",
+          "kind": "fn",
+          "startLine": 35,
+          "endLine": 36,
+          "tokens": 21
+        },
+        {
+          "name": "Pregen",
+          "kind": "class",
+          "startLine": 39,
+          "endLine": 171,
+          "tokens": 1860
+        },
+        {
+          "name": "Pregen.__init__",
+          "kind": "method",
+          "startLine": 40,
+          "endLine": 46,
+          "tokens": 139
+        },
+        {
+          "name": "Pregen._log_events",
+          "kind": "method",
+          "startLine": 48,
+          "endLine": 75,
+          "tokens": 392
+        },
+        {
+          "name": "Pregen._saved_task",
+          "kind": "method",
+          "startLine": 77,
+          "endLine": 88,
+          "tokens": 181
+        },
+        {
+          "name": "Pregen.state",
+          "kind": "method",
+          "startLine": 90,
+          "endLine": 108,
+          "tokens": 295
+        },
+        {
+          "name": "Pregen.start",
+          "kind": "method",
+          "startLine": 110,
+          "endLine": 129,
+          "tokens": 359
+        },
+        {
+          "name": "Pregen.control",
+          "kind": "method",
+          "startLine": 131,
+          "endLine": 141,
+          "tokens": 151
+        },
+        {
+          "name": "Pregen.map_ids",
+          "kind": "method",
+          "startLine": 144,
+          "endLine": 154,
+          "tokens": 114
+        },
+        {
+          "name": "Pregen.render",
+          "kind": "method",
+          "startLine": 156,
+          "endLine": 162,
+          "tokens": 89
+        },
+        {
+          "name": "Pregen.map_status",
+          "kind": "method",
+          "startLine": 164,
+          "endLine": 171,
+          "tokens": 130
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def number(text: str) -> float:\nclass Pregen:\n    def __init__(self, server: Path, data: Path, crafty, sleep=time.sleep, query=None):\n    def _log_events(self) -> dict:\n    def _saved_task(self, dim: str):\n    def state(self, running: bool) -> list:\n    def start(self, dim: str, radius: float, x: float, z: float, shape: str, by: str) -> list:\n    def control(self, dim: str, action: str) -> list:\n    def map_ids(self) -> dict:\n    def render(self, dim: str) -> list:\n    def map_status(self) -> dict:",
+      "imports": [
+        "web/app/settings.py",
+        "web/app/worlds.py"
+      ],
+      "importance": 0.3554
+    },
+    "web/app/progress.py": {
+      "description": "Progress since a moment in time: the game's stats files compared with saved copies (\"marks\").",
+      "tokens": 2682,
+      "hash": "4a84aa7994f4525d",
+      "size": 9384,
+      "mtimeMs": 1794407834597.7703,
+      "updatedAt": "2026-11-11T18:15:49.344Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "flatten",
+          "kind": "fn",
+          "startLine": 33,
+          "endLine": 42,
+          "tokens": 98
+        },
+        {
+          "name": "read_totals",
+          "kind": "fn",
+          "startLine": 45,
+          "endLine": 54,
+          "tokens": 152
+        },
+        {
+          "name": "metric_value",
+          "kind": "fn",
+          "startLine": 57,
+          "endLine": 61,
+          "tokens": 73
+        },
+        {
+          "name": "scale",
+          "kind": "fn",
+          "startLine": 64,
+          "endLine": 71,
+          "tokens": 124
+        },
+        {
+          "name": "shown",
+          "kind": "fn",
+          "startLine": 74,
+          "endLine": 81,
+          "tokens": 77
+        },
+        {
+          "name": "describe",
+          "kind": "fn",
+          "startLine": 84,
+          "endLine": 86,
+          "tokens": 56
+        },
+        {
+          "name": "delta",
+          "kind": "fn",
+          "startLine": 89,
+          "endLine": 91,
+          "tokens": 40
+        },
+        {
+          "name": "_local",
+          "kind": "fn",
+          "startLine": 95,
+          "endLine": 96,
+          "tokens": 23
+        },
+        {
+          "name": "_midnight",
+          "kind": "fn",
+          "startLine": 99,
+          "endLine": 100,
+          "tokens": 28
+        },
+        {
+          "name": "day_start",
+          "kind": "fn",
+          "startLine": 103,
+          "endLine": 104,
+          "tokens": 21
+        },
+        {
+          "name": "next_day",
+          "kind": "fn",
+          "startLine": 107,
+          "endLine": 108,
+          "tokens": 26
+        },
+        {
+          "name": "week_start",
+          "kind": "fn",
+          "startLine": 111,
+          "endLine": 113,
+          "tokens": 33
+        },
+        {
+          "name": "next_week",
+          "kind": "fn",
+          "startLine": 116,
+          "endLine": 118,
+          "tokens": 34
+        },
+        {
+          "name": "day_name",
+          "kind": "fn",
+          "startLine": 121,
+          "endLine": 122,
+          "tokens": 20
+        },
+        {
+          "name": "week_name",
+          "kind": "fn",
+          "startLine": 125,
+          "endLine": 126,
+          "tokens": 24
+        },
+        {
+          "name": "_instance",
+          "kind": "fn",
+          "startLine": 129,
+          "endLine": 130,
+          "tokens": 38
+        },
+        {
+          "name": "Store",
+          "kind": "class",
+          "startLine": 133,
+          "endLine": 194,
+          "tokens": 776
+        },
+        {
+          "name": "Store.__init__",
+          "kind": "method",
+          "startLine": 134,
+          "endLine": 139,
+          "tokens": 64
+        },
+        {
+          "name": "Store.save_mark",
+          "kind": "method",
+          "startLine": 152,
+          "endLine": 157,
+          "tokens": 124
+        },
+        {
+          "name": "Store.mark",
+          "kind": "method",
+          "startLine": 159,
+          "endLine": 163,
+          "tokens": 94
+        },
+        {
+          "name": "Store.get",
+          "kind": "method",
+          "startLine": 165,
+          "endLine": 168,
+          "tokens": 63
+        },
+        {
+          "name": "Store.put",
+          "kind": "method",
+          "startLine": 170,
+          "endLine": 172,
+          "tokens": 52
+        },
+        {
+          "name": "Store.add_instance",
+          "kind": "method",
+          "startLine": 176,
+          "endLine": 179,
+          "tokens": 76
+        },
+        {
+          "name": "Store.current",
+          "kind": "method",
+          "startLine": 181,
+          "endLine": 185,
+          "tokens": 84
+        },
+        {
+          "name": "Store.instance",
+          "kind": "method",
+          "startLine": 187,
+          "endLine": 190,
+          "tokens": 59
+        },
+        {
+          "name": "Store.replace_instance",
+          "kind": "method",
+          "startLine": 192,
+          "endLine": 194,
+          "tokens": 53
+        },
+        {
+          "name": "progress",
+          "kind": "fn",
+          "startLine": 197,
+          "endLine": 199,
+          "tokens": 61
+        },
+        {
+          "name": "pick",
+          "kind": "fn",
+          "startLine": 203,
+          "endLine": 213,
+          "tokens": 152
+        },
+        {
+          "name": "record_completions",
+          "kind": "fn",
+          "startLine": 216,
+          "endLine": 225,
+          "tokens": 210
+        },
+        {
+          "name": "first_finisher",
+          "kind": "fn",
+          "startLine": 228,
+          "endLine": 231,
+          "tokens": 66
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def flatten(raw: dict) -> dict:\ndef read_totals(server: Path, world: str = \"world\", failed: list | None = None) -> dict:\ndef metric_value(flat: dict, metric: dict) -> int:\ndef scale(metric: dict) -> int:\ndef shown(metric: dict, value: int):\ndef describe(entry: dict) -> str:\ndef delta(now: dict, mark: dict | None) -> dict:\ndef _local(t: float) -> datetime:\ndef _midnight(d) -> float:\ndef day_start(t: float) -> float:\ndef next_day(t: float) -> float:\ndef week_start(t: float) -> float:\ndef next_week(t: float) -> float:\ndef day_name(t: float) -> str:\ndef week_name(t: float) -> str:\ndef _instance(row) -> dict:\nclass Store:\n    def __init__(self, path: Path):\n    def save_mark(self, name: str, totals: dict, at: float = 0.0) -> None:\n    def mark(self, name: str) -> dict | None:\n    def get(self, key: str, default=None):\n    def put(self, key: str, value) -> None:\n    def add_instance(self, kind: str, period: str, entry: dict) -> int:\n    def current(self, kind: str, period: str) -> list:\n    def instance(self, iid: int) -> dict | None:\n    def replace_instance(self, iid: int, entry: dict) -> None:\ndef progress(totals: dict, store: Store, mark_name: str, metric: dict) -> dict:\ndef pick(pool: list, count: int, avoid: set, rng) -> list:\ndef record_completions(store: Store, iid: int, prog: dict, target: int, now: float, names: dict) -> list:",
+      "importance": 0.7543
+    },
+    "web/app/rewards.py": {
+      "description": "Challenge rewards: checking them, and giving them when a player presses Claim on the site.",
+      "tokens": 2916,
+      "hash": "8777aacf0b30ac68",
+      "size": 10204,
+      "mtimeMs": 1794407795164.483,
+      "updatedAt": "2026-11-11T18:15:49.344Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "RewardError",
+          "kind": "class",
+          "startLine": 31,
+          "endLine": 32,
+          "tokens": 11
+        },
+        {
+          "name": "ClaimError",
+          "kind": "class",
+          "startLine": 35,
+          "endLine": 36,
+          "tokens": 11
+        },
+        {
+          "name": "item_ids",
+          "kind": "fn",
+          "startLine": 42,
+          "endLine": 56,
+          "tokens": 203
+        },
+        {
+          "name": "validate_reward",
+          "kind": "fn",
+          "startLine": 59,
+          "endLine": 74,
+          "tokens": 273
+        },
+        {
+          "name": "use_registry",
+          "kind": "fn",
+          "startLine": 77,
+          "endLine": 79,
+          "tokens": 54
+        },
+        {
+          "name": "_period_start",
+          "kind": "fn",
+          "startLine": 82,
+          "endLine": 84,
+          "tokens": 42
+        },
+        {
+          "name": "expires",
+          "kind": "fn",
+          "startLine": 87,
+          "endLine": 89,
+          "tokens": 62
+        },
+        {
+          "name": "Claims",
+          "kind": "class",
+          "startLine": 92,
+          "endLine": 214,
+          "tokens": 1828
+        },
+        {
+          "name": "Claims.__init__",
+          "kind": "method",
+          "startLine": 93,
+          "endLine": 97,
+          "tokens": 86
+        },
+        {
+          "name": "Claims._claimed",
+          "kind": "method",
+          "startLine": 99,
+          "endLine": 101,
+          "tokens": 50
+        },
+        {
+          "name": "Claims._rewards_for",
+          "kind": "method",
+          "startLine": 103,
+          "endLine": 109,
+          "tokens": 97
+        },
+        {
+          "name": "Claims.claimable",
+          "kind": "method",
+          "startLine": 111,
+          "endLine": 126,
+          "tokens": 219
+        },
+        {
+          "name": "Claims.claim",
+          "kind": "method",
+          "startLine": 128,
+          "endLine": 165,
+          "tokens": 668
+        },
+        {
+          "name": "Claims._online_name",
+          "kind": "method",
+          "startLine": 167,
+          "endLine": 175,
+          "tokens": 161
+        },
+        {
+          "name": "Claims._give",
+          "kind": "method",
+          "startLine": 177,
+          "endLine": 192,
+          "tokens": 222
+        },
+        {
+          "name": "Claims._forget",
+          "kind": "method",
+          "startLine": 194,
+          "endLine": 196,
+          "tokens": 54
+        },
+        {
+          "name": "Claims.give_to",
+          "kind": "method",
+          "startLine": 198,
+          "endLine": 209,
+          "tokens": 194
+        },
+        {
+          "name": "Claims.log",
+          "kind": "method",
+          "startLine": 211,
+          "endLine": 214,
+          "tokens": 70
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "class RewardError(Exception):\nclass ClaimError(Exception):\ndef item_ids(server: Path) -> set | None:\ndef validate_reward(items, known: set | None) -> list:\ndef use_registry(server: Path) -> None:\ndef _period_start(period: str) -> float:\ndef expires(kind: str, period: str) -> float:\nclass Claims:\n    def __init__(self, store: Store, query, links, sleep=time.sleep, audit=None):\n    def _claimed(self, uuid: str) -> set:\n    def _rewards_for(self, inst: dict, uuid: str) -> list:\n    def claimable(self, uuid: str, now: float) -> list:\n    def claim(self, email: str, key: str, now: float) -> dict:\n    def _online_name(self, name: str) -> str:\n    def _give(self, name: str, items: list) -> tuple:\n    def _forget(self, key: str, uuid: str) -> None:\n    def give_to(self, name: str, items: list) -> list:\n    def log(self, limit: int = 200) -> list:",
+      "imports": [
+        "web/app/crafty.py",
+        "web/app/links.py",
+        "web/app/progress.py"
+      ],
+      "importance": 0.4462
+    },
+    "web/app/settings.py": {
+      "description": "Server settings: server.properties, and the live world border of each dimension.",
+      "tokens": 4769,
+      "hash": "ca2112840f03dfb4",
+      "size": 16689,
+      "mtimeMs": 1794161518551.2756,
+      "updatedAt": "2026-11-11T18:15:49.344Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "SettingsError",
+          "kind": "class",
+          "startLine": 59,
+          "endLine": 60,
+          "tokens": 22
+        },
+        {
+          "name": "unescape",
+          "kind": "fn",
+          "startLine": 64,
+          "endLine": 79,
+          "tokens": 151
+        },
+        {
+          "name": "escape",
+          "kind": "fn",
+          "startLine": 82,
+          "endLine": 84,
+          "tokens": 48
+        },
+        {
+          "name": "parse",
+          "kind": "fn",
+          "startLine": 87,
+          "endLine": 95,
+          "tokens": 82
+        },
+        {
+          "name": "rewrite",
+          "kind": "fn",
+          "startLine": 98,
+          "endLine": 108,
+          "tokens": 123
+        },
+        {
+          "name": "kind_of",
+          "kind": "fn",
+          "startLine": 111,
+          "endLine": 112,
+          "tokens": 22
+        },
+        {
+          "name": "check",
+          "kind": "fn",
+          "startLine": 115,
+          "endLine": 143,
+          "tokens": 407
+        },
+        {
+          "name": "read_nbt",
+          "kind": "fn",
+          "startLine": 147,
+          "endLine": 182,
+          "tokens": 334
+        },
+        {
+          "name": "num",
+          "kind": "fn",
+          "startLine": 185,
+          "endLine": 186,
+          "tokens": 26
+        },
+        {
+          "name": "ServerSettings",
+          "kind": "class",
+          "startLine": 189,
+          "endLine": 354,
+          "tokens": 2389
+        },
+        {
+          "name": "ServerSettings.__init__",
+          "kind": "method",
+          "startLine": 190,
+          "endLine": 198,
+          "tokens": 156
+        },
+        {
+          "name": "ServerSettings.query",
+          "kind": "method",
+          "startLine": 201,
+          "endLine": 221,
+          "tokens": 243
+        },
+        {
+          "name": "ServerSettings._pending",
+          "kind": "method",
+          "startLine": 224,
+          "endLine": 232,
+          "tokens": 110
+        },
+        {
+          "name": "ServerSettings.view",
+          "kind": "method",
+          "startLine": 234,
+          "endLine": 257,
+          "tokens": 363
+        },
+        {
+          "name": "ServerSettings.save",
+          "kind": "method",
+          "startLine": 259,
+          "endLine": 296,
+          "tokens": 599
+        },
+        {
+          "name": "ServerSettings._backup",
+          "kind": "method",
+          "startLine": 298,
+          "endLine": 305,
+          "tokens": 130
+        },
+        {
+          "name": "ServerSettings._border_file",
+          "kind": "method",
+          "startLine": 308,
+          "endLine": 310,
+          "tokens": 66
+        },
+        {
+          "name": "ServerSettings.borders",
+          "kind": "method",
+          "startLine": 312,
+          "endLine": 337,
+          "tokens": 423
+        },
+        {
+          "name": "ServerSettings.set_border",
+          "kind": "method",
+          "startLine": 339,
+          "endLine": 354,
+          "tokens": 272
+        },
+        {
+          "name": "chunky",
+          "kind": "fn",
+          "startLine": 357,
+          "endLine": 360,
+          "tokens": 93
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "class SettingsError(Exception):\ndef unescape(raw: str) -> str:\ndef escape(value: str) -> str:\ndef parse(text: str) -> dict:\ndef rewrite(text: str, changes: dict) -> str:\ndef kind_of(key: str):\ndef check(key: str, value, current: str) -> str:\ndef read_nbt(data: bytes) -> dict:\ndef num(v: float) -> str:\nclass ServerSettings:\n    def __init__(self, server: Path, data: Path, crafty, sleep=time.sleep):\n    def query(self, command: str, pattern: re.Pattern, timeout: float = 3.0):\n    def _pending(self, started: str | None) -> list:\n    def view(self, running: bool, started: str | None) -> dict:\n    def save(self, values: dict, running: bool, by: str) -> dict:\n    def _backup(self, text: str) -> None:\n    def _border_file(self, dim: str) -> Path:\n    def borders(self, running: bool) -> list:\n    def set_border(self, dim: str, size: float, x: float, z: float) -> list:\ndef chunky(dim: str, size: float, x: float, z: float) -> list:",
+      "imports": [
+        "web/app/worlds.py"
+      ],
+      "importance": 0.5405
+    },
+    "web/app/skins.py": {
+      "description": "Fetch player skins from Mojang and keep a copy, so visitors never talk to a third party.",
+      "tokens": 1088,
+      "hash": "8d80b58608303b9b",
+      "size": 3808,
+      "mtimeMs": 1793981401335.5862,
+      "updatedAt": "2026-11-11T18:15:49.344Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "png_size",
+          "kind": "fn",
+          "startLine": 20,
+          "endLine": 24,
+          "tokens": 63
+        },
+        {
+          "name": "texture_info",
+          "kind": "fn",
+          "startLine": 27,
+          "endLine": 39,
+          "tokens": 197
+        },
+        {
+          "name": "Skins",
+          "kind": "class",
+          "startLine": 42,
+          "endLine": 92,
+          "tokens": 686
+        },
+        {
+          "name": "Skins.__init__",
+          "kind": "method",
+          "startLine": 43,
+          "endLine": 45,
+          "tokens": 39
+        },
+        {
+          "name": "Skins.file",
+          "kind": "method",
+          "startLine": 47,
+          "endLine": 51,
+          "tokens": 56
+        },
+        {
+          "name": "Skins._download",
+          "kind": "method",
+          "startLine": 53,
+          "endLine": 67,
+          "tokens": 223
+        },
+        {
+          "name": "Skins.get",
+          "kind": "method",
+          "startLine": 69,
+          "endLine": 88,
+          "tokens": 320
+        },
+        {
+          "name": "Skins.get_many",
+          "kind": "method",
+          "startLine": 90,
+          "endLine": 92,
+          "tokens": 44
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3545
+    },
+    "web/app/slp.py": {
+      "description": "Minecraft server list ping: who is online, without RCON or plugin access.",
+      "tokens": 369,
+      "hash": "436f45d03e2a8eb4",
+      "size": 1289,
+      "mtimeMs": 1793976916325.2363,
+      "updatedAt": "2026-11-11T18:15:49.344Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/static/admin.css": {
+      "description": "Styles: 81 rules, 2 media queries",
+      "tokens": 1916,
+      "hash": "d6462c9cb1c2cec5",
+      "size": 6703,
+      "mtimeMs": 1794407326916.8362,
+      "updatedAt": "2026-11-11T18:15:49.344Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/static/admin.js": {
+      "description": "cell: api, act, button + 15 more",
+      "tokens": 11812,
+      "hash": "12a4d66a4a1ff0e7",
+      "size": 41389,
+      "mtimeMs": 1794420885395.1326,
+      "updatedAt": "2026-11-11T18:15:49.345Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "cell",
+          "kind": "fn",
+          "startLine": 1,
+          "endLine": 1,
+          "tokens": 41
+        },
+        {
+          "name": "when",
+          "kind": "fn",
+          "startLine": 2,
+          "endLine": 2,
+          "tokens": 32
+        },
+        {
+          "name": "api",
+          "kind": "fn",
+          "startLine": 6,
+          "endLine": 13,
+          "tokens": 146
+        },
+        {
+          "name": "act",
+          "kind": "fn",
+          "startLine": 15,
+          "endLine": 24,
+          "tokens": 58
+        },
+        {
+          "name": "button",
+          "kind": "fn",
+          "startLine": 26,
+          "endLine": 33,
+          "tokens": 71
+        },
+        {
+          "name": "busyWhile",
+          "kind": "fn",
+          "startLine": 36,
+          "endLine": 46,
+          "tokens": 78
+        },
+        {
+          "name": "submitBusy",
+          "kind": "fn",
+          "startLine": 48,
+          "endLine": 53,
+          "tokens": 49
+        },
+        {
+          "name": "ask",
+          "kind": "fn",
+          "startLine": 55,
+          "endLine": 70,
+          "tokens": 136
+        },
+        {
+          "name": "fill",
+          "kind": "fn",
+          "startLine": 75,
+          "endLine": 81,
+          "tokens": 57
+        },
+        {
+          "name": "loaders",
+          "kind": "fn",
+          "startLine": 84,
+          "endLine": 84,
+          "tokens": 66
+        },
+        {
+          "name": "openTab",
+          "kind": "fn",
+          "startLine": 86,
+          "endLine": 92,
+          "tokens": 100
+        },
+        {
+          "name": "applyPower",
+          "kind": "fn",
+          "startLine": 99,
+          "endLine": 106,
+          "tokens": 103
+        },
+        {
+          "name": "refreshStatus",
+          "kind": "fn",
+          "startLine": 108,
+          "endLine": 122,
+          "tokens": 160
+        },
+        {
+          "name": "refreshJob",
+          "kind": "fn",
+          "startLine": 125,
+          "endLine": 145,
+          "tokens": 238
+        },
+        {
+          "name": "POWER",
+          "kind": "fn",
+          "startLine": 149,
+          "endLine": 153,
+          "tokens": 92
+        },
+        {
+          "name": "changeServer",
+          "kind": "fn",
+          "startLine": 155,
+          "endLine": 175,
+          "tokens": 192
+        },
+        {
+          "name": "appendLog",
+          "kind": "fn",
+          "startLine": 187,
+          "endLine": 199,
+          "tokens": 151
+        },
+        {
+          "name": "pollLog",
+          "kind": "fn",
+          "startLine": 200,
+          "endLine": 206,
+          "tokens": 63
+        },
+        {
+          "name": "loadWhitelist",
+          "kind": "fn",
+          "startLine": 231,
+          "endLine": 251,
+          "tokens": 276
+        },
+        {
+          "name": "waitForWhitelist",
+          "kind": "fn",
+          "startLine": 252,
+          "endLine": 259,
+          "tokens": 74
+        },
+        {
+          "name": "loadBackups",
+          "kind": "fn",
+          "startLine": 275,
+          "endLine": 292,
+          "tokens": 168
+        },
+        {
+          "name": "loadWorlds",
+          "kind": "fn",
+          "startLine": 306,
+          "endLine": 339,
+          "tokens": 388
+        },
+        {
+          "name": "openSwap",
+          "kind": "fn",
+          "startLine": 340,
+          "endLine": 349,
+          "tokens": 155
+        },
+        {
+          "name": "n",
+          "kind": "fn",
+          "startLine": 375,
+          "endLine": 375,
+          "tokens": 19
+        },
+        {
+          "name": "settingControl",
+          "kind": "fn",
+          "startLine": 377,
+          "endLine": 418,
+          "tokens": 495
+        },
+        {
+          "name": "settingValue",
+          "kind": "fn",
+          "startLine": 420,
+          "endLine": 422,
+          "tokens": 31
+        },
+        {
+          "name": "showRestart",
+          "kind": "fn",
+          "startLine": 424,
+          "endLine": 427,
+          "tokens": 60
+        },
+        {
+          "name": "loadSettings",
+          "kind": "fn",
+          "startLine": 429,
+          "endLine": 445,
+          "tokens": 171
+        },
+        {
+          "name": "numberInput",
+          "kind": "fn",
+          "startLine": 479,
+          "endLine": 488,
+          "tokens": 76
+        },
+        {
+          "name": "loadBorders",
+          "kind": "fn",
+          "startLine": 491,
+          "endLine": 515,
+          "tokens": 402
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "const cell = (text, cls) => { const td = document.createElement('td'); td.textContent = text ?? ''; if (cls) td.className = cls; return td; };\nconst when = (ts) => new Date(ts * 1000).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });\nasync function api(path, body) {\nasync function act(path, body, okText) {\nfunction button(text, onClick, cls) {\nasync function busyWhile(btn, fn) {\nfunction submitBusy(form, fn) {\nfunction ask(title, text, yes) {\nfunction fill(id, items, key, make) {\nconst loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, system: loadSystem, challenges: loadChallenges };\nfunction openTab(name) {\nfunction applyPower() {\nasync function refreshStatus() {\nasync function refreshJob() {\nconst POWER = {\nasync function changeServer(action) {\nfunction appendLog(lines, reset) {\nasync function pollLog() {\nasync function loadWhitelist() {\nasync function waitForWhitelist(name, wanted) {\nasync function loadBackups() {\nasync function loadWorlds() {\nfunction openSwap(w) {\nconst n = (v) => (v === null || v === undefined ? '–' : fmt(v));\nfunction settingControl(f) {\nfunction settingValue(input) {\nfunction showRestart(keys) {\nasync function loadSettings() {\nfunction numberInput(value, label, min) {\nasync function loadBorders() {",
+      "importance": 0.3205
+    },
+    "web/app/static/challenges.js": {
+      "description": "Challenges page: daily and weekly challenges, claims, community goal, weekly leaders, hall of fame.",
+      "tokens": 1969,
+      "hash": "82946898338f63bb",
+      "size": 6894,
+      "mtimeMs": 1794420885394.4773,
+      "updatedAt": "2026-11-11T18:15:49.345Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "el",
+          "kind": "fn",
+          "startLine": 5,
+          "endLine": 10,
+          "tokens": 47
+        },
+        {
+          "name": "left",
+          "kind": "fn",
+          "startLine": 12,
+          "endLine": 16,
+          "tokens": 74
+        },
+        {
+          "name": "bar",
+          "kind": "fn",
+          "startLine": 18,
+          "endLine": 28,
+          "tokens": 116
+        },
+        {
+          "name": "claim",
+          "kind": "fn",
+          "startLine": 30,
+          "endLine": 45,
+          "tokens": 181
+        },
+        {
+          "name": "claimButton",
+          "kind": "fn",
+          "startLine": 47,
+          "endLine": 56,
+          "tokens": 89
+        },
+        {
+          "name": "card",
+          "kind": "fn",
+          "startLine": 58,
+          "endLine": 89,
+          "tokens": 386
+        },
+        {
+          "name": "renderClaims",
+          "kind": "fn",
+          "startLine": 91,
+          "endLine": 105,
+          "tokens": 175
+        },
+        {
+          "name": "renderBoards",
+          "kind": "fn",
+          "startLine": 107,
+          "endLine": 117,
+          "tokens": 133
+        },
+        {
+          "name": "renderHall",
+          "kind": "fn",
+          "startLine": 119,
+          "endLine": 134,
+          "tokens": 202
+        },
+        {
+          "name": "renderGoal",
+          "kind": "fn",
+          "startLine": 136,
+          "endLine": 142,
+          "tokens": 142
+        },
+        {
+          "name": "refresh",
+          "kind": "fn",
+          "startLine": 144,
+          "endLine": 166,
+          "tokens": 281
+        },
+        {
+          "name": "tickCountdowns",
+          "kind": "fn",
+          "startLine": 168,
+          "endLine": 172,
+          "tokens": 42
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/app/static/common.js": {
+      "description": "fmt: toast, setText, setChip, refreshChip, skinHead",
+      "tokens": 540,
+      "hash": "e831d12a2f713957",
+      "size": 1888,
+      "mtimeMs": 1793983585738.9722,
+      "updatedAt": "2026-11-11T18:15:49.345Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "$",
+          "kind": "fn",
+          "startLine": 1,
+          "endLine": 1,
+          "tokens": 14
+        },
+        {
+          "name": "fmt",
+          "kind": "fn",
+          "startLine": 2,
+          "endLine": 2,
+          "tokens": 16
+        },
+        {
+          "name": "bytes",
+          "kind": "fn",
+          "startLine": 3,
+          "endLine": 3,
+          "tokens": 29
+        },
+        {
+          "name": "toast",
+          "kind": "fn",
+          "startLine": 5,
+          "endLine": 12,
+          "tokens": 76
+        },
+        {
+          "name": "setText",
+          "kind": "fn",
+          "startLine": 15,
+          "endLine": 17,
+          "tokens": 26
+        },
+        {
+          "name": "setChip",
+          "kind": "fn",
+          "startLine": 21,
+          "endLine": 25,
+          "tokens": 39
+        },
+        {
+          "name": "refreshChip",
+          "kind": "fn",
+          "startLine": 27,
+          "endLine": 39,
+          "tokens": 152
+        },
+        {
+          "name": "skinHead",
+          "kind": "fn",
+          "startLine": 43,
+          "endLine": 52,
+          "tokens": 123
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/app/static/figure.js": {
+      "description": "A player built from their real skin with CSS 3D boxes. No canvas or WebGL, so a",
+      "tokens": 1438,
+      "hash": "53770ee644148036",
+      "size": 5033,
+      "mtimeMs": 1793981689418.6206,
+      "updatedAt": "2026-11-11T18:15:49.346Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "Figure",
+          "kind": "fn",
+          "startLine": 3,
+          "endLine": 120,
+          "tokens": 1390
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/app/static/fonts/OFL-pixelify-sans.txt": {
+      "description": "Declares of",
+      "tokens": 1099,
+      "hash": "8ed5cd9e189e30df",
+      "size": 4393,
+      "mtimeMs": 1793981401331.6838,
+      "updatedAt": "2026-11-11T18:15:49.346Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/static/items.js": {
+      "description": "Minecraft item helpers shared by the challenges and admin pages: names, and rewards drawn as inventory slots",
+      "tokens": 1008,
+      "hash": "7746e411c4a14ca1",
+      "size": 3527,
+      "mtimeMs": 1794420894913.1726,
+      "updatedAt": "2026-11-11T18:15:49.346Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "itemEl",
+          "kind": "fn",
+          "startLine": 3,
+          "endLine": 8,
+          "tokens": 48
+        },
+        {
+          "name": "itemName",
+          "kind": "fn",
+          "startLine": 10,
+          "endLine": 15,
+          "tokens": 106
+        },
+        {
+          "name": "itemsText",
+          "kind": "fn",
+          "startLine": 16,
+          "endLine": 16,
+          "tokens": 29
+        },
+        {
+          "name": "itemTitle",
+          "kind": "fn",
+          "startLine": 21,
+          "endLine": 21,
+          "tokens": 25
+        },
+        {
+          "name": "tipLines",
+          "kind": "fn",
+          "startLine": 23,
+          "endLine": 30,
+          "tokens": 142
+        },
+        {
+          "name": "shines",
+          "kind": "fn",
+          "startLine": 34,
+          "endLine": 34,
+          "tokens": 32
+        },
+        {
+          "name": "placeTip",
+          "kind": "fn",
+          "startLine": 36,
+          "endLine": 40,
+          "tokens": 67
+        },
+        {
+          "name": "slotsFor",
+          "kind": "fn",
+          "startLine": 42,
+          "endLine": 71,
+          "tokens": 343
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/app/static/site.css": {
+      "description": "Styles: 123 rules, 24 vars, 13 animations",
+      "tokens": 5378,
+      "hash": "7c3488c4739a48b6",
+      "size": 18822,
+      "mtimeMs": 1794420908064.093,
+      "updatedAt": "2026-11-11T18:15:49.346Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/static/site.js": {
+      "description": "Zustand store",
+      "tokens": 3060,
+      "hash": "3afef230bfe378ce",
+      "size": 10710,
+      "mtimeMs": 1794407166593.3809,
+      "updatedAt": "2026-11-11T18:15:49.346Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "loadOverview",
+          "kind": "fn",
+          "startLine": 7,
+          "endLine": 12,
+          "tokens": 66
+        },
+        {
+          "name": "ago",
+          "kind": "fn",
+          "startLine": 14,
+          "endLine": 20,
+          "tokens": 78
+        },
+        {
+          "name": "setSky",
+          "kind": "fn",
+          "startLine": 25,
+          "endLine": 29,
+          "tokens": 51
+        },
+        {
+          "name": "crowdScale",
+          "kind": "fn",
+          "startLine": 31,
+          "endLine": 35,
+          "tokens": 66
+        },
+        {
+          "name": "renderCrowd",
+          "kind": "fn",
+          "startLine": 37,
+          "endLine": 58,
+          "tokens": 203
+        },
+        {
+          "name": "renderScene",
+          "kind": "fn",
+          "startLine": 60,
+          "endLine": 67,
+          "tokens": 130
+        },
+        {
+          "name": "renderAwards",
+          "kind": "fn",
+          "startLine": 70,
+          "endLine": 90,
+          "tokens": 218
+        },
+        {
+          "name": "renderWeek",
+          "kind": "fn",
+          "startLine": 93,
+          "endLine": 137,
+          "tokens": 442
+        },
+        {
+          "name": "refreshHome",
+          "kind": "fn",
+          "startLine": 139,
+          "endLine": 153,
+          "tokens": 151
+        },
+        {
+          "name": "startHome",
+          "kind": "fn",
+          "startLine": 155,
+          "endLine": 177,
+          "tokens": 217
+        },
+        {
+          "name": "statusText",
+          "kind": "fn",
+          "startLine": 183,
+          "endLine": 187,
+          "tokens": 45
+        },
+        {
+          "name": "buildCard",
+          "kind": "fn",
+          "startLine": 189,
+          "endLine": 206,
+          "tokens": 192
+        },
+        {
+          "name": "renderRoster",
+          "kind": "fn",
+          "startLine": 208,
+          "endLine": 229,
+          "tokens": 257
+        },
+        {
+          "name": "openPlayer",
+          "kind": "fn",
+          "startLine": 231,
+          "endLine": 263,
+          "tokens": 362
+        },
+        {
+          "name": "dragToSpin",
+          "kind": "fn",
+          "startLine": 265,
+          "endLine": 283,
+          "tokens": 194
+        },
+        {
+          "name": "refreshPlayers",
+          "kind": "fn",
+          "startLine": 285,
+          "endLine": 292,
+          "tokens": 65
+        },
+        {
+          "name": "startPlayers",
+          "kind": "fn",
+          "startLine": 294,
+          "endLine": 302,
+          "tokens": 109
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "async function loadOverview() {\nfunction ago(ts) {\nfunction setSky() {\nfunction crowdScale(count) {\nfunction renderCrowd(online) {\nfunction renderScene(d) {\nfunction renderAwards(list) {\nfunction renderWeek(week, goal) {\nasync function refreshHome() {\nfunction startHome() {\nfunction statusText(p) {\nfunction buildCard(p) {\nfunction renderRoster(players) {\nfunction openPlayer(uuid) {\nfunction dragToSpin(stage) {\nasync function refreshPlayers() {\nfunction startPlayers() {",
+      "importance": 0.3205
+    },
+    "web/app/stats.py": {
+      "description": "Turn the game's per-player stats files into leaderboards.",
+      "tokens": 2359,
+      "hash": "4427fa4b74286d48",
+      "size": 8255,
+      "mtimeMs": 1794407048756.34,
+      "updatedAt": "2026-11-11T18:15:49.346Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "names",
+          "kind": "fn",
+          "startLine": 9,
+          "endLine": 16,
+          "tokens": 89
+        },
+        {
+          "name": "_flat",
+          "kind": "fn",
+          "startLine": 19,
+          "endLine": 24,
+          "tokens": 73
+        },
+        {
+          "name": "player",
+          "kind": "fn",
+          "startLine": 27,
+          "endLine": 45,
+          "tokens": 240
+        },
+        {
+          "name": "collect",
+          "kind": "fn",
+          "startLine": 48,
+          "endLine": 61,
+          "tokens": 222
+        },
+        {
+          "name": "world_bytes",
+          "kind": "fn",
+          "startLine": 64,
+          "endLine": 72,
+          "tokens": 74
+        },
+        {
+          "name": "merge_players",
+          "kind": "fn",
+          "startLine": 85,
+          "endLine": 96,
+          "tokens": 208
+        },
+        {
+          "name": "_metric",
+          "kind": "fn",
+          "startLine": 99,
+          "endLine": 101,
+          "tokens": 58
+        },
+        {
+          "name": "_pretty",
+          "kind": "fn",
+          "startLine": 132,
+          "endLine": 133,
+          "tokens": 26
+        },
+        {
+          "name": "_top",
+          "kind": "fn",
+          "startLine": 136,
+          "endLine": 138,
+          "tokens": 56
+        },
+        {
+          "name": "fun_facts",
+          "kind": "fn",
+          "startLine": 141,
+          "endLine": 160,
+          "tokens": 272
+        },
+        {
+          "name": "awards",
+          "kind": "fn",
+          "startLine": 163,
+          "endLine": 176,
+          "tokens": 218
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def names(server: Path) -> dict:\ndef _flat(path: Path) -> dict:\ndef player(path: Path, known: dict, mark: dict | None = None) -> dict:\ndef collect(server: Path, world: str = \"world\", mark: dict | None = None) -> list:\ndef world_bytes(server: Path, world: str = \"world\") -> int:\ndef merge_players(whitelist: list, online: list, played: list, ops: set) -> list:\ndef _metric(flat: dict, cat: str, patterns) -> int:\ndef _pretty(key: str) -> str:\ndef _top(flat: dict, cat: str):\ndef fun_facts(flat: dict) -> list:\ndef awards(played: list) -> list:",
+      "importance": 0.4711
+    },
+    "web/app/templates/admin.html": {
+      "description": "Declares and",
+      "tokens": 3822,
+      "hash": "c8f759fac115456c",
+      "size": 14358,
+      "mtimeMs": 1794407326916.2354,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/templates/base.html": {
+      "description": "{% block title %}TNV SMP{% endblock %}",
+      "tokens": 486,
+      "hash": "5b415427534697d3",
+      "size": 1821,
+      "mtimeMs": 1794420885394.7583,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/templates/challenges.html": {
+      "description": "",
+      "tokens": 483,
+      "hash": "981cf426030074dd",
+      "size": 1814,
+      "mtimeMs": 1794414168632.9763,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/templates/home.html": {
+      "description": "",
+      "tokens": 672,
+      "hash": "6d01d037358a3839",
+      "size": 2534,
+      "mtimeMs": 1794407166593.0144,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/templates/mods.html": {
+      "description": "",
+      "tokens": 938,
+      "hash": "f4d1c3acefa40adc",
+      "size": 3517,
+      "mtimeMs": 1793992867520.3018,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/templates/players.html": {
+      "description": "",
+      "tokens": 243,
+      "hash": "b85d5ba4614005be",
+      "size": 916,
+      "mtimeMs": 1794407166593.1794,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/templates/world.html": {
+      "description": "",
+      "tokens": 82,
+      "hash": "2ba9d9a35b0883eb",
+      "size": 307,
+      "mtimeMs": 1793992867548.8271,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/app/tnv_access.py": {
+      "description": "Check who someone is and what role they have on this site. Copy this file into your app. See README.md.",
+      "tokens": 1707,
+      "hash": "01b7de3316e99e03",
+      "size": 5973,
+      "mtimeMs": 1793979695345.695,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "AccessDenied",
+          "kind": "class",
+          "startLine": 24,
+          "endLine": 27,
+          "tokens": 42
+        },
+        {
+          "name": "AccessDenied.__init__",
+          "kind": "method",
+          "startLine": 25,
+          "endLine": 27,
+          "tokens": 33
+        },
+        {
+          "name": "AccessUser",
+          "kind": "class",
+          "startLine": 31,
+          "endLine": 33,
+          "tokens": 14
+        },
+        {
+          "name": "_http_fetch",
+          "kind": "fn",
+          "startLine": 36,
+          "endLine": 41,
+          "tokens": 64
+        },
+        {
+          "name": "AccessGuard",
+          "kind": "class",
+          "startLine": 44,
+          "endLine": 111,
+          "tokens": 1037
+        },
+        {
+          "name": "AccessGuard.__init__",
+          "kind": "method",
+          "startLine": 45,
+          "endLine": 56,
+          "tokens": 248
+        },
+        {
+          "name": "AccessGuard._email",
+          "kind": "method",
+          "startLine": 58,
+          "endLine": 69,
+          "tokens": 172
+        },
+        {
+          "name": "AccessGuard._lookup",
+          "kind": "method",
+          "startLine": 71,
+          "endLine": 104,
+          "tokens": 504
+        },
+        {
+          "name": "AccessGuard.check",
+          "kind": "method",
+          "startLine": 106,
+          "endLine": 111,
+          "tokens": 107
+        },
+        {
+          "name": "configure",
+          "kind": "fn",
+          "startLine": 117,
+          "endLine": 119,
+          "tokens": 25
+        },
+        {
+          "name": "_from_env",
+          "kind": "fn",
+          "startLine": 122,
+          "endLine": 131,
+          "tokens": 150
+        },
+        {
+          "name": "_dependency",
+          "kind": "fn",
+          "startLine": 134,
+          "endLine": 142,
+          "tokens": 103
+        },
+        {
+          "name": "require_role",
+          "kind": "fn",
+          "startLine": 145,
+          "endLine": 147,
+          "tokens": 37
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.4803
+    },
+    "web/app/worlds.py": {
+      "description": "World slots: keep several worlds on the server and swap which one is live.",
+      "tokens": 5410,
+      "hash": "9927e96d03644ea3",
+      "size": 18934,
+      "mtimeMs": 1793979709509.5474,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "WorldError",
+          "kind": "class",
+          "startLine": 33,
+          "endLine": 34,
+          "tokens": 21
+        },
+        {
+          "name": "read_json",
+          "kind": "fn",
+          "startLine": 37,
+          "endLine": 41,
+          "tokens": 43
+        },
+        {
+          "name": "write_json",
+          "kind": "fn",
+          "startLine": 44,
+          "endLine": 48,
+          "tokens": 60
+        },
+        {
+          "name": "data_version",
+          "kind": "fn",
+          "startLine": 51,
+          "endLine": 65,
+          "tokens": 171
+        },
+        {
+          "name": "dir_size",
+          "kind": "fn",
+          "startLine": 68,
+          "endLine": 76,
+          "tokens": 74
+        },
+        {
+          "name": "slugify",
+          "kind": "fn",
+          "startLine": 79,
+          "endLine": 80,
+          "tokens": 28
+        },
+        {
+          "name": "Worlds",
+          "kind": "class",
+          "startLine": 83,
+          "endLine": 459,
+          "tokens": 4787
+        },
+        {
+          "name": "Worlds.__init__",
+          "kind": "method",
+          "startLine": 84,
+          "endLine": 93,
+          "tokens": 190
+        },
+        {
+          "name": "Worlds.setup",
+          "kind": "method",
+          "startLine": 96,
+          "endLine": 103,
+          "tokens": 141
+        },
+        {
+          "name": "Worlds.active",
+          "kind": "method",
+          "startLine": 105,
+          "endLine": 106,
+          "tokens": 27
+        },
+        {
+          "name": "Worlds._slot",
+          "kind": "method",
+          "startLine": 108,
+          "endLine": 109,
+          "tokens": 24
+        },
+        {
+          "name": "Worlds._meta_file",
+          "kind": "method",
+          "startLine": 111,
+          "endLine": 112,
+          "tokens": 26
+        },
+        {
+          "name": "Worlds._meta",
+          "kind": "method",
+          "startLine": 114,
+          "endLine": 118,
+          "tokens": 55
+        },
+        {
+          "name": "Worlds._seed",
+          "kind": "method",
+          "startLine": 120,
+          "endLine": 121,
+          "tokens": 24
+        },
+        {
+          "name": "Worlds._properties",
+          "kind": "method",
+          "startLine": 123,
+          "endLine": 132,
+          "tokens": 100
+        },
+        {
+          "name": "Worlds._set_seed",
+          "kind": "method",
+          "startLine": 134,
+          "endLine": 142,
+          "tokens": 131
+        },
+        {
+          "name": "Worlds._size",
+          "kind": "method",
+          "startLine": 144,
+          "endLine": 150,
+          "tokens": 76
+        },
+        {
+          "name": "Worlds.list",
+          "kind": "method",
+          "startLine": 152,
+          "endLine": 172,
+          "tokens": 327
+        },
+        {
+          "name": "Worlds.job",
+          "kind": "method",
+          "startLine": 174,
+          "endLine": 175,
+          "tokens": 17
+        },
+        {
+          "name": "Worlds.busy",
+          "kind": "method",
+          "startLine": 177,
+          "endLine": 178,
+          "tokens": 18
+        },
+        {
+          "name": "Worlds._new_slug",
+          "kind": "method",
+          "startLine": 181,
+          "endLine": 189,
+          "tokens": 138
+        },
+        {
+          "name": "Worlds.create_new",
+          "kind": "method",
+          "startLine": 191,
+          "endLine": 198,
+          "tokens": 147
+        },
+        {
+          "name": "Worlds.backup_files",
+          "kind": "method",
+          "startLine": 200,
+          "endLine": 202,
+          "tokens": 52
+        },
+        {
+          "name": "Worlds._world_at",
+          "kind": "method",
+          "startLine": 204,
+          "endLine": 209,
+          "tokens": 65
+        },
+        {
+          "name": "Worlds.list_backups",
+          "kind": "method",
+          "startLine": 211,
+          "endLine": 218,
+          "tokens": 104
+        },
+        {
+          "name": "Worlds._extract_world",
+          "kind": "method",
+          "startLine": 220,
+          "endLine": 248,
+          "tokens": 472
+        },
+        {
+          "name": "Worlds._restore",
+          "kind": "method",
+          "startLine": 250,
+          "endLine": 259,
+          "tokens": 156
+        },
+        {
+          "name": "Worlds.start_restore",
+          "kind": "method",
+          "startLine": 261,
+          "endLine": 266,
+          "tokens": 100
+        },
+        {
+          "name": "Worlds.start_swap",
+          "kind": "method",
+          "startLine": 269,
+          "endLine": 277,
+          "tokens": 162
+        },
+        {
+          "name": "Worlds._run",
+          "kind": "method",
+          "startLine": 279,
+          "endLine": 295,
+          "tokens": 242
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "class WorldError(Exception):\ndef read_json(path: Path, default=None):\ndef write_json(path: Path, data) -> None:\ndef data_version(world: Path):\ndef dir_size(path: Path) -> int:\ndef slugify(name: str) -> str:\nclass Worlds:\n    def __init__(self, server: Path, backups: Path, crafty, ping, sleep=time.sleep,\n    def setup(self) -> None:\n    def active(self) -> str:\n    def _slot(self, slug: str) -> Path:\n    def _meta_file(self, slug: str) -> Path:\n    def _meta(self, slug: str) -> dict:\n    def _seed(self) -> str:\n    def _properties(self) -> dict:\n    def _set_seed(self, seed: str) -> None:\n    def _size(self, slug: str, path: Path) -> int:\n    def list(self) -> list:\n    def job(self):\n    def busy(self) -> bool:\n    def _new_slug(self, name: str) -> str:\n    def create_new(self, name: str, seed: str = \"\") -> str:\n    def backup_files(self) -> list:\n    def _world_at(self, when: float) -> str:\n    def list_backups(self) -> list:\n    def _extract_world(self, backup: Path, target: Path) -> dict:\n    def _restore(self, slug: str, name: str, backup: Path) -> None:\n    def start_restore(self, name: str, backup_name: str, by: str) -> None:\n    def start_swap(self, slug: str, by: str) -> None:\n    def _run(self, kind: str, target: str, by: str, fn) -> None:",
+      "importance": 1
+    },
+    "web/Dockerfile": {
+      "description": "Docker container definition",
+      "tokens": 96,
+      "hash": "830e9fe75c39b962",
+      "size": 359,
+      "mtimeMs": 1793979695347.5151,
+      "updatedAt": "2026-11-11T18:15:49.347Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/nginx/default.conf": {
+      "description": "Front door: the site at /, BlueMap at /map/. Cloudflare Access guards the whole",
+      "tokens": 660,
+      "hash": "07e1d03d6ec5467e",
+      "size": 2473,
+      "mtimeMs": 1794419517180.4573,
+      "updatedAt": "2026-11-11T18:15:49.348Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/requirements.txt": {
+      "description": "Python dependencies",
+      "tokens": 27,
+      "hash": "c66a8e3ca5ce19e2",
+      "size": 108,
+      "mtimeMs": 1794417270258.073,
+      "updatedAt": "2026-11-11T18:15:49.348Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/tests/test_admin_progress.py": {
+      "description": "Tests: admin_only, overview, bad_pool_rejected_and_file_unchanged, reset_needs_typed_confirm + 6 more",
+      "tokens": 2307,
+      "hash": "c3ff8e6e0f0a42e2",
+      "size": 8073,
+      "mtimeMs": 1794407868841.821,
+      "updatedAt": "2026-11-11T18:15:49.348Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "client",
+          "kind": "fn",
+          "startLine": 15,
+          "endLine": 65,
+          "tokens": 614
+        },
+        {
+          "name": "test_admin_only",
+          "kind": "fn",
+          "startLine": 68,
+          "endLine": 71,
+          "tokens": 72
+        },
+        {
+          "name": "test_overview",
+          "kind": "fn",
+          "startLine": 74,
+          "endLine": 78,
+          "tokens": 80
+        },
+        {
+          "name": "test_bad_pool_rejected_and_file_unchanged",
+          "kind": "fn",
+          "startLine": 81,
+          "endLine": 90,
+          "tokens": 209
+        },
+        {
+          "name": "test_reset_needs_typed_confirm",
+          "kind": "fn",
+          "startLine": 93,
+          "endLine": 97,
+          "tokens": 102
+        },
+        {
+          "name": "test_swap_keeps_claims",
+          "kind": "fn",
+          "startLine": 100,
+          "endLine": 107,
+          "tokens": 159
+        },
+        {
+          "name": "test_links_and_test_reward",
+          "kind": "fn",
+          "startLine": 110,
+          "endLine": 118,
+          "tokens": 247
+        },
+        {
+          "name": "test_give_again",
+          "kind": "fn",
+          "startLine": 121,
+          "endLine": 126,
+          "tokens": 138
+        },
+        {
+          "name": "test_writes_are_audited",
+          "kind": "fn",
+          "startLine": 129,
+          "endLine": 134,
+          "tokens": 114
+        },
+        {
+          "name": "test_other_sites_cant_post",
+          "kind": "fn",
+          "startLine": 137,
+          "endLine": 140,
+          "tokens": 66
+        },
+        {
+          "name": "test_admin_shares_the_console_query",
+          "kind": "fn",
+          "startLine": 143,
+          "endLine": 171,
+          "tokens": 379
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def client(tmp_path, role=\"admin\"):\ndef test_admin_only(tmp_path):\ndef test_overview(tmp_path):\ndef test_bad_pool_rejected_and_file_unchanged(tmp_path):\ndef test_reset_needs_typed_confirm(tmp_path):\ndef test_swap_keeps_claims(tmp_path):\ndef test_links_and_test_reward(tmp_path):\ndef test_give_again(tmp_path):\ndef test_writes_are_audited(tmp_path):\ndef test_other_sites_cant_post(tmp_path):\ndef test_admin_shares_the_console_query(tmp_path):",
+      "importance": 0.3205
+    },
+    "web/tests/test_admin.py": {
+      "description": "Tests: needs_login_and_admin_role, other_sites_cant_post, whitelist_rejects_command_injection, modpack_build_needs_admin_and_same_origin + 2 more",
+      "tokens": 1273,
+      "hash": "f6e30ad57d6adde5",
+      "size": 4454,
+      "mtimeMs": 1794161496103.6506,
+      "updatedAt": "2026-11-11T18:15:49.348Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "no_network",
+          "kind": "fn",
+          "startLine": 8,
+          "endLine": 10,
+          "tokens": 26
+        },
+        {
+          "name": "client",
+          "kind": "fn",
+          "startLine": 13,
+          "endLine": 42,
+          "tokens": 298
+        },
+        {
+          "name": "test_needs_login_and_admin_role",
+          "kind": "fn",
+          "startLine": 48,
+          "endLine": 52,
+          "tokens": 77
+        },
+        {
+          "name": "test_other_sites_cant_post",
+          "kind": "fn",
+          "startLine": 55,
+          "endLine": 59,
+          "tokens": 73
+        },
+        {
+          "name": "test_whitelist_rejects_command_injection",
+          "kind": "fn",
+          "startLine": 62,
+          "endLine": 68,
+          "tokens": 142
+        },
+        {
+          "name": "test_modpack_build_needs_admin_and_same_origin",
+          "kind": "fn",
+          "startLine": 71,
+          "endLine": 76,
+          "tokens": 114
+        },
+        {
+          "name": "test_modpack_failure_is_reported_and_audited",
+          "kind": "fn",
+          "startLine": 79,
+          "endLine": 93,
+          "tokens": 193
+        },
+        {
+          "name": "test_settings_save_needs_admin_same_origin_and_is_audited",
+          "kind": "fn",
+          "startLine": 96,
+          "endLine": 108,
+          "tokens": 278
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/tests/test_challenges_api.py": {
+      "description": "Tests: awards_use_season_delta, fun_facts, challenges_payload_shape, claim_requires_same_origin + 6 more",
+      "tokens": 3099,
+      "hash": "0484974583efc9c9",
+      "size": 10844,
+      "mtimeMs": 1794417270250.7268,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "write",
+          "kind": "fn",
+          "startLine": 16,
+          "endLine": 20,
+          "tokens": 88
+        },
+        {
+          "name": "test_awards_use_season_delta",
+          "kind": "fn",
+          "startLine": 23,
+          "endLine": 35,
+          "tokens": 231
+        },
+        {
+          "name": "test_fun_facts",
+          "kind": "fn",
+          "startLine": 38,
+          "endLine": 48,
+          "tokens": 184
+        },
+        {
+          "name": "client",
+          "kind": "fn",
+          "startLine": 52,
+          "endLine": 98,
+          "tokens": 530
+        },
+        {
+          "name": "test_challenges_payload_shape",
+          "kind": "fn",
+          "startLine": 104,
+          "endLine": 112,
+          "tokens": 140
+        },
+        {
+          "name": "test_claim_requires_same_origin",
+          "kind": "fn",
+          "startLine": 115,
+          "endLine": 118,
+          "tokens": 62
+        },
+        {
+          "name": "test_claim_flow_over_http",
+          "kind": "fn",
+          "startLine": 121,
+          "endLine": 134,
+          "tokens": 204
+        },
+        {
+          "name": "test_unlinked_user_sees_not_linked",
+          "kind": "fn",
+          "startLine": 137,
+          "endLine": 140,
+          "tokens": 72
+        },
+        {
+          "name": "test_me_online_flag",
+          "kind": "fn",
+          "startLine": 143,
+          "endLine": 153,
+          "tokens": 151
+        },
+        {
+          "name": "png",
+          "kind": "fn",
+          "startLine": 156,
+          "endLine": 161,
+          "tokens": 48
+        },
+        {
+          "name": "make_jar",
+          "kind": "fn",
+          "startLine": 164,
+          "endLine": 173,
+          "tokens": 162
+        },
+        {
+          "name": "cube_jar",
+          "kind": "fn",
+          "startLine": 176,
+          "endLine": 192,
+          "tokens": 398
+        },
+        {
+          "name": "load",
+          "kind": "fn",
+          "startLine": 195,
+          "endLine": 198,
+          "tokens": 32
+        },
+        {
+          "name": "test_icons_from_client_jar",
+          "kind": "fn",
+          "startLine": 201,
+          "endLine": 210,
+          "tokens": 165
+        },
+        {
+          "name": "test_block_icons_are_shaded_cubes",
+          "kind": "fn",
+          "startLine": 213,
+          "endLine": 226,
+          "tokens": 253
+        },
+        {
+          "name": "test_icon_route",
+          "kind": "fn",
+          "startLine": 229,
+          "endLine": 244,
+          "tokens": 224
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def write(server, uuid, cats):\ndef test_awards_use_season_delta(tmp_path):\ndef test_fun_facts():\ndef client(tmp_path, email=\"alex@example.com\"):\ndef test_challenges_payload_shape(tmp_path):\ndef test_claim_requires_same_origin(tmp_path):\ndef test_claim_flow_over_http(tmp_path):\ndef test_unlinked_user_sees_not_linked(tmp_path):\ndef test_me_online_flag(tmp_path):\ndef png(color, size=16):\ndef make_jar(path, names=(), models=None):\ndef cube_jar(path):\ndef load(data):\ndef test_icons_from_client_jar(tmp_path):\ndef test_block_icons_are_shaded_cubes(tmp_path):\ndef test_icon_route(tmp_path):",
+      "importance": 0.3205
+    },
+    "web/tests/test_challenges.py": {
+      "description": "Tests: pick_avoids_previous_when_possible, pick_skips_disabled_and_falls_back_when_pool_small, instance_is_frozen_copy, first_finisher_and_ties + 4...",
+      "tokens": 1006,
+      "hash": "268b024d87109cef",
+      "size": 3519,
+      "mtimeMs": 1794406627650.4363,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "entry",
+          "kind": "fn",
+          "startLine": 13,
+          "endLine": 17,
+          "tokens": 71
+        },
+        {
+          "name": "test_pick_avoids_previous_when_possible",
+          "kind": "fn",
+          "startLine": 20,
+          "endLine": 24,
+          "tokens": 72
+        },
+        {
+          "name": "test_pick_skips_disabled_and_falls_back_when_pool_small",
+          "kind": "fn",
+          "startLine": 27,
+          "endLine": 31,
+          "tokens": 84
+        },
+        {
+          "name": "test_instance_is_frozen_copy",
+          "kind": "fn",
+          "startLine": 34,
+          "endLine": 43,
+          "tokens": 125
+        },
+        {
+          "name": "test_first_finisher_and_ties",
+          "kind": "fn",
+          "startLine": 46,
+          "endLine": 55,
+          "tokens": 164
+        },
+        {
+          "name": "test_defaults_are_valid",
+          "kind": "fn",
+          "startLine": 58,
+          "endLine": 65,
+          "tokens": 131
+        },
+        {
+          "name": "test_load_pools_uses_defaults_when_missing",
+          "kind": "fn",
+          "startLine": 68,
+          "endLine": 69,
+          "tokens": 32
+        },
+        {
+          "name": "test_save_pools_rejects_bad_entries",
+          "kind": "fn",
+          "startLine": 76,
+          "endLine": 80,
+          "tokens": 70
+        },
+        {
+          "name": "test_weekly_needs_bonus",
+          "kind": "fn",
+          "startLine": 83,
+          "endLine": 87,
+          "tokens": 105
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/tests/test_cpu.py": {
+      "description": "Tests: read_stat, percents_split_user_and_system, cgroup_usage, server_goes_past_100_when_several_threads_are_busy + 2 more",
+      "tokens": 689,
+      "hash": "a8386655e7514c5a",
+      "size": 2410,
+      "mtimeMs": 1794403940484.6785,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "test_read_stat",
+          "kind": "fn",
+          "startLine": 14,
+          "endLine": 18,
+          "tokens": 70
+        },
+        {
+          "name": "test_percents_split_user_and_system",
+          "kind": "fn",
+          "startLine": 21,
+          "endLine": 25,
+          "tokens": 82
+        },
+        {
+          "name": "test_cgroup_usage",
+          "kind": "fn",
+          "startLine": 28,
+          "endLine": 31,
+          "tokens": 52
+        },
+        {
+          "name": "Fake",
+          "kind": "class",
+          "startLine": 34,
+          "endLine": 46,
+          "tokens": 126
+        },
+        {
+          "name": "Fake.__init__",
+          "kind": "method",
+          "startLine": 35,
+          "endLine": 36,
+          "tokens": 39
+        },
+        {
+          "name": "Fake.meter",
+          "kind": "method",
+          "startLine": 38,
+          "endLine": 40,
+          "tokens": 52
+        },
+        {
+          "name": "Fake._mc",
+          "kind": "method",
+          "startLine": 42,
+          "endLine": 46,
+          "tokens": 32
+        },
+        {
+          "name": "test_server_goes_past_100_when_several_threads_are_busy",
+          "kind": "fn",
+          "startLine": 49,
+          "endLine": 54,
+          "tokens": 108
+        },
+        {
+          "name": "test_sampler_uses_previous_reading_after_the_first",
+          "kind": "fn",
+          "startLine": 57,
+          "endLine": 62,
+          "tokens": 92
+        },
+        {
+          "name": "test_server_container_down_gives_none_but_threads_still_work",
+          "kind": "fn",
+          "startLine": 65,
+          "endLine": 67,
+          "tokens": 71
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/tests/test_dimensions.py": {
+      "description": "Tests: reads_plugin_config, fresh_jar_without_config_is_all_locked, not_installed, stopped_edits_file_and_keeps_comments + 4 more",
+      "tokens": 845,
+      "hash": "8847f5ffc8b3b57e",
+      "size": 2955,
+      "mtimeMs": 1794402893710.18,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "Crafty",
+          "kind": "class",
+          "startLine": 13,
+          "endLine": 18,
+          "tokens": 35
+        },
+        {
+          "name": "Crafty.__init__",
+          "kind": "method",
+          "startLine": 14,
+          "endLine": 15,
+          "tokens": 14
+        },
+        {
+          "name": "Crafty.command",
+          "kind": "method",
+          "startLine": 17,
+          "endLine": 18,
+          "tokens": 17
+        },
+        {
+          "name": "make",
+          "kind": "fn",
+          "startLine": 21,
+          "endLine": 35,
+          "tokens": 149
+        },
+        {
+          "name": "states",
+          "kind": "fn",
+          "startLine": 38,
+          "endLine": 39,
+          "tokens": 22
+        },
+        {
+          "name": "test_reads_plugin_config",
+          "kind": "fn",
+          "startLine": 42,
+          "endLine": 45,
+          "tokens": 46
+        },
+        {
+          "name": "test_fresh_jar_without_config_is_all_locked",
+          "kind": "fn",
+          "startLine": 48,
+          "endLine": 51,
+          "tokens": 55
+        },
+        {
+          "name": "test_not_installed",
+          "kind": "fn",
+          "startLine": 54,
+          "endLine": 58,
+          "tokens": 61
+        },
+        {
+          "name": "test_stopped_edits_file_and_keeps_comments",
+          "kind": "fn",
+          "startLine": 61,
+          "endLine": 66,
+          "tokens": 92
+        },
+        {
+          "name": "test_stopped_writes_config_when_plugin_never_ran",
+          "kind": "fn",
+          "startLine": 69,
+          "endLine": 72,
+          "tokens": 56
+        },
+        {
+          "name": "test_running_sends_command_and_trusts_reply",
+          "kind": "fn",
+          "startLine": 75,
+          "endLine": 80,
+          "tokens": 110
+        },
+        {
+          "name": "test_running_no_reply_is_an_error",
+          "kind": "fn",
+          "startLine": 83,
+          "endLine": 86,
+          "tokens": 46
+        },
+        {
+          "name": "test_rejects_unknown_dimension",
+          "kind": "fn",
+          "startLine": 90,
+          "endLine": 94,
+          "tokens": 55
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/tests/test_engine.py": {
+      "description": "Tests: first_tick_takes_season_day_week_and_picks, completion_and_first_finisher_announced, day_rollover_picks_new_dailies, week_rollover_writes_ha...",
+      "tokens": 2487,
+      "hash": "51b25b59d77384a8",
+      "size": 8702,
+      "mtimeMs": 1794407834598.4583,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "at",
+          "kind": "fn",
+          "startLine": 15,
+          "endLine": 16,
+          "tokens": 18
+        },
+        {
+          "name": "World",
+          "kind": "class",
+          "startLine": 19,
+          "endLine": 44,
+          "tokens": 321
+        },
+        {
+          "name": "World.__init__",
+          "kind": "method",
+          "startLine": 20,
+          "endLine": 25,
+          "tokens": 105
+        },
+        {
+          "name": "World.set",
+          "kind": "method",
+          "startLine": 27,
+          "endLine": 29,
+          "tokens": 58
+        },
+        {
+          "name": "World.query",
+          "kind": "method",
+          "startLine": 31,
+          "endLine": 38,
+          "tokens": 106
+        },
+        {
+          "name": "World.command",
+          "kind": "method",
+          "startLine": 40,
+          "endLine": 44,
+          "tokens": 48
+        },
+        {
+          "name": "pools",
+          "kind": "fn",
+          "startLine": 47,
+          "endLine": 54,
+          "tokens": 133
+        },
+        {
+          "name": "engine",
+          "kind": "fn",
+          "startLine": 57,
+          "endLine": 65,
+          "tokens": 179
+        },
+        {
+          "name": "test_first_tick_takes_season_day_week_and_picks",
+          "kind": "fn",
+          "startLine": 68,
+          "endLine": 78,
+          "tokens": 169
+        },
+        {
+          "name": "test_completion_and_first_finisher_announced",
+          "kind": "fn",
+          "startLine": 81,
+          "endLine": 92,
+          "tokens": 145
+        },
+        {
+          "name": "test_day_rollover_picks_new_dailies",
+          "kind": "fn",
+          "startLine": 95,
+          "endLine": 105,
+          "tokens": 129
+        },
+        {
+          "name": "test_week_rollover_writes_hall_and_announces",
+          "kind": "fn",
+          "startLine": 108,
+          "endLine": 124,
+          "tokens": 213
+        },
+        {
+          "name": "test_rollover_survives_server_down",
+          "kind": "fn",
+          "startLine": 127,
+          "endLine": 133,
+          "tokens": 76
+        },
+        {
+          "name": "test_goal_reached_announces_once_and_advances",
+          "kind": "fn",
+          "startLine": 136,
+          "endLine": 148,
+          "tokens": 155
+        },
+        {
+          "name": "test_reset_backs_up_and_zeroes",
+          "kind": "fn",
+          "startLine": 151,
+          "endLine": 164,
+          "tokens": 188
+        },
+        {
+          "name": "test_week_boards",
+          "kind": "fn",
+          "startLine": 167,
+          "endLine": 175,
+          "tokens": 89
+        },
+        {
+          "name": "test_announce_text_is_json_safe",
+          "kind": "fn",
+          "startLine": 178,
+          "endLine": 184,
+          "tokens": 109
+        },
+        {
+          "name": "test_unreadable_stats_file_at_mark_keeps_previous_totals",
+          "kind": "fn",
+          "startLine": 187,
+          "endLine": 199,
+          "tokens": 181
+        },
+        {
+          "name": "test_last_minutes_before_rollover_count_for_old_day",
+          "kind": "fn",
+          "startLine": 202,
+          "endLine": 212,
+          "tokens": 145
+        },
+        {
+          "name": "test_hall_records_weekly_first_finishers",
+          "kind": "fn",
+          "startLine": 215,
+          "endLine": 226,
+          "tokens": 128
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def at(*a):\nclass World:\n    def __init__(self, tmp_path):\n    def set(self, uuid, **custom):\n    def query(self, command, pattern, timeout=3.0):\n    def command(self, text):\ndef pools():\ndef engine(tmp_path, world, clock):\ndef test_first_tick_takes_season_day_week_and_picks(tmp_path):\ndef test_completion_and_first_finisher_announced(tmp_path):\ndef test_day_rollover_picks_new_dailies(tmp_path):\ndef test_week_rollover_writes_hall_and_announces(tmp_path):\ndef test_rollover_survives_server_down(tmp_path):\ndef test_goal_reached_announces_once_and_advances(tmp_path):\ndef test_reset_backs_up_and_zeroes(tmp_path):\ndef test_week_boards(tmp_path):\ndef test_announce_text_is_json_safe(tmp_path):\ndef test_unreadable_stats_file_at_mark_keeps_previous_totals(tmp_path):\ndef test_last_minutes_before_rollover_count_for_old_day(tmp_path):\ndef test_hall_records_weekly_first_finishers(tmp_path):",
+      "importance": 0.3205
+    },
+    "web/tests/test_modpack.py": {
+      "description": "Tests: reads_version_from_jar_then_folder, prefers_older_release_over_newer_beta_and_never_takes_alpha, builds_valid_pack_with_dependencies, missin...",
+      "tokens": 1610,
+      "hash": "7d7bfbb61c5da7f6",
+      "size": 5633,
+      "mtimeMs": 1793992081935.674,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "version",
+          "kind": "fn",
+          "startLine": 12,
+          "endLine": 19,
+          "tokens": 160
+        },
+        {
+          "name": "fake",
+          "kind": "fn",
+          "startLine": 22,
+          "endLine": 37,
+          "tokens": 172
+        },
+        {
+          "name": "full",
+          "kind": "fn",
+          "startLine": 40,
+          "endLine": 44,
+          "tokens": 58
+        },
+        {
+          "name": "server_dir",
+          "kind": "fn",
+          "startLine": 47,
+          "endLine": 50,
+          "tokens": 47
+        },
+        {
+          "name": "test_reads_version_from_jar_then_folder",
+          "kind": "fn",
+          "startLine": 53,
+          "endLine": 59,
+          "tokens": 91
+        },
+        {
+          "name": "test_prefers_older_release_over_newer_beta_and_never_takes_alpha",
+          "kind": "fn",
+          "startLine": 62,
+          "endLine": 65,
+          "tokens": 99
+        },
+        {
+          "name": "test_builds_valid_pack_with_dependencies",
+          "kind": "fn",
+          "startLine": 68,
+          "endLine": 83,
+          "tokens": 313
+        },
+        {
+          "name": "test_missing_optional_mod_is_reported_not_fatal",
+          "kind": "fn",
+          "startLine": 86,
+          "endLine": 90,
+          "tokens": 73
+        },
+        {
+          "name": "test_mod_without_its_dependency_is_left_out",
+          "kind": "fn",
+          "startLine": 93,
+          "endLine": 98,
+          "tokens": 93
+        },
+        {
+          "name": "test_failed_build_keeps_current_pack",
+          "kind": "fn",
+          "startLine": 102,
+          "endLine": 109,
+          "tokens": 92
+        },
+        {
+          "name": "test_unsafe_filename_refused",
+          "kind": "fn",
+          "startLine": 112,
+          "endLine": 116,
+          "tokens": 72
+        },
+        {
+          "name": "test_keeps_last_builds_only",
+          "kind": "fn",
+          "startLine": 119,
+          "endLine": 129,
+          "tokens": 181
+        },
+        {
+          "name": "test_corrupt_pointer_means_no_pack",
+          "kind": "fn",
+          "startLine": 132,
+          "endLine": 136,
+          "tokens": 70
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/tests/test_players.py": {
+      "description": "Tests: texture_info_only_trusts_mojang, png_size_rejects_other_files, merge_lists_everyone_online_first, awards_skip_zero_scores",
+      "tokens": 411,
+      "hash": "2bfecf59eada4a7f",
+      "size": 1436,
+      "mtimeMs": 1793981401381.6855,
+      "updatedAt": "2026-11-11T18:15:49.349Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/tests/test_progress.py": {
+      "description": "Tests: flatten, metric_patterns_sum, delta_clamps_and_counts_new_players, day_and_week_start_across_clock_change + 4 more",
+      "tokens": 1090,
+      "hash": "d67d957a9a1e69c0",
+      "size": 3812,
+      "mtimeMs": 1794406965202.0198,
+      "updatedAt": "2026-11-11T18:15:49.350Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "at",
+          "kind": "fn",
+          "startLine": 13,
+          "endLine": 14,
+          "tokens": 20
+        },
+        {
+          "name": "test_flatten",
+          "kind": "fn",
+          "startLine": 17,
+          "endLine": 19,
+          "tokens": 62
+        },
+        {
+          "name": "test_metric_patterns_sum",
+          "kind": "fn",
+          "startLine": 22,
+          "endLine": 27,
+          "tokens": 121
+        },
+        {
+          "name": "test_delta_clamps_and_counts_new_players",
+          "kind": "fn",
+          "startLine": 30,
+          "endLine": 33,
+          "tokens": 72
+        },
+        {
+          "name": "test_day_and_week_start_across_clock_change",
+          "kind": "fn",
+          "startLine": 36,
+          "endLine": 46,
+          "tokens": 212
+        },
+        {
+          "name": "test_store_marks_round_trip",
+          "kind": "fn",
+          "startLine": 49,
+          "endLine": 57,
+          "tokens": 132
+        },
+        {
+          "name": "test_read_totals_skips_bad_files",
+          "kind": "fn",
+          "startLine": 60,
+          "endLine": 65,
+          "tokens": 98
+        },
+        {
+          "name": "test_progress_against_mark",
+          "kind": "fn",
+          "startLine": 68,
+          "endLine": 73,
+          "tokens": 109
+        },
+        {
+          "name": "test_scale_and_describe_use_game_units",
+          "kind": "fn",
+          "startLine": 76,
+          "endLine": 83,
+          "tokens": 175
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
+    },
+    "web/tests/test_rewards.py": {
+      "description": "Tests: reward_rejects_bad_items, reward_accepts_components_and_unknown_registry, links_manual_wins_and_only_approved, links_missing_onboard_db + 16...",
+      "tokens": 3807,
+      "hash": "7eed6463ee332a4a",
+      "size": 13324,
+      "mtimeMs": 1794407753770.369,
+      "updatedAt": "2026-11-11T18:15:49.350Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "test_reward_rejects_bad_items",
+          "kind": "fn",
+          "startLine": 30,
+          "endLine": 32,
+          "tokens": 35
+        },
+        {
+          "name": "test_reward_accepts_components_and_unknown_registry",
+          "kind": "fn",
+          "startLine": 35,
+          "endLine": 38,
+          "tokens": 97
+        },
+        {
+          "name": "setup_server",
+          "kind": "fn",
+          "startLine": 41,
+          "endLine": 53,
+          "tokens": 169
+        },
+        {
+          "name": "test_links_manual_wins_and_only_approved",
+          "kind": "fn",
+          "startLine": 56,
+          "endLine": 67,
+          "tokens": 215
+        },
+        {
+          "name": "test_links_missing_onboard_db",
+          "kind": "fn",
+          "startLine": 70,
+          "endLine": 74,
+          "tokens": 70
+        },
+        {
+          "name": "Game",
+          "kind": "class",
+          "startLine": 77,
+          "endLine": 111,
+          "tokens": 454
+        },
+        {
+          "name": "Game.__init__",
+          "kind": "method",
+          "startLine": 80,
+          "endLine": 83,
+          "tokens": 86
+        },
+        {
+          "name": "Game.query",
+          "kind": "method",
+          "startLine": 85,
+          "endLine": 108,
+          "tokens": 312
+        },
+        {
+          "name": "Game.gives",
+          "kind": "method",
+          "startLine": 110,
+          "endLine": 111,
+          "tokens": 24
+        },
+        {
+          "name": "setup_claims",
+          "kind": "fn",
+          "startLine": 117,
+          "endLine": 128,
+          "tokens": 241
+        },
+        {
+          "name": "test_claim_gives_and_marks_done",
+          "kind": "fn",
+          "startLine": 131,
+          "endLine": 141,
+          "tokens": 171
+        },
+        {
+          "name": "test_claim_offline_refused_and_retryable",
+          "kind": "fn",
+          "startLine": 144,
+          "endLine": 151,
+          "tokens": 118
+        },
+        {
+          "name": "test_claim_twice_gives_once",
+          "kind": "fn",
+          "startLine": 154,
+          "endLine": 169,
+          "tokens": 155
+        },
+        {
+          "name": "test_link_name_case_uses_whitelist_name",
+          "kind": "fn",
+          "startLine": 172,
+          "endLine": 175,
+          "tokens": 78
+        },
+        {
+          "name": "test_claim_with_differently_cased_link",
+          "kind": "fn",
+          "startLine": 178,
+          "endLine": 185,
+          "tokens": 119
+        },
+        {
+          "name": "test_unconfirmed_give_is_not_retryable",
+          "kind": "fn",
+          "startLine": 188,
+          "endLine": 197,
+          "tokens": 128
+        },
+        {
+          "name": "test_chat_noise_doesnt_break_confirmation",
+          "kind": "fn",
+          "startLine": 200,
+          "endLine": 206,
+          "tokens": 122
+        },
+        {
+          "name": "test_fake_gave_in_chat_is_not_trusted",
+          "kind": "fn",
+          "startLine": 209,
+          "endLine": 217,
+          "tokens": 120
+        },
+        {
+          "name": "test_crafty_error_before_give_is_retryable",
+          "kind": "fn",
+          "startLine": 220,
+          "endLine": 228,
+          "tokens": 113
+        },
+        {
+          "name": "test_crafty_error_during_give_is_unconfirmed",
+          "kind": "fn",
+          "startLine": 231,
+          "endLine": 239,
+          "tokens": 106
+        },
+        {
+          "name": "test_claims_are_audited",
+          "kind": "fn",
+          "startLine": 242,
+          "endLine": 246,
+          "tokens": 74
+        },
+        {
+          "name": "test_claim_expired_refused",
+          "kind": "fn",
+          "startLine": 249,
+          "endLine": 255,
+          "tokens": 84
+        },
+        {
+          "name": "test_claim_not_completed_or_unlinked",
+          "kind": "fn",
+          "startLine": 258,
+          "endLine": 266,
+          "tokens": 142
+        },
+        {
+          "name": "test_claim_rate_limited",
+          "kind": "fn",
+          "startLine": 269,
+          "endLine": 275,
+          "tokens": 102
+        },
+        {
+          "name": "test_give_failure_not_marked",
+          "kind": "fn",
+          "startLine": 278,
+          "endLine": 283,
+          "tokens": 91
+        },
+        {
+          "name": "test_weekly_bonus_only_for_first",
+          "kind": "fn",
+          "startLine": 286,
+          "endLine": 300,
+          "tokens": 361
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "def test_reward_rejects_bad_items(items):\ndef test_reward_accepts_components_and_unknown_registry():\ndef setup_server(tmp_path, onboard_rows=()):\ndef test_links_manual_wins_and_only_approved(tmp_path):\ndef test_links_missing_onboard_db(tmp_path):\nclass Game:\n    def __init__(self, online=(\"Alex\",), fail_give=False, noise=\"\", silent_give=False, raise_on=None):\n    def query(self, command, pattern, timeout=3.0):\n    def gives(self):\ndef setup_claims(tmp_path, game, bonus_for=None):\ndef test_claim_gives_and_marks_done(tmp_path):\ndef test_claim_offline_refused_and_retryable(tmp_path):\ndef test_claim_twice_gives_once(tmp_path):\ndef test_link_name_case_uses_whitelist_name(tmp_path):\ndef test_claim_with_differently_cased_link(tmp_path):\ndef test_unconfirmed_give_is_not_retryable(tmp_path):\ndef test_chat_noise_doesnt_break_confirmation(tmp_path):\ndef test_fake_gave_in_chat_is_not_trusted(tmp_path):\ndef test_crafty_error_before_give_is_retryable(tmp_path):\ndef test_crafty_error_during_give_is_unconfirmed(tmp_path):\ndef test_claims_are_audited(tmp_path):\ndef test_claim_expired_refused(tmp_path):\ndef test_claim_not_completed_or_unlinked(tmp_path):\ndef test_claim_rate_limited(tmp_path):\ndef test_give_failure_not_marked(tmp_path):\ndef test_weekly_bonus_only_for_first(tmp_path):",
+      "importance": 0.3205
+    },
+    "web/tests/test_settings.py": {
+      "description": "Tests: escape_round_trip, save_keeps_comments_order_and_unknown_keys, nothing_changed_writes_nothing, rejects_bad_values + 9 more",
+      "tokens": 3082,
+      "hash": "06b3b9b477f42351",
+      "size": 10799,
+      "mtimeMs": 1794166601266.942,
+      "updatedAt": "2026-11-11T18:15:49.350Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "Crafty",
+          "kind": "class",
+          "startLine": 30,
+          "endLine": 38,
+          "tokens": 100
+        },
+        {
+          "name": "Crafty.__init__",
+          "kind": "method",
+          "startLine": 31,
+          "endLine": 32,
+          "tokens": 30
+        },
+        {
+          "name": "Crafty.command",
+          "kind": "method",
+          "startLine": 34,
+          "endLine": 38,
+          "tokens": 66
+        },
+        {
+          "name": "server",
+          "kind": "fn",
+          "startLine": 41,
+          "endLine": 45,
+          "tokens": 79
+        },
+        {
+          "name": "test_escape_round_trip",
+          "kind": "fn",
+          "startLine": 48,
+          "endLine": 51,
+          "tokens": 60
+        },
+        {
+          "name": "test_save_keeps_comments_order_and_unknown_keys",
+          "kind": "fn",
+          "startLine": 54,
+          "endLine": 62,
+          "tokens": 214
+        },
+        {
+          "name": "test_nothing_changed_writes_nothing",
+          "kind": "fn",
+          "startLine": 65,
+          "endLine": 68,
+          "tokens": 64
+        },
+        {
+          "name": "test_rejects_bad_values",
+          "kind": "fn",
+          "startLine": 76,
+          "endLine": 80,
+          "tokens": 64
+        },
+        {
+          "name": "test_live_commands_when_running",
+          "kind": "fn",
+          "startLine": 83,
+          "endLine": 89,
+          "tokens": 117
+        },
+        {
+          "name": "test_view_hides_secrets_and_reads_game_rule",
+          "kind": "fn",
+          "startLine": 92,
+          "endLine": 101,
+          "tokens": 189
+        },
+        {
+          "name": "test_pending_restart_clears_after_a_restart",
+          "kind": "fn",
+          "startLine": 104,
+          "endLine": 108,
+          "tokens": 82
+        },
+        {
+          "name": "nbt_border",
+          "kind": "fn",
+          "startLine": 111,
+          "endLine": 121,
+          "tokens": 183
+        },
+        {
+          "name": "test_borders_read_files_and_live_size",
+          "kind": "fn",
+          "startLine": 124,
+          "endLine": 135,
+          "tokens": 202
+        },
+        {
+          "name": "test_set_border_commands_and_limits",
+          "kind": "fn",
+          "startLine": 138,
+          "endLine": 148,
+          "tokens": 163
+        },
+        {
+          "name": "test_pregen_progress_from_log",
+          "kind": "fn",
+          "startLine": 159,
+          "endLine": 170,
+          "tokens": 298
+        },
+        {
+          "name": "test_pregen_start_and_control",
+          "kind": "fn",
+          "startLine": 173,
+          "endLine": 187,
+          "tokens": 250
+        },
+        {
+          "name": "bluemap",
+          "kind": "fn",
+          "startLine": 190,
+          "endLine": 194,
+          "tokens": 94
+        },
+        {
+          "name": "test_map_render_uses_bluemap_map_ids",
+          "kind": "fn",
+          "startLine": 197,
+          "endLine": 205,
+          "tokens": 118
+        },
+        {
+          "name": "test_map_status_reads_the_multi_line_answer",
+          "kind": "fn",
+          "startLine": 208,
+          "endLine": 226,
+          "tokens": 324
+        }
+      ],
+      "symbolSource": "ts",
+      "skeleton": "class Crafty:\n    def __init__(self, log=None, answer=None):\n    def command(self, text):\ndef server(tmp_path, crafty=None):\ndef test_escape_round_trip():\ndef test_save_keeps_comments_order_and_unknown_keys(tmp_path):\ndef test_nothing_changed_writes_nothing(tmp_path):\ndef test_rejects_bad_values(tmp_path, values):\ndef test_live_commands_when_running(tmp_path):\ndef test_view_hides_secrets_and_reads_game_rule(tmp_path):\ndef test_pending_restart_clears_after_a_restart(tmp_path):\ndef nbt_border(size, x, z):\ndef test_borders_read_files_and_live_size(tmp_path):\ndef test_set_border_commands_and_limits(tmp_path):\ndef test_pregen_progress_from_log(tmp_path):\ndef test_pregen_start_and_control(tmp_path):\ndef bluemap(tmp_path):\ndef test_map_render_uses_bluemap_map_ids(tmp_path):\ndef test_map_status_reads_the_multi_line_answer(tmp_path):",
+      "importance": 0.3205
+    },
+    "web/tests/test_stats.py": {
+      "description": "Tests: collect_aggregates_and_sorts, no_stats_dir_is_empty, varint",
+      "tokens": 365,
+      "hash": "fae69bcee9026e92",
+      "size": 1277,
+      "mtimeMs": 1793976916332.5737,
+      "updatedAt": "2026-11-11T18:15:49.350Z",
+      "source": "scan",
+      "importance": 0.3205
+    },
+    "web/tests/test_worlds.py": {
+      "description": "Tests: swap_to_new_world_and_back, failed_start_restores_old_world, restore_refuses_unsafe_backup, bad_names_refused",
+      "tokens": 1139,
+      "hash": "f977825cf95e9194",
+      "size": 3986,
+      "mtimeMs": 1793979812033.0183,
+      "updatedAt": "2026-11-11T18:15:49.350Z",
+      "source": "scan",
+      "symbols": [
+        {
+          "name": "FakeCrafty",
+          "kind": "class",
+          "startLine": 8,
+          "endLine": 31,
+          "tokens": 188
+        },
+        {
+          "name": "FakeCrafty.__init__",
+          "kind": "method",
+          "startLine": 9,
+          "endLine": 10,
+          "tokens": 35
+        },
+        {
+          "name": "FakeCrafty.running",
+          "kind": "method",
+          "startLine": 12,
+          "endLine": 13,
+          "tokens": 13
+        },
+        {
+          "name": "FakeCrafty.stats",
+          "kind": "method",
+          "startLine": 15,
+          "endLine": 16,
+          "tokens": 11
+        },
+        {
+          "name": "FakeCrafty.command",
+          "kind": "method",
+          "startLine": 18,
+          "endLine": 19,
+          "tokens": 17
+        },
+        {
+          "name": "FakeCrafty.action",
+          "kind": "method",
+          "startLine": 21,
+          "endLine": 27,
+          "tokens": 61
+        },
+        {
+          "name": "FakeCrafty.backup",
+          "kind": "method",
+          "startLine": 29,
+          "endLine": 31,
+          "tokens": 44
+        },
+        {
+          "name": "setup",
+          "kind": "fn",
+          "startLine": 34,
+          "endLine": 44,
+          "tokens": 150
+        },
+        {
+          "name": "run",
+          "kind": "fn",
+          "startLine": 47,
+          "endLine": 51,
+          "tokens": 37
+        },
+        {
+          "name": "test_swap_to_new_world_and_back",
+          "kind": "fn",
+          "startLine": 54,
+          "endLine": 69,
+          "tokens": 224
+        },
+        {
+          "name": "test_failed_start_restores_old_world",
+          "kind": "fn",
+          "startLine": 72,
+          "endLine": 99,
+          "tokens": 309
+        },
+        {
+          "name": "test_restore_refuses_unsafe_backup",
+          "kind": "fn",
+          "startLine": 102,
+          "endLine": 109,
+          "tokens": 132
+        },
+        {
+          "name": "test_bad_names_refused",
+          "kind": "fn",
+          "startLine": 112,
+          "endLine": 118,
+          "tokens": 75
+        }
+      ],
+      "symbolSource": "ts",
+      "importance": 0.3205
     }
   },
   "preamble": [

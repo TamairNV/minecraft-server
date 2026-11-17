@@ -25,6 +25,8 @@ services:
     # 10G heap + ZGC/metaspace/native + Crafty itself. Leaves 2 threads for the other sites.
     mem_limit: 14g
     cpus: 14
+    # Own cgroup slice so the site can read its exact CPU use (web/app/cpu.py), like htop.
+    cgroup_parent: minecraft.slice
 
   web:
     build:
@@ -45,11 +47,19 @@ services:
       - CF_TEAM_DOMAIN=${CF_TEAM_DOMAIN}
       - CF_AUD=${CF_AUD}
       - ACCESS_LOWEST_ROLE=${ACCESS_LOWEST_ROLE}
+      - ONBOARD_DB=/onboard/onboard.db
     volumes:
       # Writable for world swaps, which only rename paths listed in app/worlds.py.
       - ./crafty/servers/bbcec7f2-5e56-4d6c-95f6-64f4635787f2:/server
       - /mnt/fpv2tb/minecraft-backups/bbcec7f2-5e56-4d6c-95f6-64f4635787f2/${CRAFTY_BACKUP_ID}:/backups:ro
       - ./web-data:/data
+      # Read-only CPU counters for the System tab (minecraft.slice/cpu.stat).
+      - /sys/fs/cgroup:/host/cgroup:ro
+      # Discord sign-up bot's db (email -> whitelist name) for claiming challenge rewards. Read-only.
+      - /home/tnv/mc-onboard/data:/onboard:ro
+      # Network tab: netmon's live.json and its history.
+      - netmon-live:/netmon:ro
+      - netmon-history:/netmon-history:ro
     networks: [default, access-net]
     read_only: true
     tmpfs: [/tmp]
@@ -82,6 +92,75 @@ services:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 30s
       timeout: 5s
+
+  netmon:
+    # Network tab collector: WireGuard tunnel to the friend's proxy, the public join route and
+    # alerts (netmon/netmon.py). Host network, because wg0 lives there. NET_ADMIN only to read
+    # `wg show`, NET_RAW for ping; it changes nothing.
+    build:
+      context: ./netmon
+      target: prod
+    image: minecraft-netmon
+    container_name: minecraft-netmon
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=Europe/London
+      # The proxy's upload in Mbit/s, for the "close to the limit" alert. 0 = unknown, no alert.
+      - NETMON_UPLINK_MBIT=${NETMON_UPLINK_MBIT:-0}
+    volumes:
+      - netmon-live:/out
+      # A volume, not a folder in web-data: netmon is root without DAC_OVERRIDE, so it can only write
+      # where root owns the directory.
+      - netmon-history:/history
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+
+  netmon-sockets:
+    # Same image, inside the Minecraft container's network, so `ss` sees each player's TCP
+    # connection. No privileges. Compose recreates it when crafty is recreated.
+    image: minecraft-netmon
+    container_name: minecraft-netmon-sockets
+    command: ["python", "-u", "netmon.py", "sockets"]
+    restart: unless-stopped
+    network_mode: "service:crafty"
+    depends_on: [crafty, netmon]
+    user: "1000:1000"
+    volumes:
+      - netmon-live:/out
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 48m
+
+  playit:
+    # playit.gg agent: gives players on IPv4-only networks a way in
+    # (<name>.tun.ply.gg -> this host's 25565). Outbound connections only,
+    # no listening ports. Host network so it can reach 127.0.0.1:25565.
+    image: ghcr.io/playit-cloud/playit-agent:1.0
+    container_name: minecraft-playit
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - SECRET_KEY=${PLAYIT_SECRET_KEY}
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+
+volumes:
+  # live.json and sockets.json are rewritten every 5 s, so they live in memory.
+  netmon-live:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=8m,mode=1777"
+  # A week of 1-minute points and the alert log.
+  netmon-history:
 
 networks:
   access-net:
