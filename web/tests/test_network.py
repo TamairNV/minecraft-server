@@ -57,8 +57,10 @@ def setup(tmp_path, now, recent, players=None, hist=None):
         "recent": recent, "players": players, "alerts": [{"key": "loss", "level": "warn", "title": "x", "detail": ""}],
         "events": [{"t": 1}, {"t": 2}]}))
     (tmp_path / "history.json").write_text(json.dumps({"points": hist or []}))
-    (tmp_path / "latest.log").write_text(LOG)
-    return nw.Network(tmp_path / "live.json", tmp_path / "history.json", tmp_path / "latest.log", clock=lambda: now)
+    (tmp_path / "logs").mkdir(exist_ok=True)
+    (tmp_path / "logs" / "latest.log").write_text(LOG)
+    (tmp_path / "whitelist.json").write_text(json.dumps([{"uuid": "u-1", "name": "alice"}]))
+    return nw.Network(tmp_path / "live.json", tmp_path / "history.json", tmp_path / "logs" / "latest.log", clock=lambda: now)
 
 
 def test_view_live(tmp_path):
@@ -75,8 +77,9 @@ def test_view_live(tmp_path):
     assert s["handshake_age"] == 21 and s["rtt"] == 25.0 and s["loss"] == 0.0 and s["public"]["ok"]
     assert s["local"]["ok"] and s["endpoint"].startswith("77.")
     assert [p["name"] for p in v["players"]] == ["Alice", None]
-    assert v["players"][0] == {"name": "Alice", "route": "proxy", "rtt": 50.0, "jitter": 4.0, "send_q": 0,
-                               "retrans_pct": 2.0, "delivery": None, "sent": 1000}
+    assert v["players"][0] == {"name": "Alice", "uuid": "u-1", "route": "proxy", "rtt": 50.0, "jitter": 4.0, "send_q": 0,
+                               "retrans_pct": 2.0, "delivery": None, "sent": 1000,
+                               "tx_rate": None, "rx_rate": None, "leg": 25.0}
 
 
 def test_view_history_and_stale(tmp_path):

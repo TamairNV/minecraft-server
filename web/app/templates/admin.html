@@ -160,30 +160,42 @@
   </section>
 
   <section id="tab-network" class="tab network" hidden>
-    <div id="net-alerts" class="net-alerts" role="status"></div>
-    <ol class="net-path" id="net-path" aria-label="How players reach the server"></ol>
-    <div class="facts" id="net-cards"></div>
-    <div class="row narrow gap net-range" role="group" aria-label="Time range">
-      <span class="hint">Show</span>
-      <button class="btn" type="button" data-range="15m">15 min</button>
-      <button class="btn" type="button" data-range="1h">1 hour</button>
-      <button class="btn" type="button" data-range="6h">6 hours</button>
-      <button class="btn" type="button" data-range="24h">24 hours</button>
-      <button class="btn" type="button" data-range="7d">7 days</button>
+    <div class="net-top">
+      <div class="net-status" id="net-status" role="status"><b>Loading…</b><span></span></div>
+      <div class="net-range" role="group" aria-label="Chart time range">
+        <button type="button" data-range="15m">15m</button><button type="button" data-range="1h">1h</button><button type="button" data-range="6h">6h</button><button type="button" data-range="24h">24h</button><button type="button" data-range="7d">7d</button>
+      </div>
     </div>
+    <div id="net-alerts" class="net-alerts"></div>
+
+    <figure class="net-map">
+      <div id="net-map" class="net-map-svg"></div>
+      <figcaption class="net-key">
+        <span><i class="k-out"></i>Data to players</span>
+        <span><i class="k-in"></i>Data from players</span>
+        <span><i class="k-ok"></i>Healthy</span><span><i class="k-warn"></i>Slow or lossy</span><span><i class="k-bad"></i>Down</span>
+        <span class="hint">Pings are round trips. A player's ping to the proxy is their total ping minus the tunnel.</span>
+      </figcaption>
+    </figure>
+
+    <div class="net-panels" id="net-panels"></div>
+
     <div class="net-charts">
-      <figure class="net-chart"><figcaption>Latency <span class="hint">ms</span></figcaption><div id="chart-latency"></div></figure>
-      <figure class="net-chart"><figcaption>Packet loss and resends <span class="hint">%</span></figcaption><div id="chart-loss"></div></figure>
-      <figure class="net-chart"><figcaption>Tunnel traffic <span class="hint">Mbit/s</span></figcaption><div id="chart-traffic"></div></figure>
+      <figure class="net-chart"><figcaption>Ping <span class="hint">ms</span></figcaption><div id="chart-latency"></div></figure>
+      <figure class="net-chart"><figcaption>Loss and resends <span class="hint">%</span></figcaption><div id="chart-loss"></div></figure>
+      <figure class="net-chart"><figcaption>Traffic through the tunnel <span class="hint">Mbit/s</span></figcaption><div id="chart-traffic"></div></figure>
     </div>
+
     <h2 class="gap">Players</h2>
-    <p class="hint">Each player's own connection, measured by this server's network stack. Ping is the full round trip to the player, so for proxy players it includes the hop to the proxy. Resent is how much of what we sent had to go again: anything over a couple of percent means a lossy line and slow chunk loading. Waiting is data queued for the player that their connection hasn't taken yet.</p>
-    <table class="list"><thead><tr><th>Player</th><th>Route</th><th class="n">Ping</th><th class="n">Resent</th><th class="n">Waiting</th><th class="n">Speed</th></tr></thead><tbody id="net-players"><tr><td class="muted" colspan="6">Loading…</td></tr></tbody></table>
+    <table class="list"><thead><tr><th>Player</th><th>Route</th><th class="n">Ping</th><th class="n">To proxy</th><th class="n">Down / up</th><th class="n">Resent</th><th class="n">Waiting</th></tr></thead><tbody id="net-players"><tr><td class="muted" colspan="7">Loading…</td></tr></tbody></table>
     <p id="net-players-empty" class="empty" hidden>Nobody's connected.</p>
-    <h2 class="gap">Alert history</h2>
-    <table class="list"><thead><tr><th>When</th><th>What</th><th></th></tr></thead><tbody id="net-events"></tbody></table>
-    <p id="net-events-empty" class="empty" hidden>No alerts yet.</p>
-    <p class="hint gap">Measured every 5 seconds from this server by the netmon containers. The tunnel ping goes to the proxy over WireGuard, the proxy's internet ping goes to its public address outside the tunnel, and every 30 seconds a real Minecraft status ping goes in through the public address, the same way players join.</p>
+    <p class="hint">Ping is the full round trip from this server to the player. Resent over a couple of percent means a lossy line, so chunks load slowly. Waiting is data queued that their connection hasn't taken yet: if it keeps growing, they can't keep up.</p>
+
+    <details class="net-history gap">
+      <summary>Alert history <span class="muted" id="net-events-count"></span></summary>
+      <table class="list"><thead><tr><th>When</th><th>What</th><th></th></tr></thead><tbody id="net-events"></tbody></table>
+      <p id="net-events-empty" class="empty" hidden>No alerts yet.</p>
+    </details>
   </section>
 
   <section id="tab-system" class="tab" hidden>

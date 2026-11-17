@@ -150,3 +150,12 @@ def test_slp_against_fake_server():
     assert r["ok"] and r["connect"] >= 0
     srv.close()
     assert nm.slp("127.0.0.1", 1, timeout=1)["ok"] is False
+
+
+def test_player_rates():
+    a = [{"peer": "x", "bytes_sent": 1000, "bytes_received": 100}]
+    prev = nm.add_rates(a, {}, 0)
+    assert a[0]["tx_rate"] is None
+    b = [{"peer": "x", "bytes_sent": 6000, "bytes_received": 600}, {"peer": "y", "bytes_sent": 5}]
+    nm.add_rates(b, prev, 5)
+    assert (b[0]["tx_rate"], b[0]["rx_rate"], b[1]["tx_rate"]) == (1000.0, 100.0, None)

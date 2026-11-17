@@ -920,8 +920,12 @@ try { netRange = localStorage.getItem('netRange') || '1h'; } catch { /* private 
 const NET_COLORS = { a: 'var(--grass)', b: 'var(--gold)', c: '#7fb8ff', bad: '#e0604a' };
 const mbit = (bps) => (bps === null || bps === undefined ? null : (bps * 8) / 1e6);
 const fixed = (v, d = 1) => (v === null || v === undefined ? '–' : Number(v).toFixed(d));
+const ms = (v) => (v === null || v === undefined ? '–' : `${v < 10 ? Number(v).toFixed(1) : Math.round(v)} ms`);
+const rateText = (bps) => { const m = mbit(bps); if (m === null) return '–'; return m >= 1 ? `${m.toFixed(1)} Mbit/s` : m >= 0.01 ? `${Math.round(m * 1000)} kbit/s` : 'idle'; };
 const ago = (s) => (s === null || s === undefined ? 'never' : s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`);
 const kb = (b) => (b === null || b === undefined ? '–' : b < 1024 ? `${b} B` : b < 1048576 ? `${Math.round(b / 1024)} KB` : `${(b / 1048576).toFixed(1)} MB`);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const levelFor = (v, warn, crit) => (v === null || v === undefined ? '' : v >= crit ? 'crit' : v >= warn ? 'warn' : '');
 
 function nearest(values, i) {
   for (let k = 0; k < values.length; k++) {
@@ -941,7 +945,7 @@ function timeLabel(t, span) {
   return span > 86400 ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }) : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
-// Small SVG line chart: lines = [{label, color, values}], bands = indexes drawn as red columns.
+// Small SVG line chart: lines = [{label, color, values, sparse}], bands = indexes drawn as red columns.
 function lineChart(el, times, lines, opts = {}) {
   const W = 640, H = 180, L = 40, R = 8, T = 10, B = 22;
   const all = lines.flatMap((l) => l.values).filter((v) => v !== null && v !== undefined);
@@ -993,24 +997,182 @@ function lineChart(el, times, lines, opts = {}) {
   const legend = document.createElement('div');
   legend.className = 'net-legend';
   for (const l of lines) { const s = document.createElement('span'); s.innerHTML = '<i></i>'; s.querySelector('i').style.background = l.color; s.append(l.label); legend.append(s); }
-  svg.setAttribute('aria-label', `${opts.title || 'Chart'}: ${lines.map((l) => `${l.label} now ${fixed(l.values[l.values.length - 1])}`).join(', ')}`);
+  svg.setAttribute('aria-label', `${opts.title || 'Chart'}: ${lines.map((l) => `${l.label} now ${fixed(nearest(l.values, l.values.length - 1))}`).join(', ')}`);
   el.replaceChildren(svg, tip, legend);
 }
 
-function netCard(big, small, level) {
+// ---- the map: this server -> tunnel -> proxy -> players, with data flowing along the links
+// Faster, denser dashes = more data. Built once per set of players, then updated in place so
+// the flow animation doesn't restart every refresh.
+const MAP_MAX = 8;
+let mapKey = '';
+
+function flowDur(bps) {
+  const m = mbit(bps);
+  if (!m || m < 0.004) return null;
+  return Math.max(0.35, Math.min(3.2, 2.6 / (1 + Math.log2(1 + m * 4))));
+}
+
+function setFlow(el, bps) {
+  const dur = flowDur(bps);
+  el.classList.toggle('still', dur === null);
+  if (dur !== null) el.style.animationDuration = `${dur.toFixed(2)}s`;
+}
+
+// Phones get the same map stacked top to bottom, so the text stays readable.
+function buildMapNarrow(shown, extra) {
+  const W = 420, rowH = 68;
+  const S = { x: 20, y: 8, w: 380, h: 118 }, P = { x: 20, y: 236, w: 380, h: 118 }, C = { x: 70, w: 330, h: 54 };
+  const y0 = P.y + P.h + 52;
+  const py = (i) => y0 + i * rowH;
+  const rows = Math.max(1, shown.length + (extra ? 1 : 0));
+  const H = y0 + (rows - 1) * rowH + C.h / 2 + 10;
+  const links = [], cards = [];
+  shown.forEach((p, i) => {
+    const y = py(i);
+    const d = p.route === 'proxy'
+      ? `M210,${P.y + P.h} L210,${P.y + P.h + 14} Q210,${P.y + P.h + 22} 200,${P.y + P.h + 22} L46,${P.y + P.h + 22} Q38,${P.y + P.h + 22} 38,${P.y + P.h + 30} L38,${y - 8} Q38,${y} 46,${y} L${C.x},${y}`
+      : `M${S.x + S.w},${S.y + S.h / 2} Q412,${S.y + S.h / 2} 412,${S.y + S.h / 2 + 12} L412,${y - 8} Q412,${y} ${S.x + S.w},${y}`;
+    links.push(`<g class="nm-link" data-k="pl${i}"><path class="base thin" d="${d}"/><path class="flow out" data-f="out" d="${d}"/><path class="flow in" data-f="in" d="${d}"/></g>`);
+    cards.push(playerCard(p, i, C, y));
+  });
+  if (extra) cards.push(`<g class="nm-card player more" transform="translate(${C.x},${py(shown.length) - C.h / 2})"><rect width="${C.w}" height="${C.h}" rx="8"/><text x="${C.w / 2}" y="32" text-anchor="middle" class="sub">+${extra} more below</text></g>`);
+  if (!shown.length) cards.push(`<g class="nm-card player empty" transform="translate(${C.x},${y0 - C.h / 2})"><rect width="${C.w}" height="${C.h}" rx="8"/><text x="${C.w / 2}" y="32" text-anchor="middle" class="sub">Nobody online</text></g>`);
+  const tunnel = `<g class="nm-link tunnel" data-k="tunnel"><path class="base" d="M210,${S.y + S.h} L210,${P.y}"/><path class="flow out" data-f="out" d="M204,${S.y + S.h} L204,${P.y}"/><path class="flow in" data-f="in" d="M216,${S.y + S.h} L216,${P.y}"/>
+    <text x="234" y="${S.y + S.h + 30}" class="ltitle">WireGuard tunnel</text>
+    <text x="234" y="${S.y + S.h + 52}" class="lval" data-f="ping"></text>
+    <text x="234" y="${S.y + S.h + 72}" class="lsub" data-f="down"></text>
+    <text x="234" y="${S.y + S.h + 90}" class="lsub" data-f="up"></text></g>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="net-map-title"><title id="net-map-title">Network map</title>${links.join('')}${tunnel}${hubCard('server', S)}${hubCard('proxy', P)}${cards.join('')}</svg>`;
+}
+
+function playerCard(p, i, C, y) {
+  const face = p.uuid ? `<svg x="12" y="${C.h / 2 - 16}" width="32" height="32" viewBox="8 8 8 8" class="face"><image href="/api/skin/${esc(p.uuid)}.png" width="64" height="64" preserveAspectRatio="none" onerror="this.parentNode.remove()"/></svg>` : '';
+  return `<g class="nm-card player" data-k="pc${i}" transform="translate(${C.x},${y - C.h / 2})"><rect width="${C.w}" height="${C.h}" rx="8"/>
+    <rect class="avatar" x="12" y="${C.h / 2 - 16}" width="32" height="32" rx="3"/>${face}
+    <text x="56" y="${C.h / 2 - 3}" class="name" data-f="name"></text><text x="56" y="${C.h / 2 + 15}" class="sub" data-f="sub"></text></g>`;
+}
+
+function hubCard(kind, b) {
+  const glyph = kind === 'server'
+    ? '<g class="glyph" transform="translate(16,18)"><rect width="28" height="9" rx="2"/><rect y="12" width="28" height="9" rx="2"/><rect y="24" width="28" height="9" rx="2"/><circle cx="23" cy="4.5" r="1.6" class="led"/><circle cx="23" cy="16.5" r="1.6" class="led"/><circle cx="23" cy="28.5" r="1.6" class="led"/></g>'
+    : '<g class="glyph" transform="translate(16,16)"><path d="M14 0 L28 8 L28 22 L14 30 L0 22 L0 8 Z"/><path class="inner" d="M14 7 L21 11 L21 19 L14 23 L7 19 L7 11 Z"/></g>';
+  const title = kind === 'server' ? 'Your server' : 'Proxy';
+  const sub = kind === 'server' ? '<text x="56" y="48" class="sub">TNV-server · home</text>' : '<text x="56" y="48" class="sub" data-f="host"></text>';
+  return `<g class="nm-card hub" data-k="${kind}" transform="translate(${b.x},${b.y})"><rect width="${b.w}" height="${b.h}" rx="10"/>${glyph}
+    <text x="56" y="30" class="title">${title}</text>${sub}
+    <text x="16" y="${b.h - 46}" class="line" data-f="l1"></text><text x="16" y="${b.h - 27}" class="line" data-f="l2"></text><text x="16" y="${b.h - 9}" class="line dim" data-f="l3"></text></g>`;
+}
+
+function buildMap(d, shown, extra) {
+  const rowH = 74;
+  const rows = Math.max(1, shown.length + (extra ? 1 : 0));
+  const H = Math.max(300, 70 + rows * rowH);
+  const cy = H / 2;
+  const S = { x: 15, w: 205, h: 132 }, P = { x: 445, w: 210, h: 132 }, C = { x: 770, w: 215, h: 58 };
+  const top = cy - ((rows - 1) * rowH) / 2;
+  const py = (i) => top + i * rowH;
+  const links = [], cards = [];
+  shown.forEach((p, i) => {
+    const y = py(i);
+    const viaProxy = p.route === 'proxy';
+    const d = viaProxy
+      ? `M${P.x + P.w},${cy} C${P.x + P.w + 70},${cy} ${C.x - 70},${y} ${C.x},${y}`
+      : `M${S.x + S.w / 2},${cy + S.h / 2} C${S.x + S.w / 2},${H - 4} ${C.x - 120},${y} ${C.x},${y}`;
+    const mx = viaProxy ? (P.x + P.w + C.x) / 2 : (S.x + S.w / 2 + C.x) / 2 + 40;
+    const my = viaProxy ? (cy + y) / 2 : (cy + S.h / 2 + H) / 2 - 6;
+    links.push(`<g class="nm-link" data-k="pl${i}"><path class="base" d="${d}"/><path class="flow out" data-f="out" d="${d}"/><path class="flow in" data-f="in" d="${d}"/>
+      <g class="pill" transform="translate(${mx},${my})"><rect x="-34" y="-12" width="68" height="24" rx="12"/><text data-f="leg" y="5" text-anchor="middle"></text></g></g>`);
+    cards.push(playerCard(p, i, C, y));
+  });
+  if (extra) cards.push(`<g class="nm-card player more" transform="translate(${C.x},${py(shown.length) - C.h / 2})"><rect width="${C.w}" height="${C.h}" rx="8"/><text x="${C.w / 2}" y="34" text-anchor="middle" class="sub">+${extra} more below</text></g>`);
+  if (!shown.length) cards.push(`<g class="nm-card player empty" transform="translate(${C.x},${cy - C.h / 2})"><rect width="${C.w}" height="${C.h}" rx="8"/><text x="${C.w / 2}" y="34" text-anchor="middle" class="sub">Nobody online</text></g>`);
+  const tun = `M${S.x + S.w},${cy} L${P.x},${cy}`;
+  const server = hubCard('server', { ...S, y: cy - S.h / 2 });
+  const proxy = hubCard('proxy', { ...P, y: cy - P.h / 2 });
+  const tunnel = `<g class="nm-link tunnel" data-k="tunnel"><path class="base" d="${tun}"/><path class="flow out" data-f="out" d="M${S.x + S.w},${cy - 5} L${P.x},${cy - 5}"/><path class="flow in" data-f="in" d="M${S.x + S.w},${cy + 5} L${P.x},${cy + 5}"/>
+    <text x="${(S.x + S.w + P.x) / 2}" y="${cy - 40}" text-anchor="middle" class="ltitle">WireGuard tunnel</text>
+    <text x="${(S.x + S.w + P.x) / 2}" y="${cy - 20}" text-anchor="middle" class="lval" data-f="ping"></text>
+    <text x="${(S.x + S.w + P.x) / 2}" y="${cy + 32}" text-anchor="middle" class="lsub" data-f="down"></text>
+    <text x="${(S.x + S.w + P.x) / 2}" y="${cy + 50}" text-anchor="middle" class="lsub" data-f="up"></text></g>`;
+  return `<svg viewBox="0 0 1000 ${H}" role="img" aria-labelledby="net-map-title"><title id="net-map-title">Network map</title>${links.join('')}${tunnel}${server}${proxy}${cards.join('')}</svg>`;
+}
+
+function renderMap(d) {
+  const s = d.summary || {};
+  const ps = d.players;
+  const shown = [...ps.filter((p) => p.route === 'proxy'), ...ps.filter((p) => p.route !== 'proxy')].slice(0, MAP_MAX);
+  const extra = ps.length - shown.length;
+  const box = $('net-map');
+  const narrow = box.clientWidth < 640;
+  const key = JSON.stringify([shown.map((p) => [p.name, p.route, p.uuid]), extra, narrow]);
+  if (key !== mapKey || !box.firstElementChild) { box.innerHTML = narrow ? buildMapNarrow(shown, extra) : buildMap(d, shown, extra); mapKey = key; }
+  const svg = box.firstElementChild;
+  const g = (k) => svg.querySelector(`[data-k="${k}"]`);
+  const set = (el, f, text) => { const t = el && el.querySelector(`[data-f="${f}"]`); if (t) t.textContent = text; };
+  const keys = new Set(d.alerts.map((a) => a.key.split(':')[0]));
+  const tunnelBad = keys.has('tunnel') || keys.has('proxy');
+  const tunnelWarn = keys.has('loss') || keys.has('retrans') || levelFor(s.rtt, 60, 150) !== '';
+
+  const tg = g('tunnel');
+  tg.dataset.level = !d.running ? 'off' : tunnelBad ? 'crit' : tunnelWarn ? 'warn' : 'ok';
+  set(tg, 'ping', s.rtt !== null && s.rtt !== undefined ? `${ms(s.rtt)} · ${fixed(s.loss)}% loss` : 'no replies');
+  set(tg, 'down', `▶ ${rateText(s.tx)} to players`);
+  set(tg, 'up', `◀ ${rateText(s.rx)} from players`);
+  setFlow(tg.querySelector('[data-f="out"]'), d.running ? s.tx : null);
+  setFlow(tg.querySelector('[data-f="in"]'), d.running ? s.rx : null);
+
+  const sv = g('server');
+  sv.dataset.level = s.local ? (s.local.ok ? 'ok' : 'crit') : '';
+  set(sv, 'l1', s.local ? (s.local.ok ? '● Game answering' : '● Game not answering') : '● Game: checking');
+  set(sv, 'l2', `${ps.length} player${ps.length === 1 ? '' : 's'} connected`);
+  set(sv, 'l3', s.handshake_age !== null && s.handshake_age !== undefined ? `Handshake ${ago(s.handshake_age)}` : 'No handshake');
+
+  const pr = g('proxy');
+  pr.dataset.level = keys.has('public') || keys.has('proxy') ? 'crit' : keys.has('endpoint') ? 'warn' : s.public ? 'ok' : '';
+  set(pr, 'host', d.public_host || '');
+  set(pr, 'l1', s.public ? (s.public.ok ? `● Join check ok · ${ms(s.public.connect)}` : '● Join check failing') : '● Join check: waiting');
+  set(pr, 'l2', s.isp ? `Internet ping ${ms(s.isp)}` : 'Internet ping –');
+  set(pr, 'l3', s.dns || '');
+
+  shown.forEach((p, i) => {
+    const link = g(`pl${i}`), card = g(`pc${i}`);
+    const lvl = levelFor(p.rtt, 150, 250) || (p.send_q >= 512 * 1024 ? 'warn' : '') || 'ok';
+    link.dataset.level = lvl; card.dataset.level = lvl;
+    set(link, 'leg', ms(p.leg));
+    setFlow(link.querySelector('[data-f="out"]'), p.tx_rate);
+    setFlow(link.querySelector('[data-f="in"]'), p.rx_rate);
+    set(card, 'name', p.name || 'Unknown');
+    set(card, 'sub', p.route === 'proxy' ? `${ms(p.rtt)} total · ${rateText(p.tx_rate)}` : `${ms(p.rtt)} · ${p.route}`);
+  });
+}
+
+function panel(title, rows) {
   const div = document.createElement('div');
-  div.className = `fact${level ? ` ${level}` : ''}`;
-  const b = document.createElement('b');
-  const sp = document.createElement('span');
-  b.textContent = big; sp.textContent = small;
-  div.append(b, sp);
+  div.className = 'net-panel';
+  const h = document.createElement('h3'); h.textContent = title;
+  const dl = document.createElement('dl');
+  for (const [label, value, level, hint] of rows) {
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value;
+    if (level) dd.dataset.level = level;
+    if (hint) dt.title = hint;
+    dl.append(dt, dd);
+  }
+  div.append(h, dl);
   return div;
 }
 
-const levelFor = (v, warn, crit) => (v === null || v === undefined ? '' : v >= crit ? 'crit' : v >= warn ? 'warn' : '');
-
 function renderNetwork(d) {
+  const s = d.summary || {};
   const crit = d.alerts.filter((a) => a.level === 'crit').length;
+  const st = $('net-status');
+  st.dataset.level = !d.running || crit ? 'crit' : d.alerts.length ? 'warn' : 'ok';
+  st.querySelector('b').textContent = !d.running ? 'No data' : crit ? `${crit} problem${crit > 1 ? 's' : ''}` : d.alerts.length ? `${d.alerts.length} warning${d.alerts.length > 1 ? 's' : ''}` : 'All good';
+  st.querySelector('span').textContent = d.running
+    ? `${d.players.length} online · ${rateText(s.tx)} to players · updated ${ago(d.stale)}`
+    : 'The network monitor has stopped';
+
   $('net-alerts').replaceChildren(...d.alerts.map((a) => {
     const div = document.createElement('div');
     div.className = `net-alert ${a.level}`;
@@ -1021,44 +1183,49 @@ function renderNetwork(d) {
   }));
   const tab = document.querySelector('.tabs button[data-tab="network"]');
   tab.classList.toggle('alerting', d.alerts.length > 0);
-  tab.classList.toggle('critical', crit > 0);
+  tab.classList.toggle('critical', crit > 0 || !d.running);
+  if (currentTab !== 'network') return;
 
-  const s = d.summary || {};
-  const keys = new Set(d.alerts.map((a) => a.key.split(':')[0]));
-  const hop = (label, sub, bad) => { const li = document.createElement('li'); li.className = bad ? 'bad' : d.running ? 'ok' : ''; li.innerHTML = '<b></b><span></span>'; li.querySelector('b').textContent = label; li.querySelector('span').textContent = sub; return li; };
-  $('net-path').replaceChildren(
-    hop('Players', `${d.players.length} connected`, false),
-    hop(d.public_host || 'Public address', s.public ? (s.public.ok ? `join check ok · ${fixed(s.public.connect, 0)} ms` : 'join check failing') : 'not checked yet', keys.has('public')),
-    hop('Proxy', s.isp ? `internet ping ${fixed(s.isp, 0)} ms` : (d.peer || ''), keys.has('proxy') || keys.has('endpoint')),
-    hop('WireGuard', s.rtt !== null && s.rtt !== undefined ? `${fixed(s.rtt)} ms · ${fixed(s.loss)}% loss` : 'no replies', keys.has('tunnel') || keys.has('loss')),
-    hop('This server', s.local ? (s.local.ok ? 'game answering' : 'game not answering') : '', s.local && !s.local.ok),
+  renderMap(d);
+
+  const matches = s.dns && s.endpoint ? s.endpoint.startsWith(`${s.dns}:`) : null;
+  const uplinkPct = d.uplink_mbit && s.tx !== null && s.tx !== undefined ? (100 * mbit(s.tx)) / d.uplink_mbit : null;
+  $('net-panels').replaceChildren(
+    panel('Tunnel', [
+      ['Ping', ms(s.rtt), levelFor(s.rtt, 60, 150), 'Round trip to the proxy through WireGuard'],
+      ['Jitter', ms(s.jitter), levelFor(s.jitter, 15, 40)],
+      ['Loss, 5 min', `${fixed(s.loss)}%`, levelFor(s.loss, 2, 10)],
+      ['Handshake', ago(s.handshake_age), levelFor(s.handshake_age, 170, 180), 'WireGuard re-handshakes every 2 minutes'],
+    ]),
+    panel('Traffic', [
+      ['To players', rateText(s.tx), uplinkPct === null ? '' : levelFor(uplinkPct, 60, 80)],
+      ['From players', rateText(s.rx)],
+      ['Peak today', rateText(s.tx_peak_24h)],
+      ['Proxy upload', d.uplink_mbit ? `${d.uplink_mbit} Mbit/s` : 'not set', '', 'Set NETMON_UPLINK_MBIT in .env to get a warning near the limit'],
+    ]),
+    panel('Public route', [
+      ['Join check', s.public ? (s.public.ok ? `ok, ${ago(s.public.age)}` : 'failing') : '–', s.public && !s.public.ok ? 'crit' : '', `A real Minecraft status ping in through ${d.public_host || 'the public address'}`],
+      ['Connect time', ms(s.public && s.public.connect), '', 'Goes out to the proxy and back in through the tunnel, so it crosses twice'],
+      ["Proxy's internet", ms(s.isp), '', 'Ping to the proxy outside the tunnel'],
+      ['Proxy IP', s.dns || '–', matches === false ? 'warn' : '', matches === false ? `Tunnel still sends to ${s.endpoint}` : 'Matches the tunnel endpoint'],
+    ]),
+    panel('Game connections', [
+      ['Players', String(d.players.length)],
+      ['Resent, 5 min', `${fixed(s.retrans)}%`, levelFor(s.retrans, 2, 5), 'Share of the server\'s TCP packets sent again'],
+      ['Voice drops', s.voice_drops === null || s.voice_drops === undefined ? '–' : String(s.voice_drops), s.voice_drops ? 'warn' : ''],
+      ['Interface errors', s.if_errors === null || s.if_errors === undefined ? '–' : String(s.if_errors), s.if_errors ? 'warn' : ''],
+    ]),
   );
 
-  const cards = [
-    netCard(!d.running ? 'No data' : crit ? `${crit} down` : d.alerts.length ? `${d.alerts.length} warning${d.alerts.length > 1 ? 's' : ''}` : 'Healthy', d.running ? `updated ${ago(d.stale)}` : 'monitor stopped', !d.running || crit ? 'crit' : d.alerts.length ? 'warn' : 'good'),
-    netCard(`${fixed(s.rtt)} ms`, `tunnel ping · jitter ${fixed(s.jitter)} ms`, levelFor(s.rtt, 60, 150)),
-    netCard(`${fixed(s.loss)}%`, 'packet loss, last 5 min', levelFor(s.loss, 2, 10)),
-    netCard(`${fixed(s.retrans)}%`, 'game traffic resent, 5 min', levelFor(s.retrans, 2, 5)),
-    netCard(s.handshake_age === null || s.handshake_age === undefined ? '–' : ago(s.handshake_age).replace(' ago', ''), 'since WireGuard handshake', levelFor(s.handshake_age, 150, 180)),
-    netCard(`${fixed(mbit(s.tx))} Mbit/s`, `to players now · peak ${fixed(mbit(s.tx_peak_24h))} today${d.uplink_mbit ? ` of ${d.uplink_mbit}` : ''}`),
-    netCard(`${fixed(mbit(s.rx), 2)} Mbit/s`, 'from players now'),
-    netCard(s.public ? (s.public.ok ? 'Joinable' : 'Failing') : '–', s.public ? `via ${d.public_host} · ${ago(s.public.age)}` : 'public join check', s.public && !s.public.ok ? 'crit' : ''),
-    netCard(s.isp ? `${fixed(s.isp, 0)} ms` : '–', "proxy's internet ping (outside the tunnel)"),
-    netCard(s.voice_drops === null || s.voice_drops === undefined ? '–' : String(s.voice_drops), 'voice packets dropped (since start)'),
-  ];
-  if (s.dns && s.endpoint) cards.push(netCard(s.dns, s.endpoint.startsWith(`${s.dns}:`) ? 'proxy IP, matches tunnel' : `proxy IP · tunnel still uses ${s.endpoint}`, s.endpoint.startsWith(`${s.dns}:`) ? '' : 'warn'));
-  $('net-cards').replaceChildren(...cards);
-
-  const span = { '15m': 900, '1h': 3600, '6h': 21600, '24h': 86400, '7d': 604800 }[d.range];
   const pts = d.series;
   const times = pts.map((p) => p.t);
   const bands = pts.map((p, i) => (p.pub_ok === false ? i : -1)).filter((i) => i >= 0);
   lineChart($('chart-latency'), times, [
-    { label: 'Tunnel ping', color: NET_COLORS.a, values: pts.map((p) => p.rtt) },
+    { label: 'Tunnel', color: NET_COLORS.a, values: pts.map((p) => p.rtt) },
     // Measured every 30 s, so these join up across the gaps
     { label: "Proxy's internet", color: NET_COLORS.b, values: pts.map((p) => p.isp), sparse: true },
-    { label: 'Public join connect', color: NET_COLORS.c, values: pts.map((p) => p.pub_ms), sparse: true },
-  ], { bands, title: 'Latency', min: 50, span });
+    { label: 'Public join', color: NET_COLORS.c, values: pts.map((p) => p.pub_ms), sparse: true },
+  ], { bands, title: 'Ping', min: 50 });
   lineChart($('chart-loss'), times, [
     { label: 'Tunnel loss', color: NET_COLORS.bad, values: pts.map((p) => p.loss) },
     { label: 'Game traffic resent', color: NET_COLORS.b, values: pts.map((p) => p.retrans) },
@@ -1079,11 +1246,13 @@ function renderNetwork(d) {
     re.dataset.level = levelFor(p.retrans_pct, 2, 5);
     const q = cell(kb(p.send_q), 'n');
     q.dataset.level = levelFor(p.send_q, 128 * 1024, 512 * 1024);
-    tr.append(name, cell(p.route), ping, re, q, cell(p.delivery ? `${fixed(p.delivery / 1e6)} Mbit/s` : '–', 'n'));
+    tr.append(name, cell(p.route), ping, cell(p.route === 'proxy' ? ms(p.leg) : '–', 'n'),
+      cell(`${rateText(p.tx_rate)} / ${rateText(p.rx_rate)}`, 'n'), re, q);
     return tr;
   });
 
   $('net-events-empty').hidden = d.events.length > 0;
+  $('net-events-count').textContent = d.events.length ? `· ${d.events.length}` : '';
   fill('net-events', d.events, d.events, (e) => {
     const tr = document.createElement('tr');
     const tag = cell(e.state === 'start' ? (e.level === 'crit' ? 'Problem' : 'Warning') : 'Cleared');

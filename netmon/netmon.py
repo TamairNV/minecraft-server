@@ -124,6 +124,7 @@ def parse_ss(text: str, port: int) -> list[dict]:
                 rtt_var=float(rtt.group(2)) if rtt else None,
                 retrans=int(retrans.group(1)) if retrans else 0,
                 bytes_sent=_num(r"\bbytes_sent:(\d+)", line, int),
+                bytes_received=_num(r"\bbytes_received:(\d+)", line, int),
                 bytes_retrans=_num(r"\bbytes_retrans:(\d+)", line, int) or 0,
                 cwnd=_num(r"\bcwnd:(\d+)", line, int),
                 delivery=_num(r"\bdelivery_rate ([\d.]+)bps", line) or _mbps(line, "delivery_rate"),
@@ -137,6 +138,18 @@ def _mbps(line: str, key: str):
     if not m:
         return None
     return float(m.group(1)) * {"K": 1e3, "M": 1e6, "G": 1e9}[m.group(2)]
+
+
+def add_rates(players: list[dict], prev: dict, seconds: float) -> dict:
+    """Bytes/s to and from each player since the last sample. Returns this sample for next time."""
+    now = {}
+    for p in players:
+        sent, got = p.get("bytes_sent") or 0, p.get("bytes_received") or 0
+        old = prev.get(p["peer"])
+        p["tx_rate"] = round((sent - old[0]) / seconds, 1) if old and seconds > 0 and sent >= old[0] else None
+        p["rx_rate"] = round((got - old[1]) / seconds, 1) if old and seconds > 0 and got >= old[1] else None
+        now[p["peer"]] = (sent, got)
+    return now
 
 
 def parse_snmp_tcp(text: str) -> dict | None:
@@ -342,8 +355,11 @@ def minute_point(samples: list) -> dict:
 
 def sockets_loop() -> None:
     out = OUT / "sockets.json"
+    prev, last = {}, None
     while True:
+        t = time.monotonic()
         players = parse_ss(run(["ss", "-tinH", f"( sport = :{MC_PORT} )"]), MC_PORT)
+        prev, last = add_rates(players, prev, t - last if last else 0), t
         try:
             tcp = parse_snmp_tcp(Path("/proc/net/snmp").read_text())
         except OSError:

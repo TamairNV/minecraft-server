@@ -150,11 +150,19 @@ class Network:
             live_pts = recent_points(recent)
             start = live_pts[0]["t"] if live_pts else now
             series = downsample([p for p in pts if now - seconds <= p["t"] < start] + live_pts)
+        summary = self.summary(live, now)
+        players = self.players(live)
+        for p in players:
+            # Proxy players' ping includes the tunnel; what's left is the proxy <-> player leg.
+            if p["route"] == "proxy" and p["rtt"] is not None and summary["rtt"] is not None:
+                p["leg"] = round(max(1.0, p["rtt"] - summary["rtt"]), 1)
+            else:
+                p["leg"] = p["rtt"]
         return {
             "running": age <= STALE, "stale": round(age), "range": span, "tick": live.get("tick"),
             "alerts": alerts, "events": list(reversed(live.get("events") or []))[:30],
-            "summary": self.summary(live, now), "series": series,
-            "players": self.players(live), "public_host": live.get("public_host"), "peer": live.get("peer"),
+            "summary": summary, "series": series,
+            "players": players, "public_host": live.get("public_host"), "peer": live.get("peer"),
             "uplink_mbit": live.get("uplink_mbit") or None,
         }
 
@@ -204,15 +212,21 @@ class Network:
         if socks is None:
             return []
         names = self._names()
+        uuids = {}
+        for e in read_json(self.log_file.parent.parent / "whitelist.json", []) or []:
+            if isinstance(e, dict) and e.get("name"):
+                uuids[e["name"].lower()] = e.get("uuid")
         out = []
         for s in socks:
             key = peer_key(s["peer"]) or s["peer"]
             sent, re_ = s.get("bytes_sent") or 0, s.get("bytes_retrans") or 0
+            name = names.get(key)
             out.append({
-                "name": names.get(key), "route": route(key, live.get("peer", "10.100.0.1")),
+                "name": name, "uuid": uuids.get((name or "").lower()), "route": route(key, live.get("peer", "10.100.0.1")),
                 "rtt": s.get("rtt"), "jitter": s.get("rtt_var"), "send_q": s.get("send_q"),
                 "retrans_pct": round(100 * re_ / sent, 2) if sent else None,
                 "delivery": s.get("delivery"), "sent": sent,
+                "tx_rate": s.get("tx_rate"), "rx_rate": s.get("rx_rate"),
             })
         out.sort(key=lambda p: (p["name"] is None, (p["name"] or "").lower()))
         return out
