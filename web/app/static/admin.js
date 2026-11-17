@@ -81,7 +81,7 @@ function fill(id, items, key, make) {
 }
 
 // ---- tabs
-const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, system: loadSystem, challenges: loadChallenges };
+const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, network: loadNetwork, system: loadSystem, challenges: loadChallenges };
 let currentTab = 'console';
 function openTab(name) {
   currentTab = name;
@@ -913,13 +913,208 @@ $('ch-reset').addEventListener('click', (e) => busyWhile(e.currentTarget, async 
   if (await act('progress/reset', { confirm: typed }, 'Fresh start. Everything counts from now.')) loadChallenges();
 }));
 
+// ---- network
+// Numbers come from the netmon containers; this tab only reads them (every 5 s while open).
+let netRange = '1h';
+try { netRange = localStorage.getItem('netRange') || '1h'; } catch { /* private window */ }
+const NET_COLORS = { a: 'var(--grass)', b: 'var(--gold)', c: '#7fb8ff', bad: '#e0604a' };
+const mbit = (bps) => (bps === null || bps === undefined ? null : (bps * 8) / 1e6);
+const fixed = (v, d = 1) => (v === null || v === undefined ? '–' : Number(v).toFixed(d));
+const ago = (s) => (s === null || s === undefined ? 'never' : s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`);
+const kb = (b) => (b === null || b === undefined ? '–' : b < 1024 ? `${b} B` : b < 1048576 ? `${Math.round(b / 1024)} KB` : `${(b / 1048576).toFixed(1)} MB`);
+
+function nearest(values, i) {
+  for (let k = 0; k < values.length; k++) {
+    for (const j of [i - k, i + k]) if (values[j] !== null && values[j] !== undefined) return values[j];
+  }
+  return null;
+}
+
+function niceMax(v) {
+  if (!(v > 0)) return 1;
+  const p = 10 ** Math.floor(Math.log10(v));
+  return [1, 2, 2.5, 5, 10].map((m) => m * p).find((m) => m >= v);
+}
+
+function timeLabel(t, span) {
+  const d = new Date(t * 1000);
+  return span > 86400 ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }) : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Small SVG line chart: lines = [{label, color, values}], bands = indexes drawn as red columns.
+function lineChart(el, times, lines, opts = {}) {
+  const W = 640, H = 180, L = 40, R = 8, T = 10, B = 22;
+  const all = lines.flatMap((l) => l.values).filter((v) => v !== null && v !== undefined);
+  if (times.length < 2) { el.innerHTML = '<p class="hint net-nodata">Not enough data yet. Give it a minute.</p>'; return; }
+  const max = niceMax(Math.max(opts.min || 0, ...all));
+  const t0 = times[0], t1 = times[times.length - 1];
+  const x = (t) => L + ((t - t0) / Math.max(1, t1 - t0)) * (W - L - R);
+  const y = (v) => T + (1 - v / max) * (H - T - B);
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('role', 'img');
+  const mk = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.append(e); return e; };
+  const step = (W - L - R) / Math.max(1, times.length - 1);
+  (opts.bands || []).forEach((i) => mk('rect', { x: x(times[i]) - step / 2, y: T, width: Math.max(2, step), height: H - T - B, fill: NET_COLORS.bad, opacity: 0.28 }));
+  for (let i = 0; i <= 4; i++) {
+    const v = (max * i) / 4;
+    mk('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' });
+    mk('text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end', class: 'axis' }).textContent = v >= 10 ? Math.round(v) : +v.toFixed(1);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const t = t0 + ((t1 - t0) * i) / 4;
+    mk('text', { x: x(t), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === 4 ? 'end' : 'middle', class: 'axis' }).textContent = timeLabel(t, t1 - t0);
+  }
+  for (const l of lines) {
+    let d = '';
+    l.values.forEach((v, i) => {
+      if (v === null || v === undefined) { if (!l.sparse) d += ' '; return; }
+      d += `${d && !d.endsWith(' ') ? 'L' : 'M'}${x(times[i]).toFixed(1)},${y(Math.min(v, max)).toFixed(1)}`;
+    });
+    mk('path', { d: d.trim().replace(/ +/g, ''), fill: 'none', stroke: l.color, 'stroke-width': 2, 'stroke-linejoin': 'round' });
+  }
+  const cursor = mk('line', { y1: T, y2: H - B, class: 'cursor', visibility: 'hidden' });
+  const tip = document.createElement('div');
+  tip.className = 'net-tip';
+  tip.hidden = true;
+  svg.addEventListener('pointermove', (e) => {
+    const box = svg.getBoundingClientRect();
+    const px = ((e.clientX - box.left) / box.width) * W;
+    const i = Math.max(0, Math.min(times.length - 1, Math.round((px - L) / step)));
+    cursor.setAttribute('x1', x(times[i])); cursor.setAttribute('x2', x(times[i])); cursor.setAttribute('visibility', 'visible');
+    tip.replaceChildren(Object.assign(document.createElement('b'), { textContent: new Date(times[i] * 1000).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'medium' }) }),
+      ...lines.map((l) => { const r = document.createElement('div'); r.innerHTML = '<i></i><span></span>'; r.querySelector('i').style.background = l.color; r.querySelector('span').textContent = `${l.label}: ${fixed(l.sparse ? nearest(l.values, i) : l.values[i], opts.digits ?? 1)}`; return r; }));
+    if ((opts.bands || []).includes(i)) tip.append(Object.assign(document.createElement('div'), { textContent: 'Public join check failed', className: 'bad' }));
+    tip.hidden = false;
+    tip.style.left = `${Math.min(box.width - 170, Math.max(0, e.clientX - box.left + 12))}px`;
+  });
+  svg.addEventListener('pointerleave', () => { cursor.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+  const legend = document.createElement('div');
+  legend.className = 'net-legend';
+  for (const l of lines) { const s = document.createElement('span'); s.innerHTML = '<i></i>'; s.querySelector('i').style.background = l.color; s.append(l.label); legend.append(s); }
+  svg.setAttribute('aria-label', `${opts.title || 'Chart'}: ${lines.map((l) => `${l.label} now ${fixed(l.values[l.values.length - 1])}`).join(', ')}`);
+  el.replaceChildren(svg, tip, legend);
+}
+
+function netCard(big, small, level) {
+  const div = document.createElement('div');
+  div.className = `fact${level ? ` ${level}` : ''}`;
+  const b = document.createElement('b');
+  const sp = document.createElement('span');
+  b.textContent = big; sp.textContent = small;
+  div.append(b, sp);
+  return div;
+}
+
+const levelFor = (v, warn, crit) => (v === null || v === undefined ? '' : v >= crit ? 'crit' : v >= warn ? 'warn' : '');
+
+function renderNetwork(d) {
+  const crit = d.alerts.filter((a) => a.level === 'crit').length;
+  $('net-alerts').replaceChildren(...d.alerts.map((a) => {
+    const div = document.createElement('div');
+    div.className = `net-alert ${a.level}`;
+    const b = document.createElement('b'); b.textContent = a.title;
+    const p = document.createElement('p'); p.textContent = a.detail;
+    div.append(b, p);
+    return div;
+  }));
+  const tab = document.querySelector('.tabs button[data-tab="network"]');
+  tab.classList.toggle('alerting', d.alerts.length > 0);
+  tab.classList.toggle('critical', crit > 0);
+
+  const s = d.summary || {};
+  const keys = new Set(d.alerts.map((a) => a.key.split(':')[0]));
+  const hop = (label, sub, bad) => { const li = document.createElement('li'); li.className = bad ? 'bad' : d.running ? 'ok' : ''; li.innerHTML = '<b></b><span></span>'; li.querySelector('b').textContent = label; li.querySelector('span').textContent = sub; return li; };
+  $('net-path').replaceChildren(
+    hop('Players', `${d.players.length} connected`, false),
+    hop(d.public_host || 'Public address', s.public ? (s.public.ok ? `join check ok · ${fixed(s.public.connect, 0)} ms` : 'join check failing') : 'not checked yet', keys.has('public')),
+    hop('Proxy', s.isp ? `internet ping ${fixed(s.isp, 0)} ms` : (d.peer || ''), keys.has('proxy') || keys.has('endpoint')),
+    hop('WireGuard', s.rtt !== null && s.rtt !== undefined ? `${fixed(s.rtt)} ms · ${fixed(s.loss)}% loss` : 'no replies', keys.has('tunnel') || keys.has('loss')),
+    hop('This server', s.local ? (s.local.ok ? 'game answering' : 'game not answering') : '', s.local && !s.local.ok),
+  );
+
+  const cards = [
+    netCard(!d.running ? 'No data' : crit ? `${crit} down` : d.alerts.length ? `${d.alerts.length} warning${d.alerts.length > 1 ? 's' : ''}` : 'Healthy', d.running ? `updated ${ago(d.stale)}` : 'monitor stopped', !d.running || crit ? 'crit' : d.alerts.length ? 'warn' : 'good'),
+    netCard(`${fixed(s.rtt)} ms`, `tunnel ping · jitter ${fixed(s.jitter)} ms`, levelFor(s.rtt, 60, 150)),
+    netCard(`${fixed(s.loss)}%`, 'packet loss, last 5 min', levelFor(s.loss, 2, 10)),
+    netCard(`${fixed(s.retrans)}%`, 'game traffic resent, 5 min', levelFor(s.retrans, 2, 5)),
+    netCard(s.handshake_age === null || s.handshake_age === undefined ? '–' : ago(s.handshake_age).replace(' ago', ''), 'since WireGuard handshake', levelFor(s.handshake_age, 150, 180)),
+    netCard(`${fixed(mbit(s.tx))} Mbit/s`, `to players now · peak ${fixed(mbit(s.tx_peak_24h))} today${d.uplink_mbit ? ` of ${d.uplink_mbit}` : ''}`),
+    netCard(`${fixed(mbit(s.rx), 2)} Mbit/s`, 'from players now'),
+    netCard(s.public ? (s.public.ok ? 'Joinable' : 'Failing') : '–', s.public ? `via ${d.public_host} · ${ago(s.public.age)}` : 'public join check', s.public && !s.public.ok ? 'crit' : ''),
+    netCard(s.isp ? `${fixed(s.isp, 0)} ms` : '–', "proxy's internet ping (outside the tunnel)"),
+    netCard(s.voice_drops === null || s.voice_drops === undefined ? '–' : String(s.voice_drops), 'voice packets dropped (since start)'),
+  ];
+  if (s.dns && s.endpoint) cards.push(netCard(s.dns, s.endpoint.startsWith(`${s.dns}:`) ? 'proxy IP, matches tunnel' : `proxy IP · tunnel still uses ${s.endpoint}`, s.endpoint.startsWith(`${s.dns}:`) ? '' : 'warn'));
+  $('net-cards').replaceChildren(...cards);
+
+  const span = { '15m': 900, '1h': 3600, '6h': 21600, '24h': 86400, '7d': 604800 }[d.range];
+  const pts = d.series;
+  const times = pts.map((p) => p.t);
+  const bands = pts.map((p, i) => (p.pub_ok === false ? i : -1)).filter((i) => i >= 0);
+  lineChart($('chart-latency'), times, [
+    { label: 'Tunnel ping', color: NET_COLORS.a, values: pts.map((p) => p.rtt) },
+    // Measured every 30 s, so these join up across the gaps
+    { label: "Proxy's internet", color: NET_COLORS.b, values: pts.map((p) => p.isp), sparse: true },
+    { label: 'Public join connect', color: NET_COLORS.c, values: pts.map((p) => p.pub_ms), sparse: true },
+  ], { bands, title: 'Latency', min: 50, span });
+  lineChart($('chart-loss'), times, [
+    { label: 'Tunnel loss', color: NET_COLORS.bad, values: pts.map((p) => p.loss) },
+    { label: 'Game traffic resent', color: NET_COLORS.b, values: pts.map((p) => p.retrans) },
+  ], { title: 'Loss', min: 2, digits: 2 });
+  lineChart($('chart-traffic'), times, [
+    { label: 'To players', color: NET_COLORS.a, values: pts.map((p) => mbit(p.tx)) },
+    { label: 'From players', color: NET_COLORS.b, values: pts.map((p) => mbit(p.rx)) },
+  ], { title: 'Traffic', min: 0.5, digits: 2 });
+
+  $('net-players-empty').hidden = d.players.length > 0;
+  fill('net-players', d.players, d.players, (p) => {
+    const tr = document.createElement('tr');
+    const name = cell(p.name || 'Unknown');
+    if (!p.name) name.className = 'muted';
+    const ping = cell(p.rtt === null || p.rtt === undefined ? '–' : `${Math.round(p.rtt)} ms${p.jitter ? ` ±${Math.round(p.jitter)}` : ''}`, 'n');
+    ping.dataset.level = levelFor(p.rtt, 150, 250);
+    const re = cell(p.retrans_pct === null ? '–' : `${fixed(p.retrans_pct)}%`, 'n');
+    re.dataset.level = levelFor(p.retrans_pct, 2, 5);
+    const q = cell(kb(p.send_q), 'n');
+    q.dataset.level = levelFor(p.send_q, 128 * 1024, 512 * 1024);
+    tr.append(name, cell(p.route), ping, re, q, cell(p.delivery ? `${fixed(p.delivery / 1e6)} Mbit/s` : '–', 'n'));
+    return tr;
+  });
+
+  $('net-events-empty').hidden = d.events.length > 0;
+  fill('net-events', d.events, d.events, (e) => {
+    const tr = document.createElement('tr');
+    const tag = cell(e.state === 'start' ? (e.level === 'crit' ? 'Problem' : 'Warning') : 'Cleared');
+    tag.dataset.level = e.state === 'start' ? e.level : '';
+    tr.append(cell(when(e.t)), cell(e.title), tag);
+    return tr;
+  });
+  document.querySelectorAll('.net-range button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.range === d.range)));
+}
+
+async function loadNetwork() {
+  let d;
+  try { d = await api(`network?range=${encodeURIComponent(netRange)}`); } catch (e) { $('net-alerts').textContent = e.message; return; }
+  renderNetwork(d);
+}
+document.querySelectorAll('.net-range button').forEach((b) => b.addEventListener('click', () => {
+  netRange = b.dataset.range;
+  try { localStorage.setItem('netRange', netRange); } catch { /* private window */ }
+  loadNetwork();
+}));
+
 const start = location.hash.slice(1);
 openTab(document.querySelector(`.tabs button[data-tab="${start}"]`) ? start : 'console');
-refreshStatus(); refreshJob(); pollLog();
+refreshStatus(); refreshJob(); pollLog(); if (currentTab !== 'network') loadNetwork();
 setInterval(() => { if (currentTab === 'console') pollLog(); }, 2000);
 setInterval(refreshStatus, 10000);
 setInterval(() => { if (currentTab === 'system' && !document.hidden) pollCpu(); }, 1500);
 setInterval(refreshJob, 3000);
+setInterval(() => { if (currentTab === 'network' && !document.hidden) loadNetwork(); }, 5000);
+// Elsewhere, refresh now and then so the Network tab's warning dot shows up.
+setInterval(() => { if (currentTab !== 'network' && !document.hidden) loadNetwork(); }, 30000);
 setInterval(() => { if (currentTab === 'modpack' && packRunning) loadModpack(); }, 2000);
 setInterval(() => { if (currentTab === 'pregen') loadPregen(); }, 5000);
 setInterval(() => { if (currentTab === 'pregen' && mapBusy) loadMapStatus(); }, 15000);

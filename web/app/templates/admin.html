@@ -14,6 +14,7 @@
   <button role="tab" data-tab="pregen" aria-selected="false" type="button">Pre-generate</button>
   <button role="tab" data-tab="challenges" aria-selected="false" type="button">Challenges</button>
   <button role="tab" data-tab="modpack" aria-selected="false" type="button">Modpack</button>
+  <button role="tab" data-tab="network" aria-selected="false" type="button">Network</button>
   <button role="tab" data-tab="system" aria-selected="false" type="button">System</button>
 </div>
 
@@ -156,6 +157,33 @@
     <h2 class="gap">Kept builds</h2>
     <table class="list"><thead><tr><th>Built</th><th>By</th><th>Minecraft</th><th class="n">Mods</th><th>File</th></tr></thead><tbody id="pack-builds"></tbody></table>
     <p id="pack-empty" class="empty" hidden>No builds yet.</p>
+  </section>
+
+  <section id="tab-network" class="tab network" hidden>
+    <div id="net-alerts" class="net-alerts" role="status"></div>
+    <ol class="net-path" id="net-path" aria-label="How players reach the server"></ol>
+    <div class="facts" id="net-cards"></div>
+    <div class="row narrow gap net-range" role="group" aria-label="Time range">
+      <span class="hint">Show</span>
+      <button class="btn" type="button" data-range="15m">15 min</button>
+      <button class="btn" type="button" data-range="1h">1 hour</button>
+      <button class="btn" type="button" data-range="6h">6 hours</button>
+      <button class="btn" type="button" data-range="24h">24 hours</button>
+      <button class="btn" type="button" data-range="7d">7 days</button>
+    </div>
+    <div class="net-charts">
+      <figure class="net-chart"><figcaption>Latency <span class="hint">ms</span></figcaption><div id="chart-latency"></div></figure>
+      <figure class="net-chart"><figcaption>Packet loss and resends <span class="hint">%</span></figcaption><div id="chart-loss"></div></figure>
+      <figure class="net-chart"><figcaption>Tunnel traffic <span class="hint">Mbit/s</span></figcaption><div id="chart-traffic"></div></figure>
+    </div>
+    <h2 class="gap">Players</h2>
+    <p class="hint">Each player's own connection, measured by this server's network stack. Ping is the full round trip to the player, so for proxy players it includes the hop to the proxy. Resent is how much of what we sent had to go again: anything over a couple of percent means a lossy line and slow chunk loading. Waiting is data queued for the player that their connection hasn't taken yet.</p>
+    <table class="list"><thead><tr><th>Player</th><th>Route</th><th class="n">Ping</th><th class="n">Resent</th><th class="n">Waiting</th><th class="n">Speed</th></tr></thead><tbody id="net-players"><tr><td class="muted" colspan="6">Loading…</td></tr></tbody></table>
+    <p id="net-players-empty" class="empty" hidden>Nobody's connected.</p>
+    <h2 class="gap">Alert history</h2>
+    <table class="list"><thead><tr><th>When</th><th>What</th><th></th></tr></thead><tbody id="net-events"></tbody></table>
+    <p id="net-events-empty" class="empty" hidden>No alerts yet.</p>
+    <p class="hint gap">Measured every 5 seconds from this server by the netmon containers. The tunnel ping goes to the proxy over WireGuard, the proxy's internet ping goes to its public address outside the tunnel, and every 30 seconds a real Minecraft status ping goes in through the public address, the same way players join.</p>
   </section>
 
   <section id="tab-system" class="tab" hidden>

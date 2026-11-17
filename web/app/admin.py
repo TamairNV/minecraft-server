@@ -18,6 +18,7 @@ from . import challenges_default as cd
 from .progress import describe
 from .dimensions import DimensionError, Dimensions
 from .links import LinkError
+from .network import RANGES, Network
 from .rewards import ClaimError, RewardError, item_ids, validate_reward
 from .pregen import Pregen
 from .settings import ServerSettings, SettingsError
@@ -123,7 +124,8 @@ class PregenStart(BaseModel):
     shape: str = "square"
 
 
-def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None) -> APIRouter:
+def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None,
+          network=None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
@@ -133,6 +135,8 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, cl
     chunks = Pregen(server, data, crafty, query=settings.query)
     dimensions = Dimensions(server, crafty, query=settings.query)
     cpu_meter = CpuMeter()
+    network = network or Network(Path(os.environ.get("NETMON_LIVE", "/netmon/live.json")),
+                                 Path(os.environ.get("NETMON_HISTORY", "/netmon-history/history.json")), log_file)
 
     def audit(user: AccessUser, action: str, detail: str = "") -> None:
         line = json.dumps({"time": int(time.time()), "who": user.email, "action": action, "detail": detail})
@@ -417,6 +421,13 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, cl
     def cpu_now():
         """Polled every 1.5 s while the System tab is open: two small file reads, nothing sent to the server."""
         return cpu_meter.sample()
+
+    @router.get("/network")
+    def network_view(range: str = "1h"):
+        """Polled every 5 s while the Network tab is open. Reads netmon's files only."""
+        if range not in RANGES:
+            raise HTTPException(400, "Unknown range.")
+        return network.view(range)
 
     # ---- stats & challenges
     def progress_do(fn, *args):
