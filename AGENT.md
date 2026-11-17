@@ -33,6 +33,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 ## Containers and processes
 
 - `minecraft-crafty` (Crafty 4.11 + Paper + BlueMap, mem 14g, cpus 14, cgroup slice minecraft.slice), `minecraft-web` (FastAPI site, on access-net), `minecraft-proxy` (nginx, asks the app /authz before serving the map).
+- `minecraft-playit` (playit.gg agent, host network, outbound only): public IPv4 way in for players, molecule-phases.tun.ply.gg port 46157 -> 127.0.0.1:25565. Every player then shows the same source address, so IP bans mean nothing.
 
 ## Data
 
@@ -40,7 +41,7 @@ Paper Minecraft server run by Crafty Controller, plus a login-only website (mc.t
 
 ## Secrets (names only, never values)
 
-- `.env`: CRAFTY_ADMIN_USER, CRAFTY_ADMIN_PASSWORD, CRAFTY_SERVER_ID, MC_PUBLIC_ADDRESS, ACCESS_SITE, CF_TEAM_DOMAIN, CF_AUD, ACCESS_LOWEST_ROLE, CRAFTY_WEB_USER, CRAFTY_WEB_PASSWORD, CRAFTY_BACKUP_ID.
+- `.env`: CRAFTY_ADMIN_USER, CRAFTY_ADMIN_PASSWORD, CRAFTY_SERVER_ID, MC_PUBLIC_ADDRESS, ACCESS_SITE, CF_TEAM_DOMAIN, CF_AUD, ACCESS_LOWEST_ROLE, CRAFTY_WEB_USER, CRAFTY_WEB_PASSWORD, CRAFTY_BACKUP_ID, PLAYIT_SECRET_KEY (playit.gg agent key; Tamair pasted it into a Claude chat on 2026-11-17, so rotate it in the playit account if that matters).
 
 ## Depends on
 
@@ -78,3 +79,7 @@ Agents: add a dated line here at the end of every session, newest last, and trim
 - 2026-11-11: rewards now show as inventory slots (count in the corner, game-style tooltip); blocks are drawn as shaded isometric cubes from the client jar's models, chests from the entity texture (web/app/icons.py, needs Pillow, added to requirements). Rollback image minecraft-web:rollback-20261111e.
 - 2026-11-11: enchantment glint on enchanted rewards (CSS mask over the icon, still with reduced motion); README Challenges section now covers greyed Claim buttons and reward pictures. Commit ca08db4. Test data for RadioactiveAnt7 still in place until Tamair presses Reset.
 - 2026-11-11: claims failed in production with "something went wrong": nginx denied every POST outside /admin/api/. Added `location = /api/claim` (POST only). Backup ~/backups/minecraft-nginx-default.conf_*.
+- 2026-11-16: the server has a public IPv6 address and players can use smp.tamairnv.co.uk (DNS-only AAAA, IPv6 only; mc.tamairnv.co.uk stays the website). scripts/smp-ddns.sh (tnv cron, every 5 min) keeps the record on the current eno1 address; state and log in data/ddns (gitignored). Uncommitted: the script and .gitignore. Next: Tamair adds the router IPv6 firewall rule for TCP 25565 (and UDP 24454 for voice); if the prefix ever changes, the router rule needs the new address too. Details: infra notes `machine` and `apps/minecraft`.
+- 2026-11-17: added the playit.gg agent as compose service `playit` (container minecraft-playit) because friends on IPv4-only networks can't use the IPv6 address; tested with a status ping through molecule-phases.tun.ply.gg:46157. scripts/ping.py fails through playit (its edge resets the protocol -1 handshake), so test with a real protocol number. Compose backup ~/backups/minecraft-compose.yml_20261117-001149. Uncommitted. Next: Tamair decides whether smp.tamairnv.co.uk gets an SRV record to the playit address.
+- 2026-11-17: game address is now mc.tamairnv.co.uk: SRV record _minecraft._tcp.mc -> molecule-phases.tun.ply.gg:46157 (playit). The website record for mc is untouched. playit resets a handshake that carries any hostname other than its own; the vanilla client sends the SRV target so it should be fine, but Tamair has not yet confirmed a real join by that name. smp.tamairnv.co.uk (IPv6 AAAA + scripts/smp-ddns.sh cron) still exists as a direct route. MC_PUBLIC_ADDRESS in .env is empty; set it to mc.tamairnv.co.uk if the site should show the address.
+- 2026-11-17: Players now join via the friend's reverse proxy (server.tamairnv.co.uk -> WireGuard wg0, this server 10.100.0.2; infra note `wireguard`). playit.gg container stopped at Tamair's request (was failing); SRV for mc.tamairnv.co.uk still points at playit, pending Tamair's DNS decision.
