@@ -131,3 +131,13 @@ def test_api_admin_only_and_audited(tmp_path, monkeypatch):
     assert last["ok"] > 0 and "who" not in last
     audit = [json.loads(line) for line in (tmp_path / "audit.jsonl").read_text().splitlines()]
     assert audit[-1]["action"] == "network stress test" and "proxy, 2 connections" in audit[-1]["detail"]
+
+
+def test_rate_limit_paces_new_connections():
+    port = fake_server()
+    t = st.StressTest({"proxy": ("127.0.0.1", port)})
+    t.start("proxy", 10, 5, rate=20)
+    r = wait_done(t)["last"]
+    assert r["rate"] == 20 and 80 <= r["ok"] <= 105  # ~20 a second for 5 s, however many workers
+    with pytest.raises(ValueError):
+        st.StressTest({"proxy": ("127.0.0.1", port)}).start("proxy", 1, 5, rate=501)

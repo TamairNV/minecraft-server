@@ -1287,7 +1287,7 @@ function renderStress(d) {
   st.dataset.level = r.fail_pct >= 5 ? 'crit' : r.fail_pct > 0 || r.slow_connects > 0 ? 'warn' : 'ok';
   st.textContent = d.running
     ? `Running ${ROUTE_NAMES[r.target]}: ${Math.round(r.elapsed)} of ${r.seconds} s, ${r.ok} exchanges so far…`
-    : `Last test ${ROUTE_NAMES[r.target]} (${r.host}:${r.port}), ${r.connections} connections for ${r.seconds} s, ${when(r.started)}${r.error ? ` · stopped early: ${r.error}` : ''}`;
+    : `Last test ${ROUTE_NAMES[r.target]} (${r.host}:${r.port}), ${r.connections} connections, ${r.rate ? `${r.rate} new/s` : 'no rate limit'}, for ${r.seconds} s, ${when(r.started)}${r.error ? ` · stopped early: ${r.error}` : ''}`;
   $('stress-panels').replaceChildren(
     panel('Result', [
       ['Exchanges', `${r.ok} ok of ${r.attempts}`],
@@ -1331,12 +1331,13 @@ $('stress-form').addEventListener('submit', async (e) => {
   const target = $('stress-target').value;
   const connections = Number($('stress-conns').value);
   const seconds = Number($('stress-secs').value);
+  const rate = Number($('stress-rate').value);
   const msg = target === 'proxy'
-    ? `Run ${connections} connections for ${seconds} s through your friend's proxy? Players on it may notice some lag while it runs.`
+    ? `Run ${connections} connections for ${seconds} s (${rate || 'no limit on'} new per second) through your friend's proxy? Players on it may notice some lag while it runs.`
     : `Run ${connections} connections for ${seconds} s directly against the server?`;
   if (!confirm(msg)) return;
   await busyWhile($('stress-run'), async () => {
-    const d = await act('network/stress', { target, connections, seconds }, 'Stress test started');
+    const d = await act('network/stress', { target, connections, seconds, rate }, 'Stress test started');
     if (d) { renderStress(d); clearTimeout(stressTimer); stressTimer = setTimeout(loadStress, 1000); }
   });
   loadStress();

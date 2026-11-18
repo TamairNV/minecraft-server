@@ -187,7 +187,7 @@
     </div>
 
     <h2 class="gap">Stress test</h2>
-    <p class="hint">Opens lots of real Minecraft connections at once (handshake, status and ping, the same as the server list), over and over, then shows how the route held up. Nobody logs in and the world isn't touched, but players on the proxy may notice a little lag while it runs.</p>
+    <p class="hint">Opens lots of real Minecraft connections at once (handshake, status and ping, the same as the server list), over and over, then shows how the route held up. Keep new connections per second low for the proxy: your friend's router blocks an address that opens about 100 a second, for about 20 s. Nobody logs in and the world isn't touched, but players on the proxy may notice a little lag while it runs.</p>
     <form class="stress-form" id="stress-form">
       <label>Route
         <select id="stress-target">
@@ -197,6 +197,7 @@
       </label>
       <label>Connections at once <input id="stress-conns" type="number" min="1" max="50" value="20" required></label>
       <label>Seconds <input id="stress-secs" type="number" min="5" max="60" value="30" required></label>
+      <label title="Your friend's router blocks an address that opens about 100 a second for a few seconds; 0 = no limit">New per second <input id="stress-rate" type="number" min="0" max="500" value="20" required></label>
       <button class="btn primary" id="stress-run" type="submit">Run stress test</button>
     </form>
     <div class="stress-status" id="stress-status" role="status"></div>

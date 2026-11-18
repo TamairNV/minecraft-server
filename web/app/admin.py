@@ -60,6 +60,7 @@ class Stress(BaseModel):
     target: str = "proxy"
     connections: int = 20
     seconds: int = 30
+    rate: int = 20
 
 
 class Restore(BaseModel):
@@ -446,12 +447,12 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, cl
     @router.post("/network/stress", dependencies=[Depends(same_origin)])
     def stress_start(body: Stress, user: AccessUser = Depends(admin_user)):
         try:
-            out = stress.start(body.target, body.connections, body.seconds, who=user.email)
+            out = stress.start(body.target, body.connections, body.seconds, who=user.email, rate=body.rate)
         except ValueError as e:
             raise HTTPException(400, str(e)) from None
         except RuntimeError as e:
             raise HTTPException(409, str(e)) from None
-        audit(user, "network stress test", f"{body.target}, {body.connections} connections, {body.seconds} s")
+        audit(user, "network stress test", f"{body.target}, {body.connections} connections, {body.seconds} s, {body.rate or 'no limit'}/s")
         return out
 
     # ---- stats & challenges

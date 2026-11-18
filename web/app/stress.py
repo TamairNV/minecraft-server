@@ -26,6 +26,7 @@ TARGETS = {
 }
 MAX_CONNECTIONS = 50
 MAX_SECONDS = 60
+MAX_RATE = 500  # new connections per second, across all workers
 TIMEOUT = 5.0
 
 
@@ -90,19 +91,21 @@ class StressTest:
                 out["live"] = self._summary(self._live, final=False)
             return out
 
-    def start(self, target: str, connections: int, seconds: int, who: str = "") -> dict:
+    def start(self, target: str, connections: int, seconds: int, who: str = "", rate: int = 0) -> dict:
         if target not in self.targets:
             raise ValueError("Unknown target.")
         if not 1 <= connections <= MAX_CONNECTIONS:
             raise ValueError(f"Connections must be 1 to {MAX_CONNECTIONS}.")
         if not 5 <= seconds <= MAX_SECONDS:
             raise ValueError(f"Duration must be 5 to {MAX_SECONDS} seconds.")
+        if not 0 <= rate <= MAX_RATE:
+            raise ValueError(f"Rate must be 0 (no limit) to {MAX_RATE} per second.")
         with self._lock:
             if self._state["running"]:
                 raise RuntimeError("A stress test is already running.")
             host, port = self.targets[target]
             self._live = {"target": target, "host": host, "port": port, "connections": connections,
-                          "seconds": seconds, "started": self.clock(), "who": who,
+                          "seconds": seconds, "rate": rate, "started": self.clock(), "who": who,
                           "connect": [], "total": [], "fails": {}, "sent": 0, "got": 0, "timeline": {}}
             self._state["running"] = True
         threading.Thread(target=self._run, daemon=True).start()
@@ -123,9 +126,23 @@ class StressTest:
     async def _drive(self, live: dict) -> None:
         start = time.perf_counter()
         end = start + live["seconds"]
+        gap = 1 / live["rate"] if live["rate"] else 0
+        slot_lock = asyncio.Lock()
+        next_at = [start]
+
+        async def pace():
+            # Spread new connections evenly: some routers block an address that opens hundreds a second.
+            if not gap:
+                return
+            async with slot_lock:
+                at = next_at[0] = max(next_at[0] + gap, time.perf_counter())
+            await asyncio.sleep(max(0, at - time.perf_counter()))
 
         async def worker():
             while time.perf_counter() < end:
+                await pace()
+                if time.perf_counter() >= end:
+                    break
                 sec = int(time.perf_counter() - start)
                 try:
                     c, t, s, g = await exchange(live["host"], live["port"])
@@ -155,7 +172,7 @@ class StressTest:
                     for s, v in sorted(live["timeline"].items())]
         return {
             "target": live["target"], "host": live["host"], "port": live["port"],
-            "connections": live["connections"], "seconds": live["seconds"], "started": int(live["started"]),
+            "connections": live["connections"], "seconds": live["seconds"], "rate": live["rate"], "started": int(live["started"]),
             "elapsed": round(elapsed, 1), "done": final, "attempts": n, "ok": len(tot), "failed": fails,
             "fail_kinds": dict(live["fails"]), "fail_pct": round(100 * fails / n, 2) if n else 0,
             "per_second": round(len(tot) / elapsed, 1),
