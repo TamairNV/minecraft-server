@@ -81,7 +81,7 @@ function fill(id, items, key, make) {
 }
 
 // ---- tabs
-const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, network: () => { loadNetwork(); loadStress(); }, system: loadSystem, challenges: loadChallenges };
+const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, network: () => { loadNetwork(); loadStress(); loadTune(); }, system: loadSystem, challenges: loadChallenges };
 let currentTab = 'console';
 function openTab(name) {
   currentTab = name;
@@ -1272,6 +1272,92 @@ document.querySelectorAll('.net-range button').forEach((b) => b.addEventListener
   netRange = b.dataset.range;
   try { localStorage.setItem('netRange', netRange); } catch { /* private window */ }
   loadNetwork();
+}));
+
+// ---- smart tuning: view distance and Distant Horizons follow the proxy's upload
+let tuneTimer = null;
+let tuneFormDirty = false;
+const LEVEL_TONE = ['ok', 'warn', 'warn', 'crit'];
+
+function liveVal(live, target, key) {
+  // What the game reported, flagged when it differs from what this level wants.
+  const v = live ? live[key] : null;
+  if (v === null || v === undefined) return [`${target[key]} (not read yet)`, ''];
+  return v === target[key] ? [`${v}`, ''] : [`${v} (should be ${target[key]})`, 'warn'];
+}
+
+function renderTune(d) {
+  const lvl = $('tune-level');
+  lvl.textContent = d.enabled ? d.level_name : 'Off';
+  lvl.dataset.level = d.enabled ? LEVEL_TONE[d.level] : '';
+  const u = d.usage || {};
+  $('tune-why').textContent = !d.running ? 'Server stopped: nothing to tune'
+    : !u.fresh ? 'No fresh traffic numbers from the network monitor, holding'
+    : `${fixed(u.now_mbit)} of ${d.uplink_mbit} Mbit/s now · ${fixed(u.short_pct, 0)}% over ${d.windows.up} s${d.changed_at ? ` · last change ${ago(Date.now() / 1000 - d.changed_at)}` : ''}`;
+  const pct = Math.max(0, Math.min(100, u.short_pct || 0));
+  $('tune-fill').style.width = `${pct}%`;
+  $('tune-fill').dataset.level = pct >= d.up_pct ? 'crit' : pct >= d.down_pct ? 'warn' : 'ok';
+  $('tune-up').style.left = `${d.up_pct}%`; $('tune-up').title = `Steps down at ${d.up_pct}%`;
+  $('tune-down').style.left = `${d.down_pct}%`; $('tune-down').title = `Steps back up below ${d.down_pct}%`;
+  $('tune-meter').setAttribute('aria-label', `Upload ${fixed(u.short_pct, 0)}% busy`);
+
+  const t = d.target, b = d.base, live = d.live;
+  const [vv, vl] = liveVal(live, t, 'view');
+  const [cv, cl] = liveVal(live, t, 'dh_conc');
+  const [rv, rl] = liveVal(live, t, 'dh_rc');
+  $('tune-panels').replaceChildren(
+    panel('In the game now', [
+      ['View distance', `${vv} chunks`, vl, `Normal is ${b.view} (server.properties)`],
+      ['Distant Horizons requests at once', cv, cl, `Normal is ${b.dh_conc} (full_data_request_concurrency_limit)`],
+      ['Distant Horizons login requests', rv, rl, `Normal is ${b.dh_rc} (login_data_sync_rc_limit)`],
+      ['Read from the server', live && live.t ? ago(Date.now() / 1000 - live.t) : 'never', '', 'Press "Read live values" to ask the server now'],
+    ]),
+  );
+  $('tune-levels').replaceChildren(...d.levels.map((l, i) => {
+    const div = document.createElement('div');
+    div.className = 'tune-step';
+    if (i === d.level && d.enabled) div.dataset.current = 'true';
+    div.innerHTML = '<b></b><span></span>';
+    div.querySelector('b').textContent = l.name;
+    div.querySelector('span').textContent = `view ${l.view} · DH ${l.dh_conc} / ${l.dh_rc}`;
+    return div;
+  }));
+  if (!tuneFormDirty) {
+    $('tune-enabled').checked = d.enabled;
+    $('tune-uplink').value = d.uplink_mbit;
+    $('tune-uppct').value = d.up_pct;
+    $('tune-downpct').value = d.down_pct;
+  }
+  $('tune-count').textContent = d.events.length ? `(${d.events.length})` : '';
+  $('tune-events-empty').hidden = d.events.length > 0;
+  $('tune-events').replaceChildren(...d.events.map((e) => {
+    const tr = document.createElement('tr');
+    const a = e.after || {};
+    const fmt = (k) => (e.before && e.before[k] !== a[k] ? `${e.before[k]} → ${a[k]}` : a[k] ?? '');
+    tr.append(cell(when(e.t)), cell(e.text), cell(fmt('view'), 'n'), cell(fmt('dh_conc'), 'n'), cell(fmt('dh_rc'), 'n'));
+    return tr;
+  }));
+}
+
+async function loadTune() {
+  clearTimeout(tuneTimer);
+  try { renderTune(await api('network/autotune')); } catch (e) { $('tune-why').textContent = e.message; }
+  if (currentTab === 'network' && !document.hidden) tuneTimer = setTimeout(loadTune, 5000);
+}
+
+['tune-enabled', 'tune-uplink', 'tune-uppct', 'tune-downpct'].forEach((id) => $(id).addEventListener('input', () => { tuneFormDirty = true; }));
+$('tune-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = { enabled: $('tune-enabled').checked, uplink_mbit: Number($('tune-uplink').value), up_pct: Number($('tune-uppct').value), down_pct: Number($('tune-downpct').value) };
+  const btn = e.submitter || $('tune-form').querySelector('button[type=submit]');
+  await busyWhile(btn, async () => {
+    const d = await act('network/autotune', body, body.enabled ? 'Smart tuning saved' : 'Smart tuning off, settings back to normal');
+    if (d) { tuneFormDirty = false; renderTune(d); }
+  });
+});
+$('tune-refresh').addEventListener('click', () => busyWhile($('tune-refresh'), async () => {
+  const d = await act('network/autotune/refresh', {}, 'Read the live values from the server');
+  if (d) renderTune(d);
 }));
 
 // ---- stress test: lots of real Minecraft connections through the chosen route

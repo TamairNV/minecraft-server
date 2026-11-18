@@ -25,6 +25,10 @@ import org.bukkit.plugin.java.JavaPlugin;
  * Anyone already inside a locked dimension can stay and leave; only travel in is blocked.
  * Commands that teleport (e.g. /tp, /execute in) are not blocked, so ops can still go in.
  * State lives in config.yml (locked.nether, locked.end); the admin site reads it and sends /dimlock.
+ *
+ * Also /viewdist: Paper can change each world's view distance while running (no restart, nobody
+ * kicked). The admin site's network auto-tuner uses it to send fewer chunks when the proxy's upload
+ * is busy. The value is not saved: a restart goes back to view-distance in server.properties.
  */
 public final class DimLock extends JavaPlugin implements Listener {
     private static final Map<String, String> NAMES = Map.of("nether", "The Nether", "end", "The End");
@@ -86,6 +90,7 @@ public final class DimLock extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("viewdist")) return viewDist(sender, args);
         if (args.length != 2 || !NAMES.containsKey(args[0])) return false;
         String dim = args[0];
         switch (args[1]) {
@@ -106,6 +111,36 @@ public final class DimLock extends JavaPlugin implements Listener {
         return true;
     }
 
+    private boolean viewDist(CommandSender sender, String[] args) {
+        if (args.length == 2 && args[0].equals("set")) {
+            int n;
+            try {
+                n = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+            if (n < 2 || n > 32) {
+                sender.sendMessage("ViewDist: must be 2 to 32");
+                return true;
+            }
+            for (World w : Bukkit.getWorlds()) {
+                if (w.getViewDistance() != n) w.setViewDistance(n);
+            }
+        } else if (!(args.length == 1 && args[0].equals("status"))) {
+            return false;
+        }
+        // The site parses this exact line from the log: "ViewDist: view <n> sim <n> (<world> <n>, ...)".
+        List<World> worlds = Bukkit.getWorlds();
+        World main = worlds.get(0);
+        StringBuilder each = new StringBuilder();
+        for (World w : worlds) {
+            if (each.length() > 0) each.append(", ");
+            each.append(w.getName()).append(' ').append(w.getViewDistance());
+        }
+        sender.sendMessage("ViewDist: view " + main.getViewDistance() + " sim " + main.getSimulationDistance() + " (" + each + ")");
+        return true;
+    }
+
     private void announce(String text) {
         Bukkit.broadcast(Component.text(text, NamedTextColor.GOLD));
         if (getServer().getPluginManager().isPluginEnabled("DiscordSRV")) {
@@ -115,6 +150,7 @@ public final class DimLock extends JavaPlugin implements Listener {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("viewdist")) return args.length == 1 ? List.of("status", "set") : List.of();
         if (args.length == 1) return List.of("nether", "end");
         if (args.length == 2) return List.of("lock", "unlock", "status");
         return List.of();

@@ -168,6 +168,31 @@
     </div>
     <div id="net-alerts" class="net-alerts"></div>
 
+    <section class="tune" id="tune" aria-labelledby="tune-title">
+      <div class="tune-head">
+        <h2 id="tune-title">Smart tuning</h2>
+        <span class="tune-level" id="tune-level">…</span>
+        <span class="muted" id="tune-why"></span>
+      </div>
+      <p class="hint">Everything sent to players leaves through your friend's home upload. When players fill it, movement waits behind chunk data and the game lags, so this turns view distance and Distant Horizons down while the upload is busy, and back up once it's quiet. Changes apply live: nobody is kicked and the server isn't restarted.</p>
+      <div class="tune-meter" id="tune-meter" role="img" aria-label="Upload use"><div class="tune-fill" id="tune-fill"></div><span class="tune-mark up" id="tune-up"></span><span class="tune-mark down" id="tune-down"></span></div>
+      <div class="net-panels" id="tune-panels"></div>
+      <div class="tune-levels" id="tune-levels"></div>
+      <form class="stress-form" id="tune-form">
+        <label class="tune-switch"><input type="checkbox" id="tune-enabled"> On</label>
+        <label>Friend's upload <span class="hint">Mbit/s</span> <input id="tune-uplink" type="number" min="1" max="10000" step="0.5" required></label>
+        <label>Step down settings at <span class="hint">% busy</span> <input id="tune-uppct" type="number" min="11" max="100" required></label>
+        <label>Back up below <span class="hint">%</span> <input id="tune-downpct" type="number" min="10" max="99" required></label>
+        <button class="btn primary" type="submit">Save</button>
+        <button class="btn" type="button" id="tune-refresh">Read live values</button>
+      </form>
+      <details class="net-history">
+        <summary>Changes <span class="muted" id="tune-count"></span></summary>
+        <div class="tune-scroll"><table class="list"><thead><tr><th>When</th><th>What</th><th class="n">View</th><th class="n">DH at once</th><th class="n">DH login</th></tr></thead><tbody id="tune-events"></tbody></table></div>
+        <p id="tune-events-empty" class="empty" hidden>No changes yet.</p>
+      </details>
+    </section>
+
     <figure class="net-map">
       <div id="net-map" class="net-map-svg"></div>
       <figcaption class="net-key">

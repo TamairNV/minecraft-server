@@ -17,6 +17,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from . import admin, modpack, play, slp, stats
 from . import progress as pg
 from . import rewards
+from .autotune import AutoTune
 from .engine import Engine
 from .icons import Icons
 from .links import Links
@@ -68,6 +69,7 @@ def player_audit(who: str, action: str, detail: str) -> None:
 
 claims = rewards.Claims(progress_store, console.query, links, audit=player_audit)
 engine = Engine(SERVER, DATA, crafty, console.query, progress_store)
+autotune = AutoTune(SERVER, DATA, Path(os.environ.get("NETMON_LIVE", "/netmon/live.json")), crafty, console.query)
 rewards.use_registry(SERVER)
 
 
@@ -132,6 +134,7 @@ def start_worlds():
     worlds.setup()
     threading.Thread(target=recover_when_ready, daemon=True, name="world-recover").start()
     threading.Thread(target=progress_loop, daemon=True, name="progress").start()
+    threading.Thread(target=autotune.loop, daemon=True, name="autotune").start()
 
 
 def progress_loop():
@@ -165,7 +168,7 @@ async def errors(request: Request, exc: StarletteHTTPException):
     return HTMLResponse(f"<!doctype html><title>TNV SMP</title><p>{html.escape(str(exc.detail))}</p>", status_code=exc.status_code)
 
 
-app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs, engine=engine, claims=claims, console=console))
+app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs, engine=engine, claims=claims, console=console, autotune=autotune))
 _online = {"at": -1e9, "value": None}
 
 

@@ -9,6 +9,10 @@ commands:
     description: Lock or unlock the Nether or the End.
     usage: /dimlock <nether|end> <lock|unlock|status>
     permission: dimlock.admin
+  viewdist:
+    description: Show or change every world's view distance live (not saved; a restart uses server.properties).
+    usage: /viewdist <status|set <2-32>>
+    permission: dimlock.admin
 permissions:
   dimlock.admin:
     default: op

@@ -63,6 +63,13 @@ class Stress(BaseModel):
     rate: int = 20
 
 
+class Tuning(BaseModel):
+    enabled: bool
+    uplink_mbit: float = 20
+    up_pct: int = 75
+    down_pct: int = 40
+
+
 class Restore(BaseModel):
     name: str
     backup: str
@@ -133,7 +140,7 @@ class PregenStart(BaseModel):
 
 
 def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None,
-          network=None, stress=None) -> APIRouter:
+          network=None, stress=None, autotune=None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
@@ -453,6 +460,30 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, cl
         except RuntimeError as e:
             raise HTTPException(409, str(e)) from None
         audit(user, "network stress test", f"{body.target}, {body.connections} connections, {body.seconds} s, {body.rate or 'no limit'}/s")
+        return out
+
+    def tuner():
+        if autotune is None:
+            raise HTTPException(503, "Smart tuning isn't running.")
+        return autotune
+
+    @router.get("/network/autotune")
+    def autotune_status():
+        return tuner().status()
+
+    @router.post("/network/autotune/refresh", dependencies=[Depends(same_origin)])
+    def autotune_refresh():
+        """Asks the game for its live view distance and Distant Horizons limits (three console reads)."""
+        return tuner().refresh()
+
+    @router.post("/network/autotune", dependencies=[Depends(same_origin)])
+    def autotune_configure(body: Tuning, user: AccessUser = Depends(admin_user)):
+        try:
+            out = tuner().configure(body.enabled, body.uplink_mbit, body.up_pct, body.down_pct)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from None
+        audit(user, "network smart tuning", f"{'on' if body.enabled else 'off'}, upload {body.uplink_mbit:g} Mbit/s, "
+              f"step up {body.up_pct}%, down {body.down_pct}%")
         return out
 
     # ---- stats & challenges
