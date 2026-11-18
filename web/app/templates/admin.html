@@ -186,6 +186,23 @@
       <figure class="net-chart"><figcaption>Traffic through the tunnel <span class="hint">Mbit/s</span></figcaption><div id="chart-traffic"></div></figure>
     </div>
 
+    <h2 class="gap">Stress test</h2>
+    <p class="hint">Opens lots of real Minecraft connections at once (handshake, status and ping, the same as the server list), over and over, then shows how the route held up. Nobody logs in and the world isn't touched, but players on the proxy may notice a little lag while it runs.</p>
+    <form class="stress-form" id="stress-form">
+      <label>Route
+        <select id="stress-target">
+          <option value="proxy">Through the proxy (what players use)</option>
+          <option value="direct">Direct to the server (baseline)</option>
+        </select>
+      </label>
+      <label>Connections at once <input id="stress-conns" type="number" min="1" max="50" value="20" required></label>
+      <label>Seconds <input id="stress-secs" type="number" min="5" max="60" value="30" required></label>
+      <button class="btn primary" id="stress-run" type="submit">Run stress test</button>
+    </form>
+    <div class="stress-status" id="stress-status" role="status"></div>
+    <div class="net-panels" id="stress-panels"></div>
+    <figure class="net-chart" id="stress-chart-wrap" hidden><figcaption>Each second of the test <span class="hint">red = some connections failed</span></figcaption><div id="stress-chart"></div></figure>
+
     <h2 class="gap">Players</h2>
     <table class="list"><thead><tr><th>Player</th><th>Route</th><th class="n">Ping</th><th class="n">To proxy</th><th class="n">Down / up</th><th class="n">Resent</th><th class="n">Waiting</th></tr></thead><tbody id="net-players"><tr><td class="muted" colspan="7">Loading…</td></tr></tbody></table>
     <p id="net-players-empty" class="empty" hidden>Nobody's connected.</p>

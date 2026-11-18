@@ -22,6 +22,7 @@ from .network import RANGES, Network
 from .rewards import ClaimError, RewardError, item_ids, validate_reward
 from .pregen import Pregen
 from .settings import ServerSettings, SettingsError
+from .stress import StressTest
 from .tnv_access import AccessUser, require_role
 from .worlds import WorldError, read_json
 
@@ -53,6 +54,12 @@ class Player(BaseModel):
 class NewWorld(BaseModel):
     name: str
     seed: str = ""
+
+
+class Stress(BaseModel):
+    target: str = "proxy"
+    connections: int = 20
+    seconds: int = 30
 
 
 class Restore(BaseModel):
@@ -125,7 +132,7 @@ class PregenStart(BaseModel):
 
 
 def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None,
-          network=None) -> APIRouter:
+          network=None, stress=None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
@@ -428,6 +435,24 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, cl
         if range not in RANGES:
             raise HTTPException(400, "Unknown range.")
         return network.view(range)
+
+    stress = stress or StressTest()
+
+    @router.get("/network/stress")
+    def stress_status():
+        """Polled every second while a stress test runs."""
+        return stress.status()
+
+    @router.post("/network/stress", dependencies=[Depends(same_origin)])
+    def stress_start(body: Stress, user: AccessUser = Depends(admin_user)):
+        try:
+            out = stress.start(body.target, body.connections, body.seconds, who=user.email)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from None
+        except RuntimeError as e:
+            raise HTTPException(409, str(e)) from None
+        audit(user, "network stress test", f"{body.target}, {body.connections} connections, {body.seconds} s")
+        return out
 
     # ---- stats & challenges
     def progress_do(fn, *args):

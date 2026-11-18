@@ -186,3 +186,12 @@ dialog .row{justify-self:stretch}
 .net-nodata{padding:2rem 0;text-align:center}
 .net-history summary{cursor:pointer;font-weight:600;min-height:2.2rem;display:list-item}
 .nm-link .base.thin{stroke-width:6}
+/* Network tab: stress test */
+.stress-form{display:flex;flex-wrap:wrap;align-items:end;gap:.75rem 1rem;margin:.75rem 0}
+.stress-form label{display:grid;gap:.25rem;font-size:.92rem;font-weight:600}
+.stress-form input{width:7rem}
+.stress-form select{max-width:100%}
+.stress-status{margin:.5rem 0 1rem;color:var(--dim)}
+.stress-status[data-level=ok]{color:var(--ok)}
+.stress-status[data-level=warn]{color:var(--warn)}
+.stress-status[data-level=crit]{color:var(--crit)}

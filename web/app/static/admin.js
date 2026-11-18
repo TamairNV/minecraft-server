@@ -81,7 +81,7 @@ function fill(id, items, key, make) {
 }
 
 // ---- tabs
-const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, network: loadNetwork, system: loadSystem, challenges: loadChallenges };
+const loaders = { whitelist: loadWhitelist, backups: loadBackups, worlds: loadWorlds, settings: loadSettings, pregen: () => { loadPregen(); loadMapStatus(); }, modpack: loadModpack, network: () => { loadNetwork(); loadStress(); }, system: loadSystem, challenges: loadChallenges };
 let currentTab = 'console';
 function openTab(name) {
   currentTab = name;
@@ -968,7 +968,7 @@ function lineChart(el, times, lines, opts = {}) {
   }
   for (let i = 0; i <= 4; i++) {
     const t = t0 + ((t1 - t0) * i) / 4;
-    mk('text', { x: x(t), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === 4 ? 'end' : 'middle', class: 'axis' }).textContent = timeLabel(t, t1 - t0);
+    mk('text', { x: x(t), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === 4 ? 'end' : 'middle', class: 'axis' }).textContent = opts.timeText ? opts.timeText(Math.round(t)) : timeLabel(t, t1 - t0);
   }
   for (const l of lines) {
     let d = '';
@@ -987,9 +987,9 @@ function lineChart(el, times, lines, opts = {}) {
     const px = ((e.clientX - box.left) / box.width) * W;
     const i = Math.max(0, Math.min(times.length - 1, Math.round((px - L) / step)));
     cursor.setAttribute('x1', x(times[i])); cursor.setAttribute('x2', x(times[i])); cursor.setAttribute('visibility', 'visible');
-    tip.replaceChildren(Object.assign(document.createElement('b'), { textContent: new Date(times[i] * 1000).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'medium' }) }),
+    tip.replaceChildren(Object.assign(document.createElement('b'), { textContent: opts.timeText ? opts.timeText(times[i]) : new Date(times[i] * 1000).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'medium' }) }),
       ...lines.map((l) => { const r = document.createElement('div'); r.innerHTML = '<i></i><span></span>'; r.querySelector('i').style.background = l.color; r.querySelector('span').textContent = `${l.label}: ${fixed(l.sparse ? nearest(l.values, i) : l.values[i], opts.digits ?? 1)}`; return r; }));
-    if ((opts.bands || []).includes(i)) tip.append(Object.assign(document.createElement('div'), { textContent: 'Public join check failed', className: 'bad' }));
+    if ((opts.bands || []).includes(i)) tip.append(Object.assign(document.createElement('div'), { textContent: opts.bandText || 'Public join check failed', className: 'bad' }));
     tip.hidden = false;
     tip.style.left = `${Math.min(box.width - 170, Math.max(0, e.clientX - box.left + 12))}px`;
   });
@@ -1273,6 +1273,74 @@ document.querySelectorAll('.net-range button').forEach((b) => b.addEventListener
   try { localStorage.setItem('netRange', netRange); } catch { /* private window */ }
   loadNetwork();
 }));
+
+// ---- stress test: lots of real Minecraft connections through the chosen route
+let stressTimer = null;
+const ROUTE_NAMES = { proxy: 'through the proxy', direct: 'direct' };
+
+function renderStress(d) {
+  const r = d.live || d.last;
+  const st = $('stress-status');
+  $('stress-run').disabled = !!d.running;
+  if (!r) { st.textContent = 'No test run yet.'; $('stress-panels').replaceChildren(); $('stress-chart-wrap').hidden = true; return; }
+  const kinds = Object.entries(r.fail_kinds || {}).map(([k, n]) => `${n} ${k}`).join(', ');
+  st.dataset.level = r.fail_pct >= 5 ? 'crit' : r.fail_pct > 0 || r.slow_connects > 0 ? 'warn' : 'ok';
+  st.textContent = d.running
+    ? `Running ${ROUTE_NAMES[r.target]}: ${Math.round(r.elapsed)} of ${r.seconds} s, ${r.ok} exchanges so far…`
+    : `Last test ${ROUTE_NAMES[r.target]} (${r.host}:${r.port}), ${r.connections} connections for ${r.seconds} s, ${when(r.started)}${r.error ? ` · stopped early: ${r.error}` : ''}`;
+  $('stress-panels').replaceChildren(
+    panel('Result', [
+      ['Exchanges', `${r.ok} ok of ${r.attempts}`],
+      ['Per second', fixed(r.per_second)],
+      ['Failed', `${fixed(r.fail_pct)}%${kinds ? ` (${kinds})` : ''}`, levelFor(r.fail_pct, 0.01, 5), 'timeout = no answer in 5 s, reset = the connection was cut, refused = nothing listening'],
+      ['Data', kb(r.kbytes * 1024)],
+    ]),
+    panel('Opening the connection', [
+      ['Typical', ms(r.connect_ms.p50)],
+      ['Slowest 5%', ms(r.connect_ms.p95), levelFor(r.connect_ms.p95, 150, 900)],
+      ['Worst', ms(r.connect_ms.max), levelFor(r.connect_ms.max, 900, 3000)],
+      ['Over 1 s', `${r.slow_connects}`, levelFor(r.slow_connects, 1, 10), 'A connection that takes over a second almost always lost its first packet and had to resend it: a sign of packet loss'],
+    ]),
+    panel('Whole exchange', [
+      ['Typical', ms(r.total_ms.p50)],
+      ['Slowest 5%', ms(r.total_ms.p95), levelFor(r.total_ms.p95, 300, 1000)],
+      ['Slowest 1%', ms(r.total_ms.p99), levelFor(r.total_ms.p99, 600, 2000)],
+      ['Worst', ms(r.total_ms.max), levelFor(r.total_ms.max, 1000, 4000)],
+    ]),
+  );
+  const tl = r.timeline || [];
+  $('stress-chart-wrap').hidden = tl.length < 2;
+  if (tl.length >= 2) {
+    lineChart($('stress-chart'), tl.map((p) => p.s), [
+      { label: 'Exchanges done', color: NET_COLORS.a, values: tl.map((p) => p.ok) },
+      { label: 'Average time (ms)', color: NET_COLORS.b, values: tl.map((p) => p.avg), sparse: true },
+    ], { bands: tl.map((p, i) => (p.fail ? i : -1)).filter((i) => i >= 0), bandText: 'Some connections failed this second', timeText: (s) => `${s + 1} s`, digits: 0, title: 'Stress test' });
+  }
+}
+
+async function loadStress() {
+  let d;
+  try { d = await api('network/stress'); } catch (e) { $('stress-status').textContent = e.message; return; }
+  renderStress(d);
+  clearTimeout(stressTimer);
+  if (d.running) stressTimer = setTimeout(loadStress, 1000);
+}
+
+$('stress-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const target = $('stress-target').value;
+  const connections = Number($('stress-conns').value);
+  const seconds = Number($('stress-secs').value);
+  const msg = target === 'proxy'
+    ? `Run ${connections} connections for ${seconds} s through your friend's proxy? Players on it may notice some lag while it runs.`
+    : `Run ${connections} connections for ${seconds} s directly against the server?`;
+  if (!confirm(msg)) return;
+  await busyWhile($('stress-run'), async () => {
+    const d = await act('network/stress', { target, connections, seconds }, 'Stress test started');
+    if (d) { renderStress(d); clearTimeout(stressTimer); stressTimer = setTimeout(loadStress, 1000); }
+  });
+  loadStress();
+});
 
 const start = location.hash.slice(1);
 openTab(document.querySelector(`.tabs button[data-tab="${start}"]`) ? start : 'console');
