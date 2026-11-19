@@ -39,6 +39,7 @@ MODS = (
     Mod("simple-voice-chat", essential=True),
     Mod("distanthorizons", essential=True),
     Mod("sodium"),
+    Mod("sodium-extra"),  # has "Reduce resolution on macOS" for Retina screens
     Mod("lithium"),
     Mod("ferrite-core"),
     Mod("entityculling"),
