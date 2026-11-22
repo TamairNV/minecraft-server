@@ -12,9 +12,17 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from .cpu import CpuMeter
 from .crafty import CraftyError
+from . import challenges_default as cd
+from .progress import describe
+from .dimensions import DimensionError, Dimensions
+from .links import LinkError
+from .network import RANGES, Network
+from .rewards import ClaimError, RewardError, item_ids, validate_reward
 from .pregen import Pregen
 from .settings import ServerSettings, SettingsError
+from .stress import StressTest
 from .tnv_access import AccessUser, require_role
 from .worlds import WorldError, read_json
 
@@ -48,6 +56,20 @@ class NewWorld(BaseModel):
     seed: str = ""
 
 
+class Stress(BaseModel):
+    target: str = "proxy"
+    connections: int = 20
+    seconds: int = 30
+    rate: int = 20
+
+
+class Tuning(BaseModel):
+    enabled: bool
+    uplink_mbit: float = 20
+    up_pct: int = 75
+    down_pct: int = 40
+
+
 class Restore(BaseModel):
     name: str
     backup: str
@@ -69,6 +91,46 @@ class Border(BaseModel):
     center_z: float = 0
 
 
+class DimensionLock(BaseModel):
+    dim: str
+    locked: bool
+
+
+class Pools(BaseModel):
+    pools: dict
+
+
+class Goals(BaseModel):
+    goals: list
+
+
+class Swap2(BaseModel):
+    iid: int
+    pool_id: str
+
+
+class Kind(BaseModel):
+    kind: str
+
+
+class LinkBody(BaseModel):
+    email: str
+    name: str = ""
+
+
+class GiveAgain(BaseModel):
+    key: str
+    name: str
+
+
+class Items(BaseModel):
+    items: list
+
+
+class Confirm(BaseModel):
+    confirm: str
+
+
 class PregenStart(BaseModel):
     dim: str
     radius: float
@@ -77,13 +139,19 @@ class PregenStart(BaseModel):
     shape: str = "square"
 
 
-def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
+def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, claims=None, clock=time.time, console=None,
+          network=None, stress=None, autotune=None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", dependencies=[Depends(admin_user)])
     log_file = server / "logs" / "latest.log"
     audit_file = data / "audit.jsonl"
     audit_lock = threading.Lock()
-    settings = ServerSettings(server, data, crafty)
+    # One console for the whole app, so only one command waits on the log at a time (see settings.query).
+    settings = console or ServerSettings(server, data, crafty)
     chunks = Pregen(server, data, crafty, query=settings.query)
+    dimensions = Dimensions(server, crafty, query=settings.query)
+    cpu_meter = CpuMeter()
+    network = network or Network(Path(os.environ.get("NETMON_LIVE", "/netmon/live.json")),
+                                 Path(os.environ.get("NETMON_HISTORY", "/netmon-history/history.json")), log_file)
 
     def audit(user: AccessUser, action: str, detail: str = "") -> None:
         line = json.dumps({"time": int(time.time()), "who": user.email, "action": action, "detail": detail})
@@ -260,6 +328,22 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
         audit(user, "border", "; ".join(commands))
         return {"ok": True}
 
+    @router.get("/dimensions")
+    def dimensions_view():
+        return {**dimensions.view(), "running": is_running()}
+
+    @router.post("/dimensions", dependencies=[Depends(same_origin)])
+    def dimensions_set(body: DimensionLock, user: AccessUser = Depends(admin_user)):
+        idle()
+        try:
+            now = dimensions.set(body.dim, body.locked, is_running())
+        except DimensionError as e:
+            raise HTTPException(400, str(e)) from None
+        except CraftyError as e:
+            raise HTTPException(502, str(e)) from None
+        audit(user, "dimension", f"{body.dim} {'locked' if now else 'unlocked'}")
+        return {"ok": True, "locked": now}
+
     @router.get("/pregen")
     def pregen_state():
         running = is_running()
@@ -347,6 +431,150 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs) -> APIRouter:
         if files:
             out["last_backup"] = files[0]["time"]
         return out
+
+    @router.get("/cpu")
+    def cpu_now():
+        """Polled every 1.5 s while the System tab is open: two small file reads, nothing sent to the server."""
+        return cpu_meter.sample()
+
+    @router.get("/network")
+    def network_view(range: str = "1h"):
+        """Polled every 5 s while the Network tab is open. Reads netmon's files only."""
+        if range not in RANGES:
+            raise HTTPException(400, "Unknown range.")
+        return network.view(range)
+
+    stress = stress or StressTest()
+
+    @router.get("/network/stress")
+    def stress_status():
+        """Polled every second while a stress test runs."""
+        return stress.status()
+
+    @router.post("/network/stress", dependencies=[Depends(same_origin)])
+    def stress_start(body: Stress, user: AccessUser = Depends(admin_user)):
+        try:
+            out = stress.start(body.target, body.connections, body.seconds, who=user.email, rate=body.rate)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from None
+        except RuntimeError as e:
+            raise HTTPException(409, str(e)) from None
+        audit(user, "network stress test", f"{body.target}, {body.connections} connections, {body.seconds} s, {body.rate or 'no limit'}/s")
+        return out
+
+    def tuner():
+        if autotune is None:
+            raise HTTPException(503, "Smart tuning isn't running.")
+        return autotune
+
+    @router.get("/network/autotune")
+    def autotune_status():
+        return tuner().status()
+
+    @router.post("/network/autotune/refresh", dependencies=[Depends(same_origin)])
+    def autotune_refresh():
+        """Asks the game for its live view distance and Distant Horizons limits (three console reads)."""
+        return tuner().refresh()
+
+    @router.post("/network/autotune", dependencies=[Depends(same_origin)])
+    def autotune_configure(body: Tuning, user: AccessUser = Depends(admin_user)):
+        try:
+            out = tuner().configure(body.enabled, body.uplink_mbit, body.up_pct, body.down_pct)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from None
+        audit(user, "network smart tuning", f"{'on' if body.enabled else 'off'}, upload {body.uplink_mbit:g} Mbit/s, "
+              f"step up {body.up_pct}%, down {body.down_pct}%")
+        return out
+
+    # ---- stats & challenges
+    def progress_do(fn, *args):
+        if engine is None:
+            raise HTTPException(503, "Challenges aren't running.")
+        try:
+            return fn(*args)
+        except (cd.PoolError, RewardError, ClaimError, LinkError) as e:
+            raise HTTPException(400, str(e)) from None
+
+    @router.get("/progress")
+    def progress_view():
+        if engine is None:
+            raise HTTPException(503, "Challenges aren't running.")
+        week, day = engine.store.get("week"), engine.store.get("day")
+        brief = lambda i: {"iid": i["iid"], "id": i["id"], "text": describe(i), "reward": i["reward"], "bonus": i.get("bonus"),
+                           "tier": cd.tier(i) if i["kind"] == "daily" else None}
+        return {
+            "daily": [brief(i) for i in engine.store.current("daily", day)] if day else [],
+            "weekly": [brief(i) for i in engine.store.current("weekly", week)] if week else [],
+            "pools": cd.load_pools(data), "goals": cd.load_goals(data), "goals_state": engine.goals_state(),
+            "links": claims.links.list(), "log": claims.log(), "registry": item_ids(server) is not None,
+        }
+
+    @router.post("/progress/pools", dependencies=[Depends(same_origin)])
+    def progress_pools(body: Pools, user: AccessUser = Depends(admin_user)):
+        clean = progress_do(cd.save_pools, data, body.pools)
+        audit(user, "challenge pools", f"{len(clean['daily'])} daily, {len(clean['weekly'])} weekly")
+        return {"ok": True}
+
+    @router.post("/progress/goals", dependencies=[Depends(same_origin)])
+    def progress_goals(body: Goals, user: AccessUser = Depends(admin_user)):
+        clean = progress_do(cd.save_goals, data, body.goals)
+        audit(user, "community goals", f"{len(clean)} goals")
+        return {"ok": True}
+
+    @router.post("/progress/swap", dependencies=[Depends(same_origin)])
+    def progress_swap(body: Swap2, user: AccessUser = Depends(admin_user)):
+        entry = progress_do(engine.swap, body.iid, body.pool_id)
+        audit(user, "challenge swap", f"{body.iid} -> {entry['id']}")
+        return {"ok": True}
+
+    @router.post("/progress/reroll", dependencies=[Depends(same_origin)])
+    def progress_reroll(body: Kind, user: AccessUser = Depends(admin_user)):
+        if body.kind not in ("daily", "weekly"):
+            raise HTTPException(400, "Pick daily or weekly.")
+        progress_do(engine.reroll, body.kind)
+        audit(user, "challenges reroll", body.kind)
+        return {"ok": True}
+
+    @router.post("/progress/links", dependencies=[Depends(same_origin)])
+    def progress_link(body: LinkBody, user: AccessUser = Depends(admin_user)):
+        progress_do(claims.links.set_manual, body.email, body.name)
+        audit(user, "link", f"{body.email.strip().lower()} = {body.name}")
+        return {"ok": True}
+
+    @router.post("/progress/links/remove", dependencies=[Depends(same_origin)])
+    def progress_unlink(body: LinkBody, user: AccessUser = Depends(admin_user)):
+        progress_do(claims.links.remove_manual, body.email)
+        audit(user, "unlink", body.email.strip().lower())
+        return {"ok": True}
+
+    @router.post("/progress/give-again", dependencies=[Depends(same_origin)])
+    def progress_give_again(body: GiveAgain, user: AccessUser = Depends(admin_user)):
+        iid, _, tier = body.key.partition(":")
+        inst = engine.store.instance(int(iid)) if iid.isdigit() else None
+        items = (inst or {}).get("bonus" if tier == "bonus" else "reward") if tier in ("reward", "bonus") else None
+        if not items:
+            raise HTTPException(400, "That reward doesn't exist.")
+        given = progress_do(claims.give_to, body.name, items)
+        audit(user, "give again", f"{body.key} to {body.name}")
+        return {"ok": True, "given": given}
+
+    @router.post("/progress/test-reward", dependencies=[Depends(same_origin)])
+    def progress_test_reward(body: Items, user: AccessUser = Depends(admin_user)):
+        me = claims.links.player_for(user.email)
+        if not me:
+            raise HTTPException(400, "Your login isn't linked to a Minecraft name. Add a link for your email first.")
+        items = progress_do(validate_reward, body.items, item_ids(server))
+        given = progress_do(claims.give_to, me["name"], items)
+        audit(user, "test reward", f"to {me['name']}: " + ", ".join(f"{i['count']} {i['item']}" for i in given))
+        return {"ok": True, "given": given}
+
+    @router.post("/progress/reset", dependencies=[Depends(same_origin)])
+    def progress_reset(body: Confirm, user: AccessUser = Depends(admin_user)):
+        if body.confirm.strip().lower() != "reset":
+            raise HTTPException(400, "Type reset to confirm.")
+        progress_do(engine.reset, user.email)
+        audit(user, "stats reset", "new season")
+        return {"ok": True}
 
     @router.get("/audit")
     def audit_log():

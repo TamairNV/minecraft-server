@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import html
+import json
 import logging
 import os
 import threading
@@ -13,7 +14,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import admin, modpack, slp, stats
+from . import admin, modpack, play, slp, stats
+from . import progress as pg
+from . import rewards
+from .autotune import AutoTune
+from .engine import Engine
+from .icons import Icons
+from .links import Links
+from .settings import ServerSettings
 from .crafty import Crafty
 from .skins import Skins
 from .tnv_access import AccessUser, current_user, require_role
@@ -45,6 +53,24 @@ _cache: dict = {}
 ASSET_V = hashlib.sha256(b"".join(f.read_bytes() for f in sorted((HERE / "static").rglob("*")) if f.is_file())).hexdigest()[:10]
 skins = Skins(DATA / "skins")
 packs = modpack.Packs(SERVER, DATA / "modpack")
+ONBOARD_DB = Path(os.environ.get("ONBOARD_DB", "/onboard/onboard.db"))
+console = ServerSettings(SERVER, DATA, crafty)  # its query() sends a command and reads the answer from the log
+progress_store = pg.Store(DATA / "progress.db")
+links = Links(ONBOARD_DB, DATA, SERVER)
+audit_lock = threading.Lock()
+
+
+def player_audit(who: str, action: str, detail: str) -> None:
+    """Players' claims go in the same audit log as admin actions."""
+    line = json.dumps({"time": int(time.time()), "who": who, "action": action, "detail": detail})
+    with audit_lock, open(DATA / "audit.jsonl", "a") as f:
+        f.write(line + "\n")
+
+
+claims = rewards.Claims(progress_store, console.query, links, audit=player_audit)
+engine = Engine(SERVER, DATA, crafty, console.query, progress_store)
+autotune = AutoTune(SERVER, DATA, Path(os.environ.get("NETMON_LIVE", "/netmon/live.json")), crafty, console.query)
+rewards.use_registry(SERVER)
 
 
 async def cached(key: str, ttl: float, fn):
@@ -73,7 +99,11 @@ async def status() -> dict:
 
 
 def build_overview(state: dict) -> dict:
-    played = stats.collect(SERVER)
+    played = stats.collect(SERVER, mark=progress_store.mark("season") or {})
+    wins = engine.hall_counts()
+    for p in played:
+        if wins.get(p["uuid"]):
+            p["facts"].append(f"Weekly wins this season: {wins[p['uuid']]}")
     whitelist = read_json(SERVER / "whitelist.json", []) or []
     ops = {e.get("uuid") for e in read_json(SERVER / "ops.json", []) or []}
     players = stats.merge_players(whitelist, state["players"], played, ops)
@@ -83,6 +113,8 @@ def build_overview(state: dict) -> dict:
     return {
         "players": players,
         "awards": stats.awards(played),
+        "week": engine.week_boards(),
+        "goal": engine.goals_state()["current"],
         "totals": {
             "whitelisted": len(whitelist),
             "hours": round(sum(p["hours"] for p in played), 1),
@@ -101,6 +133,19 @@ async def world_size() -> int:
 def start_worlds():
     worlds.setup()
     threading.Thread(target=recover_when_ready, daemon=True, name="world-recover").start()
+    threading.Thread(target=progress_loop, daemon=True, name="progress").start()
+    threading.Thread(target=autotune.loop, daemon=True, name="autotune").start()
+
+
+def progress_loop():
+    """Day/week rollovers, challenge completions and community goals, once a minute."""
+    time.sleep(20)
+    while True:
+        try:
+            engine.tick()
+        except Exception:
+            logging.getLogger("mc").exception("progress tick failed")
+        time.sleep(60)
 
 
 def recover_when_ready():
@@ -123,7 +168,27 @@ async def errors(request: Request, exc: StarletteHTTPException):
     return HTMLResponse(f"<!doctype html><title>TNV SMP</title><p>{html.escape(str(exc.detail))}</p>", status_code=exc.status_code)
 
 
-app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs))
+app.include_router(admin.build(SERVER, DATA, crafty, worlds, blocking_ping, packs, engine=engine, claims=claims, console=console, autotune=autotune))
+_online = {"at": -1e9, "value": None}
+
+
+def online_names():
+    """Who's in game, from the same ping as the home page (cached 10 s). None if the ping can't say for sure."""
+    if time.monotonic() - _online["at"] < 10:
+        return _online["value"]
+    try:
+        raw = blocking_ping()
+    except (OSError, ValueError, asyncio.TimeoutError, asyncio.IncompleteReadError):
+        value = set()  # server down: nobody can claim
+    else:
+        p = raw.get("players", {})
+        named = [s["name"] for s in p.get("sample", []) if s.get("name") and s.get("id") != "00000000-0000-0000-0000-000000000000"]
+        value = {n.lower() for n in named} if len(named) >= p.get("online", 0) else None
+    _online.update(at=time.monotonic(), value=value)
+    return value
+
+
+app.include_router(play.build(engine, claims, online=online_names, icons=Icons(SERVER)))
 
 
 @app.get("/healthz")
@@ -172,6 +237,11 @@ def home(request: Request, user: AccessUser = Depends(current_user)):
 @app.get("/players")
 def players_page(request: Request, user: AccessUser = Depends(current_user)):
     return page(request, user, "players.html", "players")
+
+
+@app.get("/challenges")
+def challenges_page(request: Request, user: AccessUser = Depends(current_user)):
+    return page(request, user, "challenges.html", "challenges")
 
 
 @app.get("/world")

@@ -7,7 +7,7 @@
 <link rel="icon" href="/static/brand/favicon.ico?v={{ v }}" sizes="any">
 <link rel="icon" href="/static/brand/logo.svg?v={{ v }}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/static/brand/logo-256.png?v={{ v }}">
-<link rel="preload" href="/static/fonts/pixelify-sans-600.woff2?v={{ v }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/pixelify-sans-var.woff2?v={{ v }}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/static/site.css?v={{ v }}">
 {% block head %}{% endblock %}
 </head>
@@ -17,6 +17,7 @@
   <nav class="nav" aria-label="Main">
     <a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>Home</a>
     <a href="/players" {% if active == 'players' %}aria-current="page"{% endif %}>Players</a>
+    <a href="/challenges" {% if active == 'challenges' %}aria-current="page"{% endif %}>Challenges</a>
     <a href="/world" {% if active == 'world' %}aria-current="page"{% endif %}>Map</a>
     <a href="/mods" {% if active == 'mods' %}aria-current="page"{% endif %}>Mods</a>
     {% if is_admin %}<a href="/admin" {% if active == 'admin' %}aria-current="page"{% endif %}>Admin</a>{% endif %}
@@ -26,6 +27,7 @@
 {% block body %}{% endblock %}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script src="/static/common.js?v={{ v }}"></script>
+<script src="/static/items.js?v={{ v }}"></script>
 <script src="/static/figure.js?v={{ v }}"></script>
 {% block script %}{% endblock %}
 </body>
