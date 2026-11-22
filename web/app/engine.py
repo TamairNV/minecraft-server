@@ -19,7 +19,11 @@ from .stats import names as player_names
 
 log = logging.getLogger("mc.engine")
 SAVED_RE = re.compile(r"Saved the game")
-DAILY_PICKS, WEEKLY_PICKS = 2, 3
+DAILY_TIERS = {"hard": 3, "easy": 5}  # picked each day, hard ones first
+DAILY_PICKS, WEEKLY_PICKS = sum(DAILY_TIERS.values()), 3
+NAME_RE = re.compile(r"^[A-Za-z0-9_]{1,16}$")
+# In-game note to a player who finishes a daily: [Hard] in red, [Daily] in green.
+TIER_TAG = {"hard": ("[Hard] ", "red"), "easy": ("[Daily] ", "green")}
 DIST = ["minecraft:walk_one_cm", "minecraft:sprint_one_cm", "minecraft:crouch_one_cm", "minecraft:swim_one_cm",
         "minecraft:boat_one_cm", "minecraft:horse_one_cm", "minecraft:minecart_one_cm", "minecraft:pig_one_cm",
         "minecraft:aviate_one_cm", "minecraft:fly_one_cm", "minecraft:climb_one_cm", "minecraft:strider_one_cm",
@@ -97,6 +101,18 @@ class Engine:
             except CraftyError:
                 pass
 
+    def tell_done(self, name: str, inst: dict) -> None:
+        """Whispers a finished daily to that player only (not Discord), tagged by tier."""
+        if not NAME_RE.fullmatch(name or ""):
+            return
+        tag, colour = TIER_TAG[cd.tier(inst)]
+        msg = [{"text": tag, "color": colour, "bold": True},
+               {"text": f"Challenge done: {self._text(inst)}. Claim your reward on the website.", "color": "white"}]
+        try:
+            self.crafty.command(f"tellraw {name} " + json.dumps(msg))
+        except CraftyError:
+            pass
+
     @staticmethod
     def _text(inst: dict) -> str:
         return pg.describe(inst)
@@ -118,6 +134,9 @@ class Engine:
                     self.rollover_week(week, totals)
                 if self.store.mark("day:" + day) is None:
                     self.rollover_day(day, totals)
+            day_now = self.store.get("day")
+            if day_now:
+                self.fill_daily(day_now)
             self.check_completions()
             self.check_goals()
 
@@ -126,11 +145,32 @@ class Engine:
         for entry in pg.pick(cd.load_pools(self.data)[kind], count, avoid, self.rng):
             self.store.add_instance(kind, period, entry)
 
+    def fill_daily(self, day: str, previous: str | None = None, avoid: set | None = None) -> None:
+        """Tops the day up to DAILY_TIERS of each tier. Days picked before tiers existed (2 easy) keep theirs and
+        progress on them; only the missing ones are added. Progress on added ones counts from the day's mark."""
+        current = self.store.current("daily", day)
+        have = {t: 0 for t in DAILY_TIERS}
+        for inst in current:
+            have[cd.tier(inst)] += 1
+        if all(have[t] >= n for t, n in DAILY_TIERS.items()):
+            return
+        pool = cd.load_pools(self.data)["daily"]
+        taken = {i["id"] for i in current}
+        avoid = set(avoid or ())
+        if previous:
+            avoid |= {i["id"] for i in self.store.current("daily", previous)}
+        for t, n in DAILY_TIERS.items():
+            if have[t] >= n:
+                continue
+            options = [e for e in pool if cd.tier(e) == t and e["id"] not in taken]
+            for entry in pg.pick(options, n - have[t], avoid, self.rng):
+                entry["tier"] = t
+                self.store.add_instance("daily", day, entry)
+
     def rollover_day(self, day: str, totals: dict | None = None) -> None:
         previous = self.store.get("day")
         self.take_mark("day:" + day, totals)
-        if not self.store.current("daily", day):
-            self._pick("daily", day, DAILY_PICKS, previous)
+        self.fill_daily(day, previous)
         self.store.put("day", day)
 
     def rollover_week(self, week: str, totals: dict | None = None) -> None:
@@ -199,6 +239,9 @@ class Engine:
             if inst["kind"] == "weekly" and new and first_before is None:
                 who = names.get(new[0], "Someone")
                 self.announce(f"{who} was first to finish this week's challenge \"{self._text(inst)}\" and wins the bonus! Claim it on the website.")
+            if inst["kind"] == "daily":
+                for u in new:
+                    self.tell_done(names.get(u, ""), inst)
 
     # ---- community goals
     def goals_state(self, totals: dict | None = None) -> dict:
@@ -280,6 +323,10 @@ class Engine:
         entry = next((e for e in cd.load_pools(self.data)[inst["kind"]] if e["id"] == pool_id), None)
         if entry is None:
             raise cd.PoolError("That pool entry doesn't exist.")
+        if inst["kind"] == "daily":
+            if cd.tier(entry) != cd.tier(inst):
+                raise cd.PoolError(f"Swap a {cd.tier(inst)} challenge for another {cd.tier(inst)} one.")
+            entry = {**entry, "tier": cd.tier(inst)}
         self.store.replace_instance(iid, entry)
         return entry
 
@@ -292,5 +339,8 @@ class Engine:
             with self.store.conn() as c:
                 c.execute("UPDATE instances SET active=0 WHERE kind=? AND period=?", (kind, period))
             avoid = {i["id"] for i in current}
-            for entry in pg.pick(cd.load_pools(self.data)[kind], WEEKLY_PICKS if kind == "weekly" else DAILY_PICKS, avoid, self.rng):
+            if kind == "daily":
+                self.fill_daily(period, avoid=avoid)
+                return
+            for entry in pg.pick(cd.load_pools(self.data)[kind], WEEKLY_PICKS, avoid, self.rng):
                 self.store.add_instance(kind, period, entry)

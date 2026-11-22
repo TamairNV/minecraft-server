@@ -785,12 +785,13 @@ async function loadChallenges() {
   const d = await act('progress');
   if (!d) return;
   ch = d;
-  const cur = [...d.daily.map((x) => ['Today', 'daily', x]), ...d.weekly.map((x) => ['This week', 'weekly', x])];
+  const tierOf = (e) => (e.tier === 'hard' ? 'hard' : 'easy');
+  const cur = [...d.daily.map((x) => [`Today · ${tierOf(x) === 'hard' ? 'Hard' : 'Easy'}`, 'daily', x]), ...d.weekly.map((x) => ['This week', 'weekly', x])];
   $('ch-current').replaceChildren(...cur.map(([label, kind, x]) => {
     const tr = document.createElement('tr');
     const sel = document.createElement('select');
     sel.setAttribute('aria-label', `Swap ${x.text}`);
-    d.pools[kind].filter((e) => e.enabled !== false && e.id !== x.id).forEach((e) => sel.append(new Option(e.text.replace('{n}', Math.round((e.target / chScale(e.metric)) * 10) / 10), e.id)));
+    d.pools[kind].filter((e) => e.enabled !== false && e.id !== x.id && (kind !== 'daily' || tierOf(e) === tierOf(x))).forEach((e) => sel.append(new Option(e.text.replace('{n}', Math.round((e.target / chScale(e.metric)) * 10) / 10), e.id)));
     const swapTd = cell(''); swapTd.append(sel);
     const a = cell('', 'act');
     a.append(button('Swap', async () => {
@@ -837,12 +838,19 @@ function poolRow(kind, e) {
     target: input(Math.round((e.target / s) * 10) / 10, 'Target', 'num'), reward: input(itemsToText(e.reward), 'Reward'),
   };
   if (kind === 'weekly') f.bonus = input(itemsToText(e.bonus), 'First-to-finish bonus');
+  if (kind === 'daily') {
+    f.tier = document.createElement('select');
+    f.tier.setAttribute('aria-label', 'Tier');
+    f.tier.append(new Option('Easy', 'easy'), new Option('Hard', 'hard'));
+    f.tier.value = e.tier === 'hard' ? 'hard' : 'easy';
+  }
   const on = document.createElement('input');
   on.type = 'checkbox'; on.checked = e.enabled !== false; on.setAttribute('aria-label', 'Enabled');
   tr.read = () => {
     const metric = textToMetric(f.metric.value);
     const out = { id: f.id.value.trim(), text: f.text.value, metric, target: Math.round(Number(f.target.value) * chScale(metric)), reward: textToItems(f.reward.value), enabled: on.checked };
     if (f.bonus) out.bonus = textToItems(f.bonus.value);
+    if (f.tier) out.tier = f.tier.value;
     return out;
   };
   const cells = Object.values(f).map((i) => { const td = cell(''); td.append(i); return td; });
@@ -857,16 +865,16 @@ function renderPools(pools) {
   $('ch-pools').replaceChildren(...['daily', 'weekly'].map((kind) => {
     const box = document.createElement('div');
     const h = document.createElement('h3');
-    h.textContent = kind === 'daily' ? 'Daily pool' : 'Weekly pool';
+    h.textContent = kind === 'daily' ? 'Daily pool (3 hard + 5 easy picked each day)' : 'Weekly pool';
     h.className = 'gap';
     const t = document.createElement('table');
     t.className = 'list pool';
-    t.innerHTML = `<thead><tr><th>Id</th><th>Text ({n} = target)</th><th>Stats</th><th>Target</th><th>Reward</th>${kind === 'weekly' ? '<th>First-to-finish bonus</th>' : ''}<th>On</th><th></th></tr></thead>`;
+    t.innerHTML = `<thead><tr><th>Id</th><th>Text ({n} = target)</th><th>Stats</th><th>Target</th><th>Reward</th>${kind === 'weekly' ? '<th>First-to-finish bonus</th>' : '<th>Tier</th>'}<th>On</th><th></th></tr></thead>`;
     const body = document.createElement('tbody');
     body.id = `ch-pool-${kind}`;
     body.append(...pools[kind].map((e) => poolRow(kind, e)));
     t.append(body);
-    const add = button('Add challenge', () => body.append(poolRow(kind, { id: `${kind[0]}-new-${body.children.length + 1}`, text: 'Do a thing {n} times', metric: { cat: 'custom', keys: ['minecraft:jump'] }, target: 10, reward: [{ item: 'minecraft:dirt', count: 1 }], bonus: kind === 'weekly' ? [{ item: 'minecraft:diamond', count: 1 }] : undefined, enabled: true })));
+    const add = button('Add challenge', () => body.append(poolRow(kind, { id: `${kind[0]}-new-${body.children.length + 1}`, text: 'Do a thing {n} times', metric: { cat: 'custom', keys: ['minecraft:jump'] }, target: 10, reward: [{ item: 'minecraft:dirt', count: 1 }], bonus: kind === 'weekly' ? [{ item: 'minecraft:diamond', count: 1 }] : undefined, tier: kind === 'daily' ? 'easy' : undefined, enabled: true })));
     box.append(h, t, add);
     return box;
   }));

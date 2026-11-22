@@ -55,8 +55,11 @@ function claimButton(key, label) {
   return b;
 }
 
+const TIER_NAMES = { hard: 'Hard', easy: 'Daily' };
+
 function card(c, weekly) {
-  const art = el('article', 'ch card');
+  const art = el('article', `ch card${c.tier ? ` tier-${c.tier}` : ''}`);
+  if (c.tier) art.append(el('span', `tier-badge ${c.tier}`, TIER_NAMES[c.tier]));
   art.append(el('h3', '', c.text));
   const rw = el('div', 'ch-reward');
   rw.append(el('b', '', 'Reward'), slotsFor(c.reward));
@@ -98,7 +101,9 @@ function renderClaims(me) {
   $('claims').replaceChildren(...me.claimable.map((c) => {
     const li = el('li');
     const txt = el('div');
-    txt.append(el('b', '', `${c.tier === 'bonus' ? 'Bonus for' : 'For'} "${c.title}"`), el('span', 'muted', left(c.expires).replace('left', 'to claim')));
+    const what = el('b', '', `${c.tier === 'bonus' ? 'Bonus for' : 'For'} "${c.title}"`);
+    if (c.level) what.prepend(el('span', `tier-badge ${c.level}`, TIER_NAMES[c.level]), ' ');
+    txt.append(what, el('span', 'muted', left(c.expires).replace('left', 'to claim')));
     li.append(slotsFor(c.items), txt, claimButton(c.key));
     return li;
   }));
@@ -156,7 +161,8 @@ async function refresh(force) {
   setText($('me-line'), me.linked ? `Playing as ${me.name}. Progress updates every few minutes (when the game saves).`
     : "Your login isn't linked to a Minecraft name yet, so you can watch but not claim. Ask Tamair to link it.");
   renderClaims(me);
-  $('daily').replaceChildren(...data.daily.map((c) => card(c, false)));
+  $('daily-hard').replaceChildren(...data.daily.filter((c) => c.tier === 'hard').map((c) => card(c, false)));
+  $('daily').replaceChildren(...data.daily.filter((c) => c.tier !== 'hard').map((c) => card(c, false)));
   $('weekly').replaceChildren(...data.weekly.map((c) => card(c, true)));
   if (!data.daily.length) $('daily').replaceChildren(el('p', 'muted', 'Picking today\'s challenges…'));
   renderGoal(data.goal, data.goals_done);

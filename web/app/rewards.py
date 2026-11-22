@@ -122,7 +122,8 @@ class Claims:
                 key = f"{inst['iid']}:{tier}"
                 if key not in claimed:
                     title = describe(inst)
-                    out.append({"key": key, "kind": inst["kind"], "tier": tier, "title": title, "items": items, "expires": until})
+                    out.append({"key": key, "kind": inst["kind"], "tier": tier, "title": title, "items": items, "expires": until,
+                                "level": ("hard" if inst.get("tier") == "hard" else "easy") if inst["kind"] == "daily" else None})
         return out
 
     def claim(self, email: str, key: str, now: float) -> dict:

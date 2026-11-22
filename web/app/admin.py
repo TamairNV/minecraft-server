@@ -500,7 +500,8 @@ def build(server: Path, data: Path, crafty, worlds, ping, packs, engine=None, cl
         if engine is None:
             raise HTTPException(503, "Challenges aren't running.")
         week, day = engine.store.get("week"), engine.store.get("day")
-        brief = lambda i: {"iid": i["iid"], "id": i["id"], "text": describe(i), "reward": i["reward"], "bonus": i.get("bonus")}
+        brief = lambda i: {"iid": i["iid"], "id": i["id"], "text": describe(i), "reward": i["reward"], "bonus": i.get("bonus"),
+                           "tier": cd.tier(i) if i["kind"] == "daily" else None}
         return {
             "daily": [brief(i) for i in engine.store.current("daily", day)] if day else [],
             "weekly": [brief(i) for i in engine.store.current("weekly", week)] if week else [],

@@ -5,6 +5,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
+from . import challenges_default as cd
 from . import progress as pg
 from .admin import same_origin
 from .rewards import ClaimError
@@ -39,6 +40,8 @@ def build(engine, claims, clock=time.time, online=lambda: None, icons=None) -> A
             rows.sort(key=lambda r: (not r["done"], -r["value"], r["name"].lower()))
             out = {"iid": inst["iid"], "text": pg.describe(inst), "target": pg.shown(inst["metric"], inst["target"]),
                    "reward": inst["reward"], "progress": rows, "raw": prog}
+            if inst["kind"] == "daily":
+                out["tier"] = cd.tier(inst)
             if inst["kind"] == "weekly":
                 out["bonus"] = inst.get("bonus", [])
                 out["bonus_winner"] = names.get(first, first[:8]) if first else None
@@ -46,7 +49,8 @@ def build(engine, claims, clock=time.time, online=lambda: None, icons=None) -> A
 
         week, day = engine.store.get("week"), engine.store.get("day")
         value = {
-            "daily": [card(i) for i in engine.store.current("daily", day)] if day else [],
+            # hard ones first (days picked before tiers existed have their easy ones first by id)
+            "daily": sorted((card(i) for i in engine.store.current("daily", day)), key=lambda c: c["tier"] != "hard") if day else [],
             "weekly": [card(i) for i in engine.store.current("weekly", week)] if week else [],
             "goal": engine.goals_state(totals)["current"],
             "goals_done": len(engine.goals_state(totals)["done"]),

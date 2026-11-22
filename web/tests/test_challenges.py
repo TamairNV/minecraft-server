@@ -60,6 +60,8 @@ def test_defaults_are_valid(tmp_path):
     pools = cd.load_pools(tmp_path)
     assert len(pools["daily"]) >= 20 and len(pools["weekly"]) >= 30
     assert all(e.get("bonus") for e in pools["weekly"])
+    tiers = [cd.tier(e) for e in pools["daily"]]
+    assert tiers.count("hard") >= 8 and tiers.count("easy") >= 15
     assert len({e["id"] for e in pools["daily"] + pools["weekly"]}) == len(pools["daily"]) + len(pools["weekly"])
     cd.save_goals(tmp_path, cd.DEFAULT_GOALS)
     assert cd.load_goals(tmp_path)[0]["target"] > 0
@@ -85,3 +87,12 @@ def test_weekly_needs_bonus(tmp_path):
         cd.save_pools(tmp_path, {"daily": [], "weekly": [entry(0)]})
     cd.save_pools(tmp_path, {"daily": [], "weekly": [entry(0, bonus=[{"item": "minecraft:diamond", "count": 1}])]})
     assert json.loads((tmp_path / "challenges.json").read_text())["weekly"][0]["bonus"][0]["count"] == 1
+
+
+def test_daily_tier_is_checked_and_defaults_to_easy(tmp_path):
+    e = {"id": "x1", "text": "Jump {n} times", "metric": {"cat": "custom", "keys": ["minecraft:jump"]}, "target": 1,
+         "reward": [{"item": "minecraft:dirt", "count": 1}]}
+    assert cd.save_pools(tmp_path, {"daily": [e], "weekly": []})["daily"][0]["tier"] == "easy"
+    assert cd.save_pools(tmp_path, {"daily": [{**e, "tier": "hard"}], "weekly": []})["daily"][0]["tier"] == "hard"
+    with pytest.raises(cd.PoolError):
+        cd.save_pools(tmp_path, {"daily": [{**e, "tier": "insane"}], "weekly": []})

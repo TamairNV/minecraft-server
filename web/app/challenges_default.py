@@ -32,8 +32,21 @@ UNBREAKING = 'enchanted_book[stored_enchantments={"minecraft:unbreaking":3}]'
 EFFICIENCY = 'enchanted_book[stored_enchantments={"minecraft:efficiency":4}]'
 
 
+TIERS = ("hard", "easy")  # dailies: each day picks engine.DAILY_TIERS of each
+
+
 def d(id, text, metric, target, reward):
-    return {"id": id, "text": text, "metric": metric, "target": target, "reward": reward, "enabled": True}
+    return {"id": id, "text": text, "metric": metric, "target": target, "reward": reward, "enabled": True, "tier": "easy"}
+
+
+def tier(entry: dict) -> str:
+    """A daily's tier. Entries saved before tiers existed are easy."""
+    return "hard" if entry.get("tier") == "hard" else "easy"
+
+
+def h(id, text, metric, target, reward):
+    """A hard daily: a proper session's work, for a better reward."""
+    return {**d(id, text, metric, target, reward), "tier": "hard"}
 
 
 def w(id, text, metric, target, reward, bonus):
@@ -63,6 +76,32 @@ DAILY = [
     d("d-sleep", "Sleep through {n} nights", c("custom", "minecraft:sleep_in_bed", "minecraft:sleep_in_straw_bed"), 2, r(("white_wool", 8))),
     d("d-sand", "Dig {n} sand or gravel", c("mined", "minecraft:sand", "minecraft:red_sand", "minecraft:gravel"), 64, r(("glass", 32))),
     d("d-cake", "Eat {n} slices of cake", c("custom", "minecraft:eat_cake_slice"), 3, r(("sugar", 16), ("egg", 4))),
+    d("d-flowers", "Pick {n} flowers", c("mined", "minecraft:dandelion", "minecraft:poppy", "minecraft:*_tulip", "minecraft:cornflower", "minecraft:allium", "minecraft:azure_bluet", "minecraft:oxeye_daisy", "minecraft:lily_of_the_valley"), 16, r(("bone_meal", 24))),
+    d("d-sugarcane", "Harvest {n} sugar cane", c("mined", "minecraft:sugar_cane"), 32, r(("paper", 24))),
+    d("d-melons", "Harvest {n} melons or pumpkins", c("mined", "minecraft:melon", "minecraft:pumpkin"), 12, r(("pumpkin_pie", 8))),
+    d("d-eggs", "Collect {n} eggs", c("picked_up", "minecraft:egg", "minecraft:brown_egg", "minecraft:blue_egg"), 8, r(("cookie", 16))),
+    d("d-climb", "Climb {n} blocks of ladders and vines", c("custom", "minecraft:climb_one_cm"), 64 * CM, r(("ladder", 16))),
+    d("d-minecart", "Ride a minecart {n} blocks", c("custom", "minecraft:minecart_one_cm"), 300 * CM, r(("rail", 16))),
+    d("d-chests", "Open {n} chests or barrels", c("custom", "minecraft:open_chest", "minecraft:open_barrel"), 30, r(("barrel", 2))),
+    d("d-workbench", "Use a crafting table {n} times", c("custom", "minecraft:interact_with_crafting_table"), 20, r(("oak_planks", 32))),
+    d("d-furnace", "Use a furnace {n} times", c("custom", "minecraft:interact_with_furnace", "minecraft:interact_with_blast_furnace", "minecraft:interact_with_smoker"), 10, r(("coal", 12))),
+    # Hard dailies: a proper session's work, for a better reward (a weekly reward is ~3 diamonds or 32 iron).
+    h("h-deep", "Mine {n} stone or deepslate", c("mined", "minecraft:stone", "minecraft:deepslate", "minecraft:cobblestone", "minecraft:cobbled_deepslate", "minecraft:tuff"), 1000, r(("diamond", 1), ("iron_ingot", 16))),
+    h("h-iron", "Mine {n} iron ore", c("mined", "minecraft:iron_ore", "minecraft:deepslate_iron_ore"), 40, r(("diamond", 2))),
+    h("h-diamonds", "Mine {n} diamond ore", c("mined", "minecraft:diamond_ore", "minecraft:deepslate_diamond_ore"), 3, r(("golden_apple", 1), ("experience_bottle", 16))),
+    h("h-gold", "Mine {n} gold ore", c("mined", "minecraft:gold_ore", "minecraft:deepslate_gold_ore"), 15, r(("golden_apple", 2))),
+    h("h-redstone", "Mine {n} redstone ore", c("mined", "minecraft:redstone_ore", "minecraft:deepslate_redstone_ore"), 12, r(("diamond", 1), ("redstone_block", 4))),
+    h("h-hunter", "Defeat {n} hostile mobs", c("custom", "minecraft:mob_kills"), 60, r(("diamond", 2), ("arrow", 32))),
+    h("h-creepers", "Defeat {n} creepers", c("killed", "minecraft:creeper"), 15, r(("diamond", 1), ("tnt", 4))),
+    h("h-endermen", "Defeat {n} endermen", c("killed", "minecraft:enderman"), 5, r(("ender_pearl", 8), ("experience_bottle", 16))),
+    h("h-lumber", "Chop {n} logs", c("mined", "minecraft:*_log", "minecraft:*_stem"), 200, r(("emerald", 12), ("golden_apple", 1))),
+    h("h-explorer", "Travel {n} blocks on foot", c("custom", "minecraft:walk_one_cm", "minecraft:sprint_one_cm"), 10000 * CM, r(("golden_carrot", 24), ("saddle", 1))),
+    h("h-swim", "Swim {n} blocks", c("custom", "minecraft:swim_one_cm"), 1500 * CM, r(("diamond", 1), ("prismarine_shard", 16))),
+    h("h-angler", "Catch {n} fish", c("custom", "minecraft:fish_caught"), 25, r(("name_tag", 1), ("emerald", 10))),
+    h("h-farmer", "Harvest {n} crops", c("mined", "minecraft:wheat", "minecraft:carrots", "minecraft:potatoes", "minecraft:beetroots", "minecraft:melon", "minecraft:pumpkin"), 250, r(("golden_apple", 1), ("bone_meal", 64))),
+    h("h-breeder", "Breed {n} animals", c("custom", "minecraft:animals_bred"), 25, r(("name_tag", 2), ("lead", 2))),
+    h("h-trader", "Trade with villagers {n} times", c("custom", "minecraft:traded_with_villager"), 20, r(("experience_bottle", 24))),
+    h("h-builder", "Place {n} blocks of any kind", c("used", "minecraft:*stone*", "minecraft:*planks", "minecraft:*brick*", "minecraft:glass*", "minecraft:*_log"), 1000, r(("diamond", 2))),
 ]
 
 WEEKLY = [
@@ -145,6 +184,10 @@ def check_entry(e: dict, weekly: bool) -> dict:
         raise PoolError(f"{e['id']}: the target must be a whole number from 1 to {TARGET_MAX:,}.")
     out = {"id": e["id"], "text": text, "metric": {"cat": e["metric"]["cat"], "keys": list(e["metric"]["keys"])},
            "target": t, "reward": _check_reward(e.get("reward"), "reward"), "enabled": bool(e.get("enabled", True))}
+    if not weekly:
+        if e.get("tier", "easy") not in TIERS:
+            raise PoolError(f"{e['id']}: the tier must be hard or easy.")
+        out["tier"] = e.get("tier", "easy")
     if weekly:
         out["bonus"] = _check_reward(e.get("bonus"), "first-to-finish bonus")
     return out

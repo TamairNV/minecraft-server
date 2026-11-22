@@ -104,7 +104,8 @@ HEAD = {"Cf-Access-Jwt-Assertion": "x", "Origin": "http://testserver"}
 def test_challenges_payload_shape(tmp_path):
     c, engine, server, sent = client(tmp_path)
     d = c.get("/api/challenges", headers=HEAD).json()
-    assert len(d["daily"]) == 2 and len(d["weekly"]) == 3
+    assert len(d["daily"]) == 8 and len(d["weekly"]) == 3
+    assert [c["tier"] for c in d["daily"]] == ["hard"] * 3 + ["easy"] * 5
     card = d["weekly"][0]
     assert {"iid", "text", "target", "reward", "bonus", "bonus_winner", "progress", "mine"} <= set(card)
     assert d["me"]["linked"] and d["me"]["name"] == "Alex"

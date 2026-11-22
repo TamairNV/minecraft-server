@@ -74,7 +74,7 @@ def test_admin_only(tmp_path):
 def test_overview(tmp_path):
     c, *_ = client(tmp_path)
     d = c.get("/admin/api/progress", headers=HEAD).json()
-    assert len(d["daily"]) == 2 and len(d["weekly"]) == 3
+    assert len(d["daily"]) == 8 and len(d["weekly"]) == 3
     assert len(d["pools"]["daily"]) >= 20 and d["goals"] and d["links"] == {"onboard": [], "manual": []}
 
 
@@ -102,7 +102,8 @@ def test_swap_keeps_claims(tmp_path):
     d = c.get("/admin/api/progress", headers=HEAD).json()
     iid = d["daily"][0]["iid"]
     pg.record_completions(engine.store, iid, {"u-t": 1}, 1, NOW, {})
-    other = next(e["id"] for e in d["pools"]["daily"] if e["id"] not in {x["id"] for x in d["daily"]})
+    tier = d["daily"][0].get("tier", "easy")
+    other = next(e["id"] for e in d["pools"]["daily"] if e["id"] not in {x["id"] for x in d["daily"]} and e["tier"] == tier)
     assert c.post("/admin/api/progress/swap", json={"iid": iid, "pool_id": other}, headers=HEAD).status_code == 200
     assert engine.store.instance(iid)["id"] == other and pg.completed(engine.store, iid) == {"u-t"}
 
